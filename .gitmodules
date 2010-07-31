@@ -13,3 +13,6 @@
 [submodule "bundle/zencoding"]
 	path = bundle/zencoding
 	url = http://github.com/mattn/zencoding-vim.git
+[submodule "bundle/autoclose"]
+	path = bundle/autoclose
+	url = http://github.com/Townk/vim-autoclose.git
