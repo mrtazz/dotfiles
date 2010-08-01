@@ -25,9 +25,6 @@
 [submodule "bundle/taglist"]
 	path = bundle/taglist
 	url = http://github.com/jc00ke/taglist.vim.git
-[submodule "bundle/fuzzyfinder_textmate/plugin"]
-	path = bundle/fuzzyfinder_textmate/plugin
-	url = http://github.com/jamis/fuzzyfinder_textmate.git
 [submodule "bundle/railscasts/colors"]
 	path = bundle/railscasts/colors
 	url = http://github.com/jpo/vim-railscasts-theme.git
