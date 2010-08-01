@@ -34,3 +34,6 @@
 [submodule "bundle/cocoa"]
 	path = bundle/cocoa
 	url = http://github.com/msanders/cocoa.vim.git
+[submodule "bundle/snipmate"]
+	path = bundle/snipmate
+	url = http://github.com/msanders/snipmate.vim.git
