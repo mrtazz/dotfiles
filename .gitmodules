@@ -19,3 +19,6 @@
 [submodule "bundle/supertab"]
 	path = bundle/supertab
 	url = http://github.com/ervandew/supertab.git
+[submodule "bundle/railscasts"]
+	path = bundle/railscasts
+	url = http://github.com/jpo/vim-railscasts-theme.git
