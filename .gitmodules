@@ -22,3 +22,6 @@
 [submodule "bundle/railscasts"]
 	path = bundle/railscasts
 	url = http://github.com/jpo/vim-railscasts-theme.git
+[submodule "bundle/fuzzyfinder"]
+	path = bundle/fuzzyfinder
+	url = http://github.com/vim-bundles/fuzzyfinder.git
