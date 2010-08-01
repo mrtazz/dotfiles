@@ -16,3 +16,6 @@
 [submodule "bundle/autoclose"]
 	path = bundle/autoclose
 	url = http://github.com/Townk/vim-autoclose.git
+[submodule "bundle/supertab"]
+	path = bundle/supertab
+	url = http://github.com/ervandew/supertab.git
