@@ -31,3 +31,6 @@
 [submodule "bundle/railscasts/colors"]
 	path = bundle/railscasts/colors
 	url = http://github.com/jpo/vim-railscasts-theme.git
+[submodule "bundle/cocoa"]
+	path = bundle/cocoa
+	url = http://github.com/msanders/cocoa.vim.git
