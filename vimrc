@@ -25,10 +25,12 @@ syntax on
 if has("gui_running")
     colorscheme default
     set go-=T
-    set statusline=%t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m
-    set laststatus=2
 else
+    colorscheme railscasts
 endif
+" some information in the statusline
+set statusline=%t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m
+set laststatus=2
 
 " command shortcuts
 let mapleader=","
