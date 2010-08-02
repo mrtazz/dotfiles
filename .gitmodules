@@ -40,3 +40,6 @@
 [submodule "bundle/ack"]
 	path = bundle/ack
 	url = http://github.com/mileszs/ack.vim.git
+[submodule "bundle/mustache"]
+	path = bundle/mustache
+	url = http://github.com/jc00ke/mustache.vim.git
