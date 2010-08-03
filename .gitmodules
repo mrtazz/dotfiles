@@ -46,3 +46,6 @@
 [submodule "bundle/DoxygenToolkit"]
 	path = bundle/DoxygenToolkit
 	url = git@github.com:mrtazz/DoxygenToolkit.vim.git
+[submodule "bundle/vimerl"]
+	path = bundle/vimerl
+	url = http://github.com/oscarh/vimerl.git
