@@ -43,3 +43,6 @@
 [submodule "bundle/mustache"]
 	path = bundle/mustache
 	url = http://github.com/jc00ke/mustache.vim.git
+[submodule "bundle/DoxygenToolkit"]
+	path = bundle/DoxygenToolkit
+	url = git@github.com:mrtazz/DoxygenToolkit.vim.git
