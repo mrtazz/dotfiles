@@ -45,7 +45,7 @@
 	url = http://github.com/jc00ke/mustache.vim.git
 [submodule "bundle/DoxygenToolkit"]
 	path = bundle/DoxygenToolkit
-	url = git@github.com:mrtazz/DoxygenToolkit.vim.git
+	url = http://github.com/mrtazz/DoxygenToolkit.vim.git
 [submodule "bundle/vimerl"]
 	path = bundle/vimerl
 	url = http://github.com/oscarh/vimerl.git
