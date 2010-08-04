@@ -49,3 +49,6 @@
 [submodule "bundle/vimerl"]
 	path = bundle/vimerl
 	url = http://github.com/oscarh/vimerl.git
+[submodule "bundle/gist"]
+	path = bundle/gist
+	url = http://github.com/mattn/gist-vim.git
