@@ -52,3 +52,6 @@
 [submodule "bundle/gist"]
 	path = bundle/gist
 	url = http://github.com/mattn/gist-vim.git
+[submodule "bundle/nerdcommenter"]
+	path = bundle/nerdcommenter
+	url = http://github.com/scrooloose/nerdcommenter.git
