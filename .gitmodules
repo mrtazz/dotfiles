@@ -58,3 +58,6 @@
 [submodule "bundle/syntastic"]
 	path = bundle/syntastic
 	url = http://github.com/scrooloose/syntastic.git
+[submodule "bundle/jekyll"]
+	path = bundle/jekyll
+	url = http://github.com/csexton/jekyll.vim.git
