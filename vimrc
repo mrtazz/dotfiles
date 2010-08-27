@@ -52,3 +52,6 @@ let g:SuperTabLongestHighlight = 1
 
 " tag list on the right side of the vim window
 let Tlist_Use_Right_Window = 1
+
+" call PyFlakes() on write for .py files
+autocmd BufWritePost *.py call Pyflakes()
