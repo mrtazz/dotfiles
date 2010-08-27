@@ -61,3 +61,6 @@
 [submodule "bundle/jekyll"]
 	path = bundle/jekyll
 	url = http://github.com/csexton/jekyll.vim.git
+[submodule "bundle/surround"]
+	path = bundle/surround
+	url = http://github.com/tpope/vim-surround.git
