@@ -67,3 +67,6 @@
 [submodule "bundle/pyflakes"]
 	path = bundle/pyflakes
 	url = http://github.com/nvie/vim-pyflakes.git
+[submodule "bundle/pep8"]
+	path = bundle/pep8
+	url = http://github.com/nvie/vim-pep8.git
