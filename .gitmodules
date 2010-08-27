@@ -64,3 +64,6 @@
 [submodule "bundle/surround"]
 	path = bundle/surround
 	url = http://github.com/tpope/vim-surround.git
+[submodule "bundle/pyflakes"]
+	path = bundle/pyflakes
+	url = http://github.com/nvie/vim-pyflakes.git
