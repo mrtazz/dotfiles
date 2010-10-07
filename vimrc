@@ -25,6 +25,8 @@ syntax on
 if has("gui_running")
     colorscheme default
     set go-=T
+    set guifont=Monaco:h12
+    set antialias
 else
     colorscheme railscasts
 endif
@@ -55,3 +57,8 @@ let Tlist_Use_Right_Window = 1
 
 " call PyFlakes() on write for .py files
 autocmd BufWritePost *.py call Pyflakes()
+
+" set backup and swap dir to specific folder to play nice with open files in
+" dropbox
+set backupdir=/Users/mrtazz/.vim/tmp
+set directory=/Users/mrtazz/.vim/tmp
