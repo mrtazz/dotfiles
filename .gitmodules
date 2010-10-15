@@ -73,3 +73,6 @@
 [submodule "bundle/py-unit"]
 	path = bundle/py-unit
 	url = http://github.com/nvie/vim-pyunit.git
+[submodule "bundle/blackboard-theme"]
+	path = bundle/blackboard-theme
+	url = http://github.com/nelstrom/vim-blackboard.git
