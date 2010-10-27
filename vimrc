@@ -1,4 +1,7 @@
 set nocompatible
+" if filetype is not on and then turned off, vim issues a bad exit status,
+" which is a problem for git for example
+filetype on
 " this needs to be done to guarantee proper plugin loading
 filetype off
 " load modules via pathogen
