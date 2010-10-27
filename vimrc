@@ -46,11 +46,11 @@ autocmd BufWritePre * :%s/\s\+$//e
 
 
 " Supertab settings
-"let g:SuperTabDefaultCompletionTypeDiscovery = [
-"\ "&completefunc:<c-x><c-u>",
-"\ "&omnifunc:<c-x><c-o>",
-"\ ]
-"let g:SuperTabLongestHighlight = 1
+let g:SuperTabDefaultCompletionTypeDiscovery = [
+\ "&completefunc:<c-x><c-u>",
+\ "&omnifunc:<c-x><c-o>",
+\ ]
+let g:SuperTabLongestHighlight = 1
 
 " tag list on the right side of the vim window
 let Tlist_Use_Right_Window = 1
