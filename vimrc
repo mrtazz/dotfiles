@@ -23,12 +23,12 @@ set encoding=utf-8
 
 syntax on
 if has("gui_running")
-    colorscheme default
+    colorscheme blackboard
     set go-=T
     set guifont=Monaco:h12
     set antialias
 else
-    colorscheme railscasts
+    colorscheme blackboard
 endif
 " some information in the statusline
 set statusline=%t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m\ %P
