@@ -47,6 +47,8 @@ map <leader>l :TlistToggle<CR>
 " remove unneeded spaces for a good whitespace carbon footprint
 autocmd BufWritePre * :%s/\s\+$//e
 
+" handle .json files as javascript
+autocmd BufNewFile,BufRead *.json set filetype=javascript
 
 " Supertab settings
 let g:SuperTabDefaultCompletionTypeDiscovery = [
