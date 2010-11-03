@@ -76,3 +76,6 @@
 [submodule "bundle/autoclose"]
 	path = bundle/autoclose
 	url = http://github.com/vim-scripts/AutoClose.git
+[submodule "bundle/molokai"]
+	path = bundle/molokai
+	url = http://github.com/mrtazz/molokai.vim.git
