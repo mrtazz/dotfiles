@@ -79,3 +79,6 @@
 [submodule "bundle/molokai"]
 	path = bundle/molokai
 	url = http://github.com/mrtazz/molokai.vim.git
+[submodule "bundle/pythoncomplete"]
+	path = bundle/pythoncomplete
+	url = https://github.com/vim-scripts/pythoncomplete.git
