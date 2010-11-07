@@ -73,9 +73,6 @@
 [submodule "bundle/blackboard-theme"]
 	path = bundle/blackboard-theme
 	url = http://github.com/nelstrom/vim-blackboard.git
-[submodule "bundle/autoclose"]
-	path = bundle/autoclose
-	url = http://github.com/vim-scripts/AutoClose.git
 [submodule "bundle/molokai"]
 	path = bundle/molokai
 	url = http://github.com/mrtazz/molokai.vim.git
