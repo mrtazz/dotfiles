@@ -85,3 +85,6 @@
 [submodule "bundle/autoclose"]
 	path = bundle/autoclose
 	url = https://github.com/Townk/vim-autoclose.git
+[submodule "bundle/omnicppcomplete"]
+	path = bundle/omnicppcomplete
+	url = https://github.com/vim-scripts/OmniCppComplete.git
