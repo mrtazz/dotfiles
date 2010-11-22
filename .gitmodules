@@ -91,3 +91,6 @@
 [submodule "bundle/simple-pairs"]
 	path = bundle/simple-pairs
 	url = https://github.com/vim-scripts/simple-pairs.git
+[submodule "bundle/python"]
+	path = bundle/python
+	url = https://github.com/vim-scripts/python.vim--Vasiliev.git
