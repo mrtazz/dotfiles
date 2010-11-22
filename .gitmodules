@@ -79,9 +79,6 @@
 [submodule "bundle/rainbow-parenthesis"]
 	path = bundle/rainbow-parenthesis
 	url = https://github.com/vim-scripts/Rainbow-Parenthsis-Bundle.git
-[submodule "bundle/autoclose"]
-	path = bundle/autoclose
-	url = https://github.com/Townk/vim-autoclose.git
 [submodule "bundle/fuzzyfinder"]
 	path = bundle/fuzzyfinder
 	url = https://github.com/vim-scripts/FuzzyFinder.git
