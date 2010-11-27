@@ -40,7 +40,7 @@ set laststatus=2
 " command shortcuts
 let mapleader=","
 
-map <leader>t :FuzzyFinderTextMate<CR>
+map <leader>m :FuzzyFinderTextMate<CR>
 map <leader>d :execute 'NERDTreeToggle ' . getcwd()<CR>
 map <leader>l :TlistToggle<CR>
 
