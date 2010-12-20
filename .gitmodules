@@ -1,78 +1,78 @@
 [submodule "bundle/nerdtree"]
 	path = bundle/nerdtree
-	url = http://github.com/scrooloose/nerdtree.git
+	url = https://github.com/scrooloose/nerdtree.git
 [submodule "bundle/fugitive"]
 	path = bundle/fugitive
-	url = http://github.com/tpope/vim-fugitive.git
+	url = https://github.com/tpope/vim-fugitive.git
 [submodule "bundle/rails"]
 	path = bundle/rails
-	url = http://github.com/tpope/vim-fugitive.git
+	url = https://github.com/tpope/vim-fugitive.git
 [submodule "bundle/markdown"]
 	path = bundle/markdown
-	url = http://github.com/tpope/vim-markdown.git
+	url = https://github.com/tpope/vim-markdown.git
 [submodule "bundle/zencoding"]
 	path = bundle/zencoding
-	url = http://github.com/mattn/zencoding-vim.git
+	url = https://github.com/mattn/zencoding-vim.git
 [submodule "bundle/supertab"]
 	path = bundle/supertab
-	url = http://github.com/ervandew/supertab.git
+	url = https://github.com/ervandew/supertab.git
 [submodule "bundle/taglist"]
 	path = bundle/taglist
-	url = http://github.com/jc00ke/taglist.vim.git
+	url = https://github.com/jc00ke/taglist.vim.git
 [submodule "bundle/railscasts/colors"]
 	path = bundle/railscasts/colors
-	url = http://github.com/jpo/vim-railscasts-theme.git
+	url = https://github.com/jpo/vim-railscasts-theme.git
 [submodule "bundle/cocoa"]
 	path = bundle/cocoa
-	url = http://github.com/msanders/cocoa.vim.git
+	url = https://github.com/msanders/cocoa.vim.git
 [submodule "bundle/snipmate"]
 	path = bundle/snipmate
-	url = http://github.com/msanders/snipmate.vim.git
+	url = https://github.com/msanders/snipmate.vim.git
 [submodule "bundle/fuzzyfinder_textmate"]
 	path = bundle/fuzzyfinder_textmate
-	url = http://github.com/jonuts/fuzzyfinder_textmate.git
+	url = https://github.com/jonuts/fuzzyfinder_textmate.git
 [submodule "bundle/ack"]
 	path = bundle/ack
-	url = http://github.com/mileszs/ack.vim.git
+	url = https://github.com/mileszs/ack.vim.git
 [submodule "bundle/mustache"]
 	path = bundle/mustache
-	url = http://github.com/jc00ke/mustache.vim.git
+	url = https://github.com/jc00ke/mustache.vim.git
 [submodule "bundle/DoxygenToolkit"]
 	path = bundle/DoxygenToolkit
-	url = http://github.com/mrtazz/DoxygenToolkit.vim.git
+	url = https://github.com/mrtazz/DoxygenToolkit.vim.git
 [submodule "bundle/vimerl"]
 	path = bundle/vimerl
-	url = http://github.com/oscarh/vimerl.git
+	url = https://github.com/oscarh/vimerl.git
 [submodule "bundle/gist"]
 	path = bundle/gist
-	url = http://github.com/mattn/gist-vim.git
+	url = https://github.com/mattn/gist-vim.git
 [submodule "bundle/nerdcommenter"]
 	path = bundle/nerdcommenter
-	url = http://github.com/scrooloose/nerdcommenter.git
+	url = https://github.com/scrooloose/nerdcommenter.git
 [submodule "bundle/syntastic"]
 	path = bundle/syntastic
-	url = http://github.com/scrooloose/syntastic.git
+	url = https://github.com/scrooloose/syntastic.git
 [submodule "bundle/jekyll"]
 	path = bundle/jekyll
-	url = http://github.com/csexton/jekyll.vim.git
+	url = https://github.com/csexton/jekyll.vim.git
 [submodule "bundle/surround"]
 	path = bundle/surround
-	url = http://github.com/tpope/vim-surround.git
+	url = https://github.com/tpope/vim-surround.git
 [submodule "bundle/pyflakes"]
 	path = bundle/pyflakes
-	url = http://github.com/nvie/vim-pyflakes.git
+	url = https://github.com/nvie/vim-pyflakes.git
 [submodule "bundle/pep8"]
 	path = bundle/pep8
-	url = http://github.com/nvie/vim-pep8.git
+	url = https://github.com/nvie/vim-pep8.git
 [submodule "bundle/py-unit"]
 	path = bundle/py-unit
-	url = http://github.com/nvie/vim-pyunit.git
+	url = https://github.com/nvie/vim-pyunit.git
 [submodule "bundle/blackboard-theme"]
 	path = bundle/blackboard-theme
-	url = http://github.com/nelstrom/vim-blackboard.git
+	url = https://github.com/nelstrom/vim-blackboard.git
 [submodule "bundle/molokai"]
 	path = bundle/molokai
-	url = http://github.com/mrtazz/molokai.vim.git
+	url = https://github.com/mrtazz/molokai.vim.git
 [submodule "bundle/pythoncomplete"]
 	path = bundle/pythoncomplete
 	url = https://github.com/vim-scripts/pythoncomplete.git
