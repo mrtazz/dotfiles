@@ -97,3 +97,6 @@
 [submodule "bundle/indent-python"]
 	path = bundle/indent-python
 	url = https://github.com/vim-scripts/indentpython.vim.git
+[submodule "bundle/autoclose"]
+	path = bundle/autoclose
+	url = https://github.com/mtvee/vim-autoclose.git
