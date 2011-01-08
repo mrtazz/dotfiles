@@ -66,7 +66,7 @@ autocmd BufWritePost *.py call Pyflakes()
 " set indents for python files
 au FileType python setl autoindent tabstop=4 expandtab shiftwidth=4 softtabstop=4
 " set path to my blog for jekkyl plugin
-let g:jekyll_path = "/Users/mrtazz/Documents/blog"
+let g:jekyll_path = "/Users/mrtazz/Dropbox/Documents/blog"
 
 " set backup and swap dir to specific folder to play nice with open files in
 " dropbox
