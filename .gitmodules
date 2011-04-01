@@ -96,7 +96,7 @@
 	url = https://github.com/vim-scripts/indentpython.vim.git
 [submodule "bundle/autoclose"]
 	path = bundle/autoclose
-	url = https://github.com/mtvee/vim-autoclose.git
+	url = https://github.com/Townk/vim-autoclose.git
 [submodule "bundle/cucumber"]
 	path = bundle/cucumber
 	url = https://github.com/tpope/vim-cucumber.git
