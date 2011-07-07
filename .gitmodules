@@ -34,9 +34,6 @@
 [submodule "bundle/ack"]
 	path = bundle/ack
 	url = https://github.com/mileszs/ack.vim.git
-[submodule "bundle/mustache"]
-	path = bundle/mustache
-	url = https://github.com/jc00ke/mustache.vim.git
 [submodule "bundle/DoxygenToolkit"]
 	path = bundle/DoxygenToolkit
 	url = https://github.com/mrtazz/DoxygenToolkit.vim.git
