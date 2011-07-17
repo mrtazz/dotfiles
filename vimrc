@@ -77,3 +77,4 @@ set directory=/Users/mrtazz/.vim/tmp
 autocmd InsertEnter *.tex setlocal spell
 autocmd InsertLeave *.tex setlocal nospell
 
+source ~/.simplenoterc
