@@ -16,9 +16,6 @@
 [submodule "bundle/supertab"]
 	path = bundle/supertab
 	url = https://github.com/ervandew/supertab.git
-[submodule "bundle/taglist"]
-	path = bundle/taglist
-	url = https://github.com/jc00ke/taglist.vim.git
 [submodule "bundle/railscasts/colors"]
 	path = bundle/railscasts/colors
 	url = https://github.com/jpo/vim-railscasts-theme.git
