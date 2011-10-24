@@ -112,3 +112,6 @@
 [submodule "bundle/mustache"]
 	path = bundle/mustache
 	url = https://github.com/juvenn/mustache.vim.git
+[submodule "bundle/coffee-script"]
+	path = bundle/coffee-script
+	url = https://github.com/kchmck/vim-coffee-script.git
