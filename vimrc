@@ -78,3 +78,13 @@ autocmd InsertEnter *.tex setlocal spell
 autocmd InsertLeave *.tex setlocal nospell
 
 source ~/.simplenoterc
+
+" let's see if we can work with arrow keys
+inoremap  <Up>     <NOP>
+inoremap  <Down>   <NOP>
+inoremap  <Left>   <NOP>
+inoremap  <Right>  <NOP>
+noremap   <Up>     <NOP>
+noremap   <Down>   <NOP>
+noremap   <Left>   <NOP>
+noremap   <Right>  <NOP>
