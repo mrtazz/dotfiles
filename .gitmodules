@@ -4,30 +4,15 @@
 [submodule "bundle/fugitive"]
 	path = bundle/fugitive
 	url = https://github.com/tpope/vim-fugitive.git
-[submodule "bundle/rails"]
-	path = bundle/rails
-	url = https://github.com/tpope/vim-fugitive.git
 [submodule "bundle/markdown"]
 	path = bundle/markdown
 	url = https://github.com/tpope/vim-markdown.git
-[submodule "bundle/zencoding"]
-	path = bundle/zencoding
-	url = https://github.com/mattn/zencoding-vim.git
 [submodule "bundle/supertab"]
 	path = bundle/supertab
 	url = https://github.com/ervandew/supertab.git
-[submodule "bundle/railscasts/colors"]
-	path = bundle/railscasts/colors
-	url = https://github.com/jpo/vim-railscasts-theme.git
-[submodule "bundle/cocoa"]
-	path = bundle/cocoa
-	url = https://github.com/msanders/cocoa.vim.git
 [submodule "bundle/snipmate"]
 	path = bundle/snipmate
 	url = https://github.com/msanders/snipmate.vim.git
-[submodule "bundle/fuzzyfinder_textmate"]
-	path = bundle/fuzzyfinder_textmate
-	url = https://github.com/jonuts/fuzzyfinder_textmate.git
 [submodule "bundle/ack"]
 	path = bundle/ack
 	url = https://github.com/mileszs/ack.vim.git
@@ -46,33 +31,18 @@
 [submodule "bundle/syntastic"]
 	path = bundle/syntastic
 	url = https://github.com/scrooloose/syntastic.git
-[submodule "bundle/jekyll"]
-	path = bundle/jekyll
-	url = https://github.com/csexton/jekyll.vim.git
 [submodule "bundle/surround"]
 	path = bundle/surround
 	url = https://github.com/tpope/vim-surround.git
 [submodule "bundle/pyflakes"]
 	path = bundle/pyflakes
 	url = https://github.com/nvie/vim-pyflakes.git
-[submodule "bundle/pep8"]
-	path = bundle/pep8
-	url = https://github.com/nvie/vim-pep8.git
-[submodule "bundle/py-unit"]
-	path = bundle/py-unit
-	url = https://github.com/nvie/vim-pyunit.git
-[submodule "bundle/blackboard-theme"]
-	path = bundle/blackboard-theme
-	url = https://github.com/nelstrom/vim-blackboard.git
 [submodule "bundle/molokai"]
 	path = bundle/molokai
 	url = https://github.com/mrtazz/molokai.vim.git
 [submodule "bundle/pythoncomplete"]
 	path = bundle/pythoncomplete
 	url = https://github.com/vim-scripts/pythoncomplete.git
-[submodule "bundle/rainbow-parenthesis"]
-	path = bundle/rainbow-parenthesis
-	url = https://github.com/vim-scripts/Rainbow-Parenthsis-Bundle.git
 [submodule "bundle/omnicppcomplete"]
 	path = bundle/omnicppcomplete
 	url = https://github.com/vim-scripts/OmniCppComplete.git
@@ -94,18 +64,6 @@
 [submodule "bundle/cucumber"]
 	path = bundle/cucumber
 	url = https://github.com/tpope/vim-cucumber.git
-[submodule "bundle/fuzzyfinder"]
-	path = bundle/fuzzyfinder
-	url = https://github.com/vim-scripts/FuzzyFinder.git
-[submodule "bundle/zenburn"]
-	path = bundle/zenburn
-	url = https://github.com/vim-scripts/Zenburn.git
-[submodule "bundle/solarized"]
-	path = bundle/solarized
-	url = https://github.com/altercation/vim-colors-solarized.git
-[submodule "bundle/extradite"]
-	path = bundle/extradite
-	url = https://github.com/int3/vim-extradite.git
 [submodule "bundle/simplenote"]
 	path = bundle/simplenote
 	url = https://github.com/mrtazz/simplenote.vim.git
