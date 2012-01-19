@@ -70,8 +70,8 @@ let g:jekyll_path = "/Users/mrtazz/Dropbox/Documents/blog"
 
 " set backup and swap dir to specific folder to play nice with open files in
 " dropbox
-set backupdir=/Users/mrtazz/.vim/tmp
-set directory=/Users/mrtazz/.vim/tmp
+set backupdir=~/.vim/tmp
+set directory=~/.vim/tmp
 
 " activate spell checker in insert mode
 autocmd InsertEnter *.tex setlocal spell
