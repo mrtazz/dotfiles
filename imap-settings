@@ -1,7 +1,7 @@
 # basic imap settings
 set folder=$my_imap_url
 set spoolfile=$my_imap_url
-set record=$my_imap_url/Sent\ Messages
+set record=$my_imap_url/Sent
 set postponed=$my_imap_url/postponed
 
 # activate TLS if available on the server
