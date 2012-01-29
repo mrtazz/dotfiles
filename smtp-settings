@@ -1,0 +1,4 @@
+#
+# SMTP settings
+#
+set smtp_url=$my_smtp_url

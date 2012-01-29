@@ -1,0 +1,38 @@
+# all colors are set here
+
+# normal text is white
+color normal white default
+
+# header is red
+color hdrdefault red default
+
+# quoted text is green
+color quoted green default
+
+# signature is red
+color signature red default
+
+# message cursor
+color indicator brightwhite magenta
+
+# status line
+color status cyan default
+
+# thread arrows
+color tree red default
+
+# the plus sign newline marker
+color markers red default
+
+# MIME attachments
+color attachment brightmagenta default
+
+# search result in pager
+color search yellow default
+
+# tagged messages
+color index magenta default ~T
+
+# deleted messages
+color index black yellow ~D
+

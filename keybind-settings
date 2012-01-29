@@ -1,0 +1,8 @@
+# set keybindings here
+
+# delete messages with d
+bind index d delete-message
+bind pager d delete-message
+
+# reply to message with r
+bind index r reply

@@ -1,0 +1,3 @@
+cache/headers/*
+cache/bodies/*
+!*.gitignore

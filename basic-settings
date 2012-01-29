@@ -1,0 +1,93 @@
+#
+# basic mutt settings
+#
+
+# reset everything to default
+reset all
+
+# set the homedir
+set my_mutt_dir=$HOME/.mutt
+
+# import your identity
+source $my_mutt_dir/identity
+
+# include all other settings
+source $my_mutt_dir/color-settings
+source $my_mutt_dir/compose-settings
+source $my_mutt_dir/imap-settings
+source $my_mutt_dir/keybind-settings
+source $my_mutt_dir/mime-settings
+source $my_mutt_dir/regex-settings
+source $my_mutt_dir/smtp-settings
+
+# basic mail settings
+# sort by date sent, thread
+set sort="date-sent"
+set sort="threads"
+# thread sorting only by In-Reply-To header and Subject
+set strict_threads
+
+# check at most once every 5 seconds
+set mail_check="5"
+
+# beep for new mail
+set beep_new
+
+# don't mark read mail as "Old" or move it to $mbox
+unset mark_old
+set move="no"
+
+# display help in top line
+set help
+
+# certificates
+set certificate_file =~/.mutt/certificates
+
+# don't show hidden files in the filebrowser
+set mask="!^\\.[^.]"
+
+# always insert the mutt user agent string
+set user_agent
+
+# use system editor
+set editor=$EDITOR
+
+# use ISO-8859-1 and UTF-8 as fallback
+set charset="iso-8859-1:utf-8"
+
+# make sure not to use quoted printables
+unset allow_8bit
+
+# set basic datetime format
+set date_format="!%a, %b %d, %Y at %I:%M:%S%p %Z"
+
+# folder format in the file browser
+set folder_format="%N %F %2l %-8.8u %-8.8g %8s %d %f"
+
+# line format for the mail index
+set index_format="%4C %Z %{%b %d} %-15.15L (%4c) %s"
+
+# pages status line
+set pager_format="-%S- %C/%m: %-20.20n   %s"
+
+# message format
+set message_format="%s"
+
+# format of status line
+set status_format="-%r-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?]---(%s/%S)-%>-(%P)---"
+
+# format of alias menu data
+set alias_format="%4n %t %-10a   %r"
+
+# format of compose and attachment menus
+set attach_format="%u%D%I %t%4n %T%.40d%> [%.7m/%.10M, %.6e%?C?, %C?, %s] "
+
+# set marker for pager newline
+set markers
+
+# don't show the tilde at the end of the pager
+unset tilde
+
+# save attachment for FCC
+set fcc_attach
+

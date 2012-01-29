@@ -1,0 +1,21 @@
+# basic imap settings
+set folder=$my_imap_url
+set spoolfile=$my_imap_url
+set record=$my_imap_url/Sent\ Messages
+set postponed=$my_imap_url/postponed
+
+# activate TLS if available on the server
+set ssl_starttls=yes
+# always use SSL when connecting to a server
+set ssl_force_tls=yes
+# Don't wait to enter mailbox manually
+unset imap_passive
+# Automatically poll subscribed mailboxes for new mail
+set imap_check_subscribed
+# Reduce polling frequency to a sane level
+set mail_check=60
+# keep a cache of headers and bodies for faster loading
+set header_cache=$my_mutt_dir/cache/headers
+set message_cachedir=$my_mutt_dir/cache/bodies
+# Display download progress every 5K
+set net_inc=5
