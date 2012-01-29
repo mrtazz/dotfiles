@@ -6,3 +6,6 @@ bind pager d delete-message
 
 # reply to message with r
 bind index r reply
+
+# fetch imap on G
+bind index G imap-fetch-mail
