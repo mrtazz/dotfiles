@@ -8,6 +8,8 @@ set postponed=$my_imap_url/postponed
 set ssl_starttls=yes
 # always use SSL when connecting to a server
 set ssl_force_tls=yes
+# don't force expire check
+set ssl_verify_dates="no"
 # Don't wait to enter mailbox manually
 unset imap_passive
 # Automatically poll subscribed mailboxes for new mail
