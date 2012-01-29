@@ -43,7 +43,7 @@ set move="no"
 set help
 
 # certificates
-set certificate_file =~/.mutt/certificates
+set certificate_file =$my_mutt_dir/certificates
 
 # don't show hidden files in the filebrowser
 set mask="!^\\.[^.]"
