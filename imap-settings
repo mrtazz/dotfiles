@@ -12,8 +12,6 @@ set ssl_force_tls=yes
 unset imap_passive
 # Automatically poll subscribed mailboxes for new mail
 set imap_check_subscribed
-# Reduce polling frequency to a sane level
-set mail_check=60
 # keep a cache of headers and bodies for faster loading
 set header_cache=$my_mutt_dir/cache/headers
 set message_cachedir=$my_mutt_dir/cache/bodies

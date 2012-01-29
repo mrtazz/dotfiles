@@ -28,7 +28,9 @@ set sort="threads"
 set strict_threads
 
 # check at most once every 5 seconds
+set check_new
 set mail_check="5"
+set timeout="100"
 
 # beep for new mail
 set beep_new
