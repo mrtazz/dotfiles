@@ -9,6 +9,9 @@ unset fast_reply
 # don't put me on recipient for group reply
 unset metoo
 
+# don't check spelling
+set ispell="no"
+
 # don't ignore reply-to header on mailing lists
 unset ignore_list_reply_to
 
