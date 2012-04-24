@@ -27,6 +27,9 @@ set encoding=utf-8
 " set colors
 set t_Co=256
 
+" use open buffers
+set switchbuf=useopen
+
 syntax on
 if has("gui_running")
     colorscheme molokai
@@ -37,7 +40,7 @@ else
     colorscheme molokai
 endif
 " some information in the statusline
-set statusline=%t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m\ %P
+set statusline=[%n]\ %t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m\ %P
 set laststatus=2
 
 " command shortcuts
@@ -46,6 +49,8 @@ let mapleader=","
 map <leader>m :FuzzyFinderTextMate<CR>
 map <leader>d :execute 'NERDTreeToggle ' . getcwd()<CR>
 map <leader>l :TlistToggle<CR>
+map <leader>w <C-w>
+map <leader>b :sb
 
 " remove unneeded spaces for a good whitespace carbon footprint
 autocmd BufWritePre * :%s/\s\+$//e
