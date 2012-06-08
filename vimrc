@@ -89,7 +89,9 @@ set directory=~/.vim/tmp
 autocmd InsertEnter *.tex setlocal spell
 autocmd InsertLeave *.tex setlocal nospell
 
-"source ~/.simplenoterc
+if filereadable("~/.simplenoterc")
+  source ~/.simplenoterc
+endif
 
 " let's see if we can work with arrow keys
 inoremap  <Up>     <NOP>
