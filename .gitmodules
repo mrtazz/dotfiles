@@ -7,18 +7,6 @@
 [submodule "bundle/supertab"]
 	path = bundle/supertab
 	url = https://github.com/ervandew/supertab.git
-[submodule "bundle/snipmate"]
-	path = bundle/snipmate
-	url = https://github.com/msanders/snipmate.vim.git
-[submodule "bundle/ack"]
-	path = bundle/ack
-	url = https://github.com/mileszs/ack.vim.git
-[submodule "bundle/DoxygenToolkit"]
-	path = bundle/DoxygenToolkit
-	url = https://github.com/mrtazz/DoxygenToolkit.vim.git
-[submodule "bundle/gist"]
-	path = bundle/gist
-	url = https://github.com/mattn/gist-vim.git
 [submodule "bundle/nerdcommenter"]
 	path = bundle/nerdcommenter
 	url = https://github.com/scrooloose/nerdcommenter.git
@@ -28,36 +16,9 @@
 [submodule "bundle/molokai"]
 	path = bundle/molokai
 	url = https://github.com/mrtazz/molokai.vim.git
-[submodule "bundle/omnicppcomplete"]
-	path = bundle/omnicppcomplete
-	url = https://github.com/vim-scripts/OmniCppComplete.git
-[submodule "bundle/tasklist"]
-	path = bundle/tasklist
-	url = https://github.com/vim-scripts/TaskList.vim.git
-[submodule "bundle/python"]
-	path = bundle/python
-	url = https://github.com/vim-scripts/python.vim--Vasiliev.git
-[submodule "bundle/indent-python"]
-	path = bundle/indent-python
-	url = https://github.com/vim-scripts/indentpython.vim.git
-[submodule "bundle/autoclose"]
-	path = bundle/autoclose
-	url = https://github.com/Townk/vim-autoclose.git
-[submodule "bundle/cucumber"]
-	path = bundle/cucumber
-	url = https://github.com/tpope/vim-cucumber.git
 [submodule "bundle/simplenote"]
 	path = bundle/simplenote
 	url = https://github.com/mrtazz/simplenote.vim.git
 [submodule "bundle/mustache"]
 	path = bundle/mustache
 	url = https://github.com/juvenn/mustache.vim.git
-[submodule "bundle/coffee-script"]
-	path = bundle/coffee-script
-	url = https://github.com/kchmck/vim-coffee-script.git
-[submodule "bundle/rails"]
-	path = bundle/rails
-	url = https://github.com/tpope/vim-rails.git
-[submodule "bundle/taglist"]
-	path = bundle/taglist
-	url = https://github.com/vim-scripts/taglist.vim.git
