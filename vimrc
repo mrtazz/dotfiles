@@ -41,6 +41,11 @@ else
 endif
 " some information in the statusline
 set statusline=[%n]\ %t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m\ %P
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+let g:syntastic_auto_loc_list=1
+let g:syntastic_loc_list_height=5
 set laststatus=2
 
 " command shortcuts
@@ -73,6 +78,7 @@ autocmd BufWritePost *.py call Pyflakes()
 
 " set indents for python files
 au FileType python setl autoindent tabstop=4 expandtab shiftwidth=4 softtabstop=4
+au FileType php setl autoindent tabstop=4 expandtab shiftwidth=4 softtabstop=4
 
 " set backup and swap dir to specific folder to play nice with open files in
 " dropbox
@@ -83,7 +89,7 @@ set directory=~/.vim/tmp
 autocmd InsertEnter *.tex setlocal spell
 autocmd InsertLeave *.tex setlocal nospell
 
-source ~/.simplenoterc
+"source ~/.simplenoterc
 
 " let's see if we can work with arrow keys
 inoremap  <Up>     <NOP>
