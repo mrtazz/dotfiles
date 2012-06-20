@@ -9,3 +9,8 @@ bind index r reply
 
 # fetch imap on G
 bind index G imap-fetch-mail
+
+# vi keys for scrolling in pager
+bind pager k previous-line
+bind pager j next-line
+
