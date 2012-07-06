@@ -48,14 +48,20 @@ let g:syntastic_auto_loc_list=1
 let g:syntastic_loc_list_height=5
 set laststatus=2
 
+" tab completion for file opening
+set wildmode=longest,list,full
+set wildmenu
+
 " command shortcuts
 let mapleader=","
 
-map <leader>m :FuzzyFinderTextMate<CR>
-map <leader>d :execute 'NERDTreeToggle ' . getcwd()<CR>
-map <leader>l :TlistToggle<CR>
 map <leader>w <C-w>
 map <leader>b :sb
+map <leader>m :make<CR>
+" open ctags definition in new tab
+"map <C-\> :tab split<CR>:exec("tag ".expand("<cword>"))<CR>
+" open ctags definition in vertical split
+map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 
 " remove unneeded spaces for a good whitespace carbon footprint
 autocmd BufWritePre * :%s/\s\+$//e
