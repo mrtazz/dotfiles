@@ -1,11 +1,13 @@
 # my vimfiles
 Fresh setup with submodules and tim pope's pathogen
 
-## Dependencies
-* `gem install fuzzy_file_finder` for fuzzyfinder + textmate
-* `pip install pep8` for pep8 module
-* `pip install pyflakes` for pyflakes module
-* `pip install nose` for py-unit module
+## Plugin management
+I manage my plugins with [vim-bundle](https://github.com/benmills/vim-bundle)
+instead of submodules. The repository includes a Makefile which includes a task
+to update all plugins with
+```
+make update-plugins
+```
 
-## Caveats
-* taglist does not work with original OSX ctags
+## Dependencies
+- vim compiled with `+python` for simplenote plugin
