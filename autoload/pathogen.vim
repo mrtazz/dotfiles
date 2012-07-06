@@ -166,7 +166,7 @@ let s:done_bundles = ''
 function! pathogen#helptags() " {{{1
   let sep = pathogen#separator()
   for dir in pathogen#split(&rtp)
-    if (dir.sep)[0 : strlen($VIMRUNTIME)] !=# $VIMRUNTIME.sep && filewritable(dir.sep.'doc') == 2 && !empty(glob(dir.sep.'doc'.sep.'*')) && (!filereadable(dir.sep.'doc'.sep.'tags') || filewritable(dir.sep.'doc'.sep.'tags'))
+    if (dir.sep)[0 : strlen($VIMRUNTIME)] !=# $VIMRUNTIME.sep && filewritable(dir.sep.'doc') == 2 && !empty(filter(split(glob(dir.sep.'doc'.sep.'*'),"\n>"),'!isdirectory(v:val)')) && (!filereadable(dir.sep.'doc'.sep.'tags') || filewritable(dir.sep.'doc'.sep.'tags'))
       helptags `=dir.'/doc'`
     endif
   endfor
@@ -180,6 +180,17 @@ function! pathogen#runtime_findfile(file,count) "{{{1
   return fnamemodify(findfile(a:file,rtp,a:count),':p')
 endfunction " }}}1
 
+" Backport of fnameescape().
+function! pathogen#fnameescape(string) " {{{1
+  if exists('*fnameescape')
+    return fnameescape(a:string)
+  elseif a:string ==# '-'
+    return '\-'
+  else
+    return substitute(escape(a:string," \t\n*?[{`$\\%#'\"|!<"),'^[+>]','\\&','')
+  endif
+endfunction " }}}1
+
 function! s:find(count,cmd,file,lcd) " {{{1
   let rtp = pathogen#join(1,pathogen#split(&runtimepath))
   let file = pathogen#runtime_findfile(a:file,a:count)
@@ -188,9 +199,9 @@ function! s:find(count,cmd,file,lcd) " {{{1
   elseif a:lcd
     let path = file[0:-strlen(a:file)-2]
     execute 'lcd `=path`'
-    return a:cmd.' '.fnameescape(a:file)
+    return a:cmd.' '.pathogen#fnameescape(a:file)
   else
-    return a:cmd.' '.fnameescape(file)
+    return a:cmd.' '.pathogen#fnameescape(file)
   endif
 endfunction " }}}1
 
