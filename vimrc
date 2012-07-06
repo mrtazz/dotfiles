@@ -58,6 +58,7 @@ let mapleader=","
 map <leader>w <C-w>
 map <leader>b :sb
 map <leader>m :make<CR>
+map <leader>p :CtrlP<CR>
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag ".expand("<cword>"))<CR>
 " open ctags definition in vertical split
