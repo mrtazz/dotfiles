@@ -67,9 +67,6 @@ map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 " remove unneeded spaces for a good whitespace carbon footprint
 autocmd BufWritePre * :%s/\s\+$//e
 
-" handle .json files as javascript
-autocmd BufNewFile,BufRead *.json set filetype=javascript
-
 " Supertab settings
 let g:SuperTabDefaultCompletionTypeDiscovery = [
 \ "&completefunc:<c-x><c-u>",
@@ -77,15 +74,12 @@ let g:SuperTabDefaultCompletionTypeDiscovery = [
 \ ]
 let g:SuperTabLongestHighlight = 1
 
-" tag list on the right side of the vim window
-let Tlist_Use_Right_Window = 1
-
-" call PyFlakes() on write for .py files
-autocmd BufWritePost *.py call Pyflakes()
-
 " set indents for python files
 au FileType python setl autoindent tabstop=4 expandtab shiftwidth=4 softtabstop=4
+" set indents for php files
 au FileType php setl autoindent tabstop=4 expandtab shiftwidth=4 softtabstop=4
+" handle .json files as javascript
+autocmd BufNewFile,BufRead *.json set filetype=javascript
 
 " set backup and swap dir to specific folder to play nice with open files in
 " dropbox
@@ -100,7 +94,7 @@ if filereadable("~/.simplenoterc")
   source ~/.simplenoterc
 endif
 
-" let's see if we can work with arrow keys
+" let's see if we can work without arrow keys
 inoremap  <Up>     <NOP>
 inoremap  <Down>   <NOP>
 inoremap  <Left>   <NOP>
