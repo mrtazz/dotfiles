@@ -1,8 +1,8 @@
 # basic imap settings
 set folder=$my_imap_url
 set spoolfile=$my_imap_url
-set record=$my_imap_url/Sent
-set postponed=$my_imap_url/postponed
+set record=$my_imap_url"Sent Messages"
+set postponed=$my_imap_url"Drafts"
 
 # activate TLS if available on the server
 set ssl_starttls=yes
@@ -19,3 +19,5 @@ set header_cache=$my_mutt_dir/cache/headers
 set message_cachedir=$my_mutt_dir/cache/bodies
 # Display download progress every 5K
 set net_inc=5
+# no pipelining
+set imap_pipeline_depth=0
