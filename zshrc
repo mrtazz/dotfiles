@@ -19,7 +19,8 @@ export ZSH_THEME="mrtazz"
 # Uncomment following line if you want to disable autosetting terminal title.
 # export DISABLE_AUTO_TITLE="true"
 
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
+# Which plugins would you like to load? (plugins can be found in
+# ~/.oh-my-zsh/plugins/*)
 # Example format: plugins=(rails git textmate ruby lighthouse)
 plugins=(git heroku brew knife)
 
@@ -28,7 +29,7 @@ source $ZSH/oh-my-zsh.sh
 # Customize to your needs...
 export PATH=~/bin:$PATH
 
-EDITOR="vim"
+export EDITOR="vim"
 
 alias knife="nocorrect knife"
 
