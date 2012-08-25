@@ -38,6 +38,10 @@ color index brightgreen default '~C mrtazz'
 
 color index yellow default '~C nanog'
 color index brightyellow default '~f github'
+color index brightyellow default '~f distsys-discuss@googlegroups.com'
+color index brightyellow default '~f devops@googlegroups.com'
+color index brightyellow default '~f riemann-users@googlegroups.com'
+color index brightyellow default '~f riak-users@lists.basho.com'
 
 # tagged messages
 color index magenta default ~T
