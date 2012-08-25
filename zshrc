@@ -39,3 +39,10 @@ source ~/.profile
 
 export LC_ALL=en_US.UTF-8
 eval "$(hub alias -s)"
+
+# shell function to graph graphite data via spark
+function graphline() {
+  if [ ! -n "$1" ]; then print "Usage: $0 metric [minutes]"; return 1; fi
+  if [ ! -n "$2" ]; then MINUTES=10 ; else MINUTES=$2; fi
+  curl -s "${GRAPHITEHOST}/render?from=-${MINUTES}minutes&target=${1}&format=raw" | cut -d"|" -f 2 | spark ;
+}
