@@ -1,0 +1,30 @@
+[core]
+  excludesfile = ~/.gitignore
+  editor = vim
+  whitespace = trailing-space,space-before-tab
+
+[apply]
+  whitespace = fix
+
+[color]
+  ui = auto
+
+  interactive = true
+  status = true
+  branch = true
+  diff = true
+
+[alias]
+  lol = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
+  st = status -sb
+  lerl = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
+
+[merge]
+  tool = fugitive
+[mergetool "fugitive"]
+  cmd =fugitive mvim -f -c \"Gdiff\" \"$MERGED\"
+
+[user]
+  email = d@unwiredcouch.com
+  name  = Daniel Schauenberg
+
