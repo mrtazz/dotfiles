@@ -86,7 +86,7 @@ set alias_format="%4n %t %-10a   %r"
 set attach_format="%u%D%I %t%4n %T%.40d%> [%.7m/%.10M, %.6e%?C?, %C?, %s] "
 
 # set marker for pager newline
-set markers
+set markers=no
 
 # don't show the tilde at the end of the pager
 unset tilde
@@ -94,3 +94,12 @@ unset tilde
 # save attachment for FCC
 set fcc_attach
 
+# edit in vim
+set editor="vim"
+
+# where dat mailcap at?
+set mailcap_path=$my_mutt_dir/mailcap
+
+# view inline if possible
+set implicit_autoview
+auto_view text/html

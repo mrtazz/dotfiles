@@ -37,6 +37,7 @@ color index brightgreen default '~C schauenberg'
 color index brightgreen default '~C mrtazz'
 
 color index yellow default '~C nanog'
+color index yellow default '~C logstash-users@googlegroups.com'
 color index brightyellow default '~f github'
 color index brightyellow default '~f distsys-discuss@googlegroups.com'
 color index brightyellow default '~f devops@googlegroups.com'
