@@ -21,8 +21,9 @@
 
 [merge]
   tool = fugitive
+
 [mergetool "fugitive"]
-  cmd =fugitive mvim -f -c \"Gdiff\" \"$MERGED\"
+  cmd =fugitive vim -f -c \"Gdiff\" \"$MERGED\"
 
 [user]
   email = d@unwiredcouch.com
