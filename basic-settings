@@ -19,6 +19,10 @@ source $my_mutt_dir/keybind-settings
 source $my_mutt_dir/mime-settings
 source $my_mutt_dir/regex-settings
 source $my_mutt_dir/smtp-settings
+source $my_mutt_dir/subscription-settings
+
+# where dat mailcap at?
+set mailcap_path=$my_mutt_dir/mailcap
 
 # basic mail settings
 # sort by date sent, thread
@@ -96,9 +100,6 @@ set fcc_attach
 
 # edit in vim
 set editor="vim"
-
-# where dat mailcap at?
-set mailcap_path=$my_mutt_dir/mailcap
 
 # view inline if possible
 set implicit_autoview
