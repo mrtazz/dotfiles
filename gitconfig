@@ -2,22 +2,32 @@
   excludesfile = ~/.gitignore
   editor = vim
   whitespace = trailing-space,space-before-tab
+  autocrlf = input
+  safecrlf = true
 
 [apply]
   whitespace = fix
 
 [color]
   ui = auto
-
   interactive = true
   status = true
   branch = true
   diff = true
 
+[push]
+  default = tracking
+
 [alias]
   lol = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
   st = status -sb
   lerl = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
+  changelog = "!f() { git whatchanged --pretty=oneline --abbrev-commit --since=$1; }; f"
+  df = diff
+  rpull = pull --rebase --stat
+  pullr = pull --rebase
+  unstage = reset
+  dfc = diff --cached
 
 [merge]
   tool = fugitive
