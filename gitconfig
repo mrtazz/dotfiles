@@ -4,6 +4,7 @@
   whitespace = trailing-space,space-before-tab
   autocrlf = input
   safecrlf = true
+  preloadindex = 1
 
 [apply]
   whitespace = fix
