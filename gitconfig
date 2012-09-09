@@ -5,6 +5,7 @@
   autocrlf = input
   safecrlf = true
   preloadindex = 1
+  pager=less -R
 
 [apply]
   whitespace = fix
