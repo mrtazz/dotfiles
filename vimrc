@@ -60,7 +60,7 @@ map <leader>b :sb
 map <leader>m :make<CR>
 map <leader>p :CtrlP<CR>
 " open ctags definition in new tab
-"map <C-\> :tab split<CR>:exec("tag ".expand("<cword>"))<CR>
+"map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
 " open ctags definition in vertical split
 map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 
@@ -90,8 +90,8 @@ set directory=~/.vim/tmp
 autocmd InsertEnter *.tex setlocal spell
 autocmd InsertLeave *.tex setlocal nospell
 
-if filereadable("~/.simplenoterc")
-  source ~/.simplenoterc
+if filereadable($HOME."/.simplenoterc")
+  exec ":source ". $HOME . "/.simplenoterc"
 endif
 
 " let's see if we can work without arrow keys
