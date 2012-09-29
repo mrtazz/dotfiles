@@ -104,3 +104,9 @@ set editor="vim"
 # view inline if possible
 set implicit_autoview
 auto_view text/html
+
+# don't need confirmation for appending
+set confirmappend=no
+
+# don't ask for delete
+set delete=yes
