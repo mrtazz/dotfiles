@@ -16,3 +16,9 @@ bind pager j next-line
 bind index k previous-entry
 bind index j next-entry
 
+# filtering macros
+macro index,pager R "<save-message>=gtd-to-read/<enter><sync-mailbox>"
+macro index,pager A "<save-message>=gtd-needs-reply/<enter><sync-mailbox>"
+macro index Si "<change-folder>=INBOX/<enter>"
+macro index Sr "<change-folder>=gtd-to-read/<enter>"
+macro index Sa "<change-folder>=gtd-needs-reply/<enter>"
