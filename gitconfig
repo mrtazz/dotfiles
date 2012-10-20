@@ -2,7 +2,7 @@
   excludesfile = ~/.gitignore
   editor = vim
   whitespace = trailing-space,space-before-tab
-  autocrlf = input
+  autocrlf = false
   safecrlf = true
   preloadindex = 1
   pager=less -R
@@ -32,7 +32,7 @@
   dfc = diff --cached
 
 [merge]
-  tool = fugitive
+  tool = vimdiff
 
 [mergetool "fugitive"]
   cmd =fugitive vim -f -c \"Gdiff\" \"$MERGED\"
