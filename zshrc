@@ -22,7 +22,7 @@ export ZSH_THEME="mrtazz"
 # Which plugins would you like to load? (plugins can be found in
 # ~/.oh-my-zsh/plugins/*)
 # Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(git heroku brew knife)
+plugins=(git heroku brew knife vi-mode)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -46,3 +46,8 @@ function graphline() {
   if [ ! -n "$2" ]; then MINUTES=10 ; else MINUTES=$2; fi
   curl -s "${GRAPHITEHOST}/render?from=-${MINUTES}minutes&target=${1}&format=raw" | cut -d"|" -f 2 | spark ;
 }
+
+# todos are stored in simplenote
+alias todos='vim -c "Simplenote -l todo"'
+alias inbox='vim -c "Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA"'
+
