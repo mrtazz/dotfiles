@@ -19,10 +19,10 @@ Full path fuzzy __file__, __buffer__, __mru__, __tag__, __...__ finder for Vim.
 Check `:help ctrlp-commands` and `:help ctrlp-extensions` for other commands.
 
 ##### Once CtrlP is open:
+* Press `<F5>` to purge the cache for the current directory to get new files, remove deleted files and apply new ignore options.
 * Press `<c-f>` and `<c-b>` to cycle between modes.
 * Press `<c-d>` to switch to filename only search instead of full path.
 * Press `<c-r>` to switch to regexp mode.
-* Press `<F5>` to purge the cache for the current directory and get new files.
 * Use `<c-n>`, `<c-p>` to select the next/previous string in the prompt's history.
 * Use `<c-y>` to create a new file and its parent directories.
 * Use `<c-z>` to mark/unmark multiple files and `<c-o>` to open them.
@@ -32,8 +32,7 @@ Run `:help ctrlp-mappings` or submit `?` in CtrlP for more mapping help.
 * Submit two or more dots `..` to go up the directory tree by one or multiple levels.
 * End the input string with a colon `:` followed by a command to execute it on the opening file(s):  
 Use `:25` to jump to line 25.  
-Use `:/any\:\ string` to jump to the first instance of `any: string`.  
-Use `:difft` when opening multiple files to run `:difft` on the first 4 files.
+Use `:diffthis` when opening multiple files to run `:diffthis` on the first 4 files.
 
 ## Basic Options
 * Change the default mapping and the default command to invoke CtrlP:
@@ -43,30 +42,29 @@ Use `:difft` when opening multiple files to run `:difft` on the first 4 files.
     let g:ctrlp_cmd = 'CtrlP'
     ```
 
-* When invoked, unless a starting directory is specified, CtrlP will set its local working directory
-according to this variable:
+* When invoked, unless a starting directory is specified, CtrlP will set its local working directory according to this variable:
 
     ```vim
-    let g:ctrlp_working_path_mode = 2
+    let g:ctrlp_working_path_mode = 'ra'
     ```
 
-    0 - don't manage working directory.  
-    1 - the directory of the current file.  
-    2 - the nearest ancestor that contains one of these directories or files:
-    `.git` `.hg` `.svn` `.bzr` `_darcs`
+    `'c'` - the directory of the current file.  
+    `'r'` - the nearest ancestor that contains one of these directories or files: `.git` `.hg` `.svn` `.bzr` `_darcs`  
+    `'a'` - like c, but only if the current working directory outside of CtrlP is not a direct ancestor of the directory of the current file.  
+    `0` or `''` (empty string) - disable this feature.
 
     Define additional root markers with the `g:ctrlp_root_markers` option.
 
 * Exclude files and directories using Vim's `wildignore` and CtrlP's own `g:ctrlp_custom_ignore`:
 
     ```vim
-    set wildignore+=*/tmp/*,*.so,*.swp,*.zip  " MacOSX/Linux
-    set wildignore+=tmp\*,*.swp,*.zip,*.exe   " Windows
+    set wildignore+=*/tmp/*,*.so,*.swp,*.zip     " MacOSX/Linux
+    set wildignore+=*\\tmp\\*,*.swp,*.zip,*.exe  " Windows
 
-    let g:ctrlp_custom_ignore = '\.git$\|\.hg$\|\.svn$'
+    let g:ctrlp_custom_ignore = '\v[\/]\.(git|hg|svn)$'
     let g:ctrlp_custom_ignore = {
-      \ 'dir':  '\.git$\|\.hg$\|\.svn$',
-      \ 'file': '\.exe$\|\.so$\|\.dll$',
+      \ 'dir':  '\v[\/]\.(git|hg|svn)$',
+      \ 'file': '\v\.(exe|so|dll)$',
       \ 'link': 'some_bad_symbolic_links',
       \ }
     ```

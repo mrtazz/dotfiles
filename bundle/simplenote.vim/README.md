@@ -17,18 +17,26 @@ If you don't want to have the credentials in your `vimrc` (if you manage it
 with git for example), you can just set the variables in a different file (like
 `~/.simplenoterc`) and source it with `source ~/.simplenoterc` in your `vimrc`.
 
+By default all notes are treated as plain text. If you usually write all of
+your notes in some other format (like markdown or restructured text) you can
+set `g:SimplenoteFiletype` to the preferred vim filetype.
+
 ## Usage
 The plugin provides several commands to interact with your Simplenote account.
 In order to retrieve a list of your notes execute
 
     :Simplenote -l X
+    :Simplenote -l todo,shopping
 
-Where X is the number of notes to retrieve; omit X to retrieve all.
-This opens a new scratch buffer with a line-wise listing of your notes. When
-`let g:SimplenoteVertical=1` is set, the scratch buffer is opened as a vertical
-rather than a horizontal split window. You can then navigate through the notes
-with the arrow keys and enter a note on hitting `Return`. Now that you see the
-content of the note, you can interact with this specific note:
+Where X is the number of notes to retrieve; omit X to retrieve all.  This opens
+a new scratch buffer with a line-wise listing of your notes. With `let
+g:SimplenoteListHeight=X` set, the scratch buffer will come up X lines tall.
+Alternatively when `let g:SimplenoteVertical=1` is set, it is opened as a
+vertical rather than horizontal split window. You can also pass a comma
+separated list of tags. This will only list notes which have at least one of
+those tags. You can then navigate through the with the arrow keys and enter a
+note on hitting `Return`. Now that you see the content of the note, you can
+interact with this specific note:
 
     :Simplenote -u
 
@@ -59,6 +67,18 @@ on a buffer containing a valid note, you get an input dialog, prefilled with
 existing comma-separated tags for the note, which you can then edit. Tags have
 to be comma separated and hitting `Enter` will then update the note with the
 new tag list.
+
+There is also an option to open notes directly from a given key:
+
+    :Simplenote -o <notekey>
+
+While this is not very useful in everyday usage, it can be used very
+effectively to create shortcuts to notes you use often. Example:
+
+    " add :Todo command
+    command Todo Simplenote -o <yourtodonotekey>
+
+Now you can jump to your todo note directly with `:Todo` in vim.
 
 ## Dependencies
 Version 2 of the SimpleNote API relies heavily on JSON. As JSON and VimL don't
