@@ -6,6 +6,7 @@ filetype on
 filetype off
 " load modules via pathogen
 call pathogen#infect()
+call pathogen#helptags()
 " enable after plugins are loaded
 filetype plugin indent on
 
@@ -103,3 +104,9 @@ noremap   <Up>     <NOP>
 noremap   <Down>   <NOP>
 noremap   <Left>   <NOP>
 noremap   <Right>  <NOP>
+
+let g:SimplenoteListHeight=30
+let g:SimplenoteFiletype="markdown"
+let g:SimplenoteSortOrder="pinned,modifydate"
+
+command Inbox Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA
