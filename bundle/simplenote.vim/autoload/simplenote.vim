@@ -4,13 +4,6 @@
 " Author: Daniel Schauenberg <d@unwiredcouch.com>
 " WebPage: http://github.com/mrtazz/simplenote.vim
 " License: MIT
-" Usage:
-"   :Simplenote -l => list all notes
-"   :Simplenote -u => update a note from buffer
-"   :Simplenote -d => move note to trash
-"   :Simplenote -n => create new note from buffer
-"   :Simplenote -D => delete note in current buffer
-"   :Simplenote -t => tag note in current buffer
 "
 "
 
@@ -43,6 +36,13 @@ if exists("g:SimplenoteVertical")
   let s:vbuff = g:SimplenoteVertical
 else
   let s:vbuff = 0
+endif
+
+" line height
+if exists("g:SimplenoteListHeight")
+  let s:lineheight = g:SimplenoteListHeight
+else
+  let s:lineheight = 0
 endif
 
 
@@ -94,7 +94,15 @@ function! s:ScratchBuffer()
     setlocal bufhidden=hide
     setlocal noswapfile
     setlocal cursorline
-    setlocal filetype=txt
+    if exists("g:SimplenoteFiletype")
+      exe "setlocal filetype=" . g:SimplenoteFiletype
+    else
+      setlocal filetype=txt
+    endif
+
+    if (s:vbuff == 0) && (s:lineheight > 0)
+        exe "resize " . s:lineheight
+    endif
 endfunction
 
 
@@ -129,7 +137,7 @@ except ImportError:
 AUTH_URL = 'https://simple-note.appspot.com/api/login'
 DATA_URL = 'https://simple-note.appspot.com/api2/data'
 INDX_URL = 'https://simple-note.appspot.com/api2/index?'
-NOTE_FETCH_LENGTH = 20
+NOTE_FETCH_LENGTH = 100
 
 class Simplenote(object):
     """ Class for interacting with the simplenote web service """
@@ -224,8 +232,12 @@ class Simplenote(object):
         if note.has_key("tags"):
             note["tags"] = [unicode(t, 'utf-8') for t in note["tags"]]
 
+
         # determine whether to create a new note or updated an existing one
         if note.has_key("key"):
+            # set modification timestamp in milli-seconds since epoch
+            note["modifydate"] = int(round(time.time() * 1000))
+
             url = '%s/%s?auth=%s&email=%s' % (DATA_URL, note["key"],
                                               self.get_token(), self.username)
         else:
@@ -443,6 +455,8 @@ class SimplenoteVimInterface(object):
         width -= max(m.floor(m.log(len(vim.current.buffer))) + 2, 5)
         width = int(width)
 
+        # get note tags
+        tags = "[%s]" % ",".join(sorted(note["tags"]))
 
         # format date
         mt = time.localtime(float(note["modifydate"]))
@@ -453,14 +467,16 @@ class SimplenoteVimInterface(object):
         else:
             title = str(note["key"])
 
+
         # Compress everything into the appropriate number of columns
-        title_width = width - len(mod_time) - 1
+        title_meta_length = len(tags) + len(mod_time) + 1
+        title_width = width - title_meta_length
         if len(title) > title_width:
             title = title[:title_width]
         elif len(title) < title_width:
             title = title.ljust(title_width)
 
-        return "%s %s" % (title, mod_time)
+        return "%s %s %s" % (title, tags, mod_time)
 
 
     def get_notes_from_keys(self, key_list):
@@ -490,14 +506,17 @@ class SimplenoteVimInterface(object):
         """
         vim.command("call s:ScratchBufferOpen('%s')" % sb_name)
 
-    def display_note_in_scratch_buffer(self):
+    def display_note_in_scratch_buffer(self, note_id=None):
         """ displays the note corresponding to the given key in the scratch
         buffer
         """
-        # get the notes id which is shown in brackets in the current line
-        line, col = vim.current.window.cursor
-        note_id = self.note_index[int(line) - 1]
-        # store it as a global script variable
+        # get the notes id which is shown in brackets in the current line if we
+        # didn't got passed a key
+        if note_id is None:
+            line, col = vim.current.window.cursor
+            note_id = self.note_index[int(line) - 1]
+
+        # get note and open it in scratch buffer
         note, status = self.simplenote.get_note(note_id)
         vim.command("""call s:ScratchBufferOpen("%s")""" % note_id)
         self.set_current_note(note_id)
@@ -571,7 +590,7 @@ class SimplenoteVimInterface(object):
         else:
             print "Update failed.: %s" % note["key"]
 
-    def list_note_index_in_scratch_buffer(self, qty=float("inf")):
+    def list_note_index_in_scratch_buffer(self, qty=float("inf"), tags=[]):
         """ get all available notes and display them in a scratchbuffer """
         # Initialize the scratch buffer
         self.scratch_buffer()
@@ -579,14 +598,20 @@ class SimplenoteVimInterface(object):
         # clear global note id storage
         buffer = vim.current.buffer
         note_list, status = self.simplenote.get_note_list(qty)
+        if (len(tags) > 0):
+            note_list = [n for n in note_list if (n["deleted"] != 1 and
+                            len(set(n["tags"]).intersection(tags)) > 0)]
+        else:
+            note_list = [n for n in note_list if n["deleted"] != 1]
+
         # set global notes index object to notes
         if status == 0:
             note_titles = []
             notes = self.get_notes_from_keys([n['key'] for n in note_list])
-            notes.sort(key=lambda k: k['modifydate'])
+            notes.sort(key=lambda k: (('pinned' in k['systemtags']), k['modifydate']))
             notes.reverse()
-            note_titles = [self.format_title(n) for n in notes if n["deleted"] != 1]
-            self.note_index = [n["key"] for n in notes if n["deleted"] != 1]
+            note_titles = [self.format_title(n) for n in notes]
+            self.note_index = [n["key"] for n in notes]
             buffer[:] = note_titles
 
         else:
@@ -650,9 +675,9 @@ optionsexist = True if (float(vim.eval("a:0"))>=1) else False
 if param == "-l":
     if optionsexist:
         try:
-            interface.list_note_index_in_scratch_buffer(int(float(vim.eval("a:1"))))
+            interface.list_note_index_in_scratch_buffer(qty=int(vim.eval("a:1")))
         except:
-            interface.list_note_index_in_scratch_buffer()
+            interface.list_note_index_in_scratch_buffer(tags=vim.eval("a:1").split(","))
     else:
         interface.list_note_index_in_scratch_buffer()
 
@@ -670,6 +695,12 @@ elif param == "-D":
 
 elif param == "-t":
     interface.set_tags_for_current_note()
+
+elif param == "-o":
+    if optionsexist:
+        interface.display_note_in_scratch_buffer(vim.eval("a:1"))
+    else:
+        print "No notekey given."
 
 else:
     print "Unknown argument"
