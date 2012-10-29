@@ -25,6 +25,10 @@ macro index Sr "<change-folder>=gtd-to-read/<enter>"
 macro index Sa "<change-folder>=gtd-needs-reply/<enter>"
 macro index SA "<change-folder>=Archive/<enter>"
 
+# thread collapsing
+bind index - collapse-thread
+bind index _ collapse-all
+
 # not much integration
 # 'L' performs a notmuch query, showing only the results
 macro index Ls "<enter-command>unset wait_key<enter><shell-escape>read -p 'notmuch query: ' x; echo \$x >~/.cache/mutt_terms<enter><limit>~i \"\`notmuch search --output=messages \$(cat ~/.cache/mutt_terms) | head -n 600 | perl -le '@a=<>;chomp@a;s/\^id:// for@a;$,=\"|\";print@a'\`\"<enter>" "show only messages matching a notmuch pattern"

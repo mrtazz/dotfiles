@@ -30,7 +30,9 @@ set sort="date-sent"
 set sort="threads"
 set sort_aux="last-date-received"
 # thread sorting only by In-Reply-To header and Subject
-set strict_threads
+set strict_threads="yes"
+# collapse threads with unread messages
+unset collapse_unread
 
 # check at most once every 5 seconds
 set check_new
@@ -60,7 +62,8 @@ set user_agent
 set editor=$EDITOR
 
 # use ISO-8859-1 and UTF-8 as fallback
-set charset="iso-8859-1:utf-8"
+#set charset="iso-8859-1:utf-8"
+set charset="utf-8"
 
 # make sure not to use quoted printables
 unset allow_8bit
