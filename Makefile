@@ -12,6 +12,7 @@ PLUGINS += "juvenn/mustache.vim"
 PLUGINS += "mrtazz/simplenote.vim"
 PLUGINS += "tpope/vim-commentary"
 PLUGINS += "altercation/vim-colors-solarized"
+PLUGINS += "jimenezrick/vimerl"
 
 # targets
 

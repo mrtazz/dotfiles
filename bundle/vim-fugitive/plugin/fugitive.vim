@@ -1066,7 +1066,7 @@ function! s:Log(cmd,...)
   let dir = getcwd()
   try
     execute cd.'`=s:repo().tree()`'
-    let &grepprg = escape(call(s:repo().git_command,cmd,s:repo()),'%')
+    let &grepprg = escape(call(s:repo().git_command,cmd,s:repo()),'%#')
     let &grepformat = '%f::%m'
     exe a:cmd
   finally
@@ -2048,7 +2048,8 @@ function! s:BufReadIndex()
     nnoremap <buffer> <silent> cA :<C-U>Gcommit --amend --reuse-message=HEAD<CR>
     nnoremap <buffer> <silent> ca :<C-U>Gcommit --amend<CR>
     nnoremap <buffer> <silent> cc :<C-U>Gcommit<CR>
-    nnoremap <buffer> <silent> cv :<C-U>Gcommit -v<CR>
+    nnoremap <buffer> <silent> cva :<C-U>Gcommit --amend --verbose<CR>
+    nnoremap <buffer> <silent> cvc :<C-U>Gcommit --verbose<CR>
     nnoremap <buffer> <silent> D :<C-U>execute <SID>StageDiff('Gvdiff')<CR>
     nnoremap <buffer> <silent> dd :<C-U>execute <SID>StageDiff('Gvdiff')<CR>
     nnoremap <buffer> <silent> dh :<C-U>execute <SID>StageDiff('Gsdiff')<CR>
@@ -2486,7 +2487,7 @@ function! fugitive#foldtext() abort
     let [add, remove] = [-1, -1]
     let filename = ''
     for lnum in range(v:foldstart, v:foldend)
-      if filename ==# '' && getline(lnum) =~# '^[+-]\{3\} [ab]/'
+      if filename ==# '' && getline(lnum) =~# '^[+-]\{3\} [abciow12]/'
         let filename = getline(lnum)[6:-1]
       endif
       if getline(lnum) =~# '^+'
@@ -2499,6 +2500,9 @@ function! fugitive#foldtext() abort
     endfor
     if filename ==# ''
       let filename = matchstr(getline(v:foldstart), '^diff .\{-\} a/\zs.*\ze b/')
+    endif
+    if filename ==# ''
+      let filename = getline(v:foldstart)[5:-1]
     endif
     if exists('binary')
       return 'Binary: '.filename
