@@ -14,7 +14,6 @@ source $my_mutt_dir/identity
 # include all other settings
 source $my_mutt_dir/color-settings
 source $my_mutt_dir/compose-settings
-source $my_mutt_dir/imap-settings
 source $my_mutt_dir/keybind-settings
 source $my_mutt_dir/mime-settings
 source $my_mutt_dir/regex-settings
@@ -23,6 +22,12 @@ source $my_mutt_dir/subscription-settings
 
 # where dat mailcap at?
 set mailcap_path=$my_mutt_dir/mailcap
+
+# keep a cache of headers and bodies for faster loading
+set header_cache=$my_mutt_dir/cache/headers
+set message_cachedir=$my_mutt_dir/cache/bodies
+# Display download progress every 5K
+set net_inc=5
 
 # basic mail settings
 # sort by date sent, thread

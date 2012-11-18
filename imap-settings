@@ -14,10 +14,5 @@ set ssl_verify_dates="no"
 unset imap_passive
 # Automatically poll subscribed mailboxes for new mail
 set imap_check_subscribed
-# keep a cache of headers and bodies for faster loading
-set header_cache=$my_mutt_dir/cache/headers
-set message_cachedir=$my_mutt_dir/cache/bodies
-# Display download progress every 5K
-set net_inc=5
 # no pipelining
 set imap_pipeline_depth=0

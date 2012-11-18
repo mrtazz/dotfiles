@@ -3,6 +3,9 @@
 # use the from
 set use_from="yes"
 
+# set the envelope
+set envelope_from=yes
+
 # ask questions before setting up the reply
 unset fast_reply
 
