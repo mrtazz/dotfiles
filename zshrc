@@ -50,4 +50,6 @@ function graphline() {
 # todos are stored in simplenote
 alias todos='vim -c "Simplenote -l todo"'
 alias inbox='vim -c "Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA"'
+alias simplenote='vim -c "Simplenote -l"'
+alias tma='tmux attach -d -t'
 
