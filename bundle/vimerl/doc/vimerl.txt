@@ -95,6 +95,13 @@ If your project uses Rebar, Vimerl will search the value of "deps_dir" in
 "rebar.config", with "deps/" as default, to also let you use omni completion
 on dependency modules.
 
+A cache file is created in the "autoload/" directory where Vimerl is installed
+or in "/tmp" if "autoload/" is not writeable. This cache file stores all the
+modules information.
+
+If the cached information about a module becomes outdated, you can use the
+|:ErlangPurgeCache| command to remove that information from the cache.
+
 Note: the user is responsible for having compiled his project so that Vimerl
       finds the .beam files.
 
@@ -156,8 +163,17 @@ Loads an OTP gen_fsm skeleton: >
                                                              *:ErlangGenEvent*
 Loads an OTP gen_event skeleton: >
 	:ErlangGenEvent
+<
+                                                           *:ErlangCommonTest*
+Loads an OTP common_test skeleton: >
+	:ErlangCommonTest
 
 Note: all the previous commands are applied to the current buffer.
+
+                                                           *:ErlangPurgeCache*
+Removes one or more specified modules from the cache: >
+	:ErlangPurgeCache module1
+	:ErlangPurgeCache module1 module2
 
 ==============================================================================
 4. Options                                                    *vimerl-options*

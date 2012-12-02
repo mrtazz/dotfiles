@@ -4,18 +4,26 @@
 " Contributors: kTT (http://github.com/kTT)
 "               Ricardo Catalinas Jiménez <jimenezrick@gmail.com>
 "               Eduardo Lopez (http://github.com/tapichu)
+"               Zhihui Jiao (http://github.com/onlychoice)
 " License:      Vim license
-" Version:      2012/01/14
-
-" Completion program path
-let s:erlang_complete_file = expand('<sfile>:p:h') . '/erlang_complete.erl'
+" Version:      2012/11/26
 
 if !exists('g:erlang_completion_cache')
 	let g:erlang_completion_cache = 1
 endif
 
+" Completion program path
+let s:erlang_complete_file = expand('<sfile>:p:h') . '/erlang_complete.erl'
+
 " Modules cache used to speed up the completion
 let s:modules_cache = {}
+
+" File cache for persistence between Vim sessions
+if filewritable(expand('<sfile>:p:h')) == 2
+	let s:file_cache = expand('<sfile>:p:h') . '/vimerl_cache'
+else
+	let s:file_cache = '/tmp/vimerl_cache'
+endif
 
 " Patterns for completions
 let s:erlang_local_func_beg    = '\(\<[0-9A-Za-z_-]*\|\s*\)$'
@@ -131,6 +139,8 @@ function s:ErlangFindExternalFunc(module, base)
 		endif
 	endfor
 
+	call s:ErlangWriteCache(a:module)
+
 	return []
 endfunction
 
@@ -156,3 +166,54 @@ function s:ErlangFindLocalFunc(base)
 
 	return []
 endfunction
+
+function s:ErlangLoadCache()
+	if filereadable(s:file_cache)
+		for line in readfile(s:file_cache)
+			let cache_entry = eval(line)
+			" cache_entry is a dict with just one key with the
+			" module name and the function list we are going to
+			" add to the memory cache as the value of this key
+			for mod_name in keys(cache_entry)
+				let func_list = get(cache_entry, mod_name)
+				let s:modules_cache[mod_name] = func_list
+			endfor
+		endfor
+	endif
+endfunction
+
+function s:ErlangWriteCache(module)
+	" Write all the module functions to the cache file
+	if has_key(s:modules_cache, a:module)
+		let func_list = get(s:modules_cache, a:module)
+		if len(func_list) > 0
+			let cache_entry = {a:module : func_list}
+			execute 'redir >>' . s:file_cache
+			silent echon cache_entry
+			silent echon "\n"
+			redir END
+		endif
+	endif
+endfunction
+
+function s:ErlangPurgeCache(...)
+	for mod_name in a:000
+		if has_key(s:modules_cache, mod_name)
+			call remove(s:modules_cache, mod_name)
+		endif
+	endfor
+
+	" Delete the old cache file
+	call delete(s:file_cache)
+
+	" Write a new one
+	for mod_name in keys(s:modules_cache)
+		call s:ErlangWriteCache(mod_name)
+	endfor
+endfunction
+
+" Load the file cache when this script is autoloaded
+call s:ErlangLoadCache()
+
+" Command for removing modules from the cache
+command -nargs=+ ErlangPurgeCache silent call s:ErlangPurgeCache(<f-args>)

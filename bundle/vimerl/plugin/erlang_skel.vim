@@ -2,7 +2,7 @@
 " Language: Erlang
 " Author:   Ricardo Catalinas Jiménez <jimenezrick@gmail.com>
 " License:  Vim license
-" Version:  2012/06/28
+" Version:  2012/11/25
 
 if exists('g:loaded_erlang_skel') || v:version < 700 || &compatible
 	finish
@@ -56,3 +56,4 @@ command ErlangSupervisor  silent call s:LoadSkeleton('supervisor')
 command ErlangGenServer   silent call s:LoadSkeleton('gen_server')
 command ErlangGenFsm      silent call s:LoadSkeleton('gen_fsm')
 command ErlangGenEvent    silent call s:LoadSkeleton('gen_event')
+command ErlangCommonTest  silent call s:LoadSkeleton('common_test')
