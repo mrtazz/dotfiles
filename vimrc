@@ -13,7 +13,7 @@ filetype plugin indent on
 " general settings
 set ruler
 set number
-set textwidth=79
+set textwidth=78
 set copyindent
 set shiftwidth=2           " tab indention
 set tabstop=2              " how big is ur tab
@@ -24,6 +24,7 @@ set bs=2                   " backspacing over everything
 set incsearch
 set ignorecase
 set encoding=utf-8
+set cursorline
 
 " set colors
 set t_Co=256
