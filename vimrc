@@ -53,6 +53,7 @@ set laststatus=2
 " tab completion for file opening
 set wildmode=longest,list,full
 set wildmenu
+set wildignorecase
 
 " command shortcuts
 let mapleader=","
@@ -61,10 +62,12 @@ map <leader>w <C-w>
 map <leader>b :sb
 map <leader>m :make<CR>
 map <leader>p :CtrlP<CR>
+map <leader>i :Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA<CR>
+
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
-" open ctags definition in vertical split
-map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
+" open ctags definition in split
+map <C-\> :sp <CR>:exec("tag ".expand("<cword>"))<CR>
 
 " remove unneeded spaces for a good whitespace carbon footprint
 autocmd BufWritePre * :%s/\s\+$//e
@@ -109,5 +112,3 @@ noremap   <Right>  <NOP>
 let g:SimplenoteListHeight=30
 let g:SimplenoteFiletype="markdown"
 let g:SimplenoteSortOrder="pinned,modifydate"
-
-command Inbox Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA
