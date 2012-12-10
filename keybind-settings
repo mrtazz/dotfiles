@@ -18,8 +18,8 @@ bind index j next-entry
 
 # filtering macros
 macro index,pager R "<save-message>=gtd-to-read/<enter><sync-mailbox>"
-macro index,pager A "<save-message>=gtd-needs-reply/<enter><sync-mailbox>"
-macro index,pager a "<save-message>=Archive/<enter><sync-mailbox>"
+macro index,pager a "<enter-command>unset wait_key<enter><pipe-message>mutt-to-omnifocus.py <enter><save-message>=gtd-needs-reply/<enter><sync-mailbox>"
+macro index,pager A "<save-message>=Archive/<enter><sync-mailbox>"
 macro index Si "<change-folder>=INBOX/<enter>"
 macro index Sr "<change-folder>=gtd-to-read/<enter>"
 macro index Sa "<change-folder>=gtd-needs-reply/<enter>"
@@ -34,3 +34,4 @@ bind index _ collapse-all
 macro index Ls "<enter-command>unset wait_key<enter><shell-escape>read -p 'notmuch query: ' x; echo \$x >~/.cache/mutt_terms<enter><limit>~i \"\`notmuch search --output=messages \$(cat ~/.cache/mutt_terms) | head -n 600 | perl -le '@a=<>;chomp@a;s/\^id:// for@a;$,=\"|\";print@a'\`\"<enter>" "show only messages matching a notmuch pattern"
 # 'a' shows all messages again (supersedes default <alias> binding)
 macro index La "<limit>all\n" "show all messages (undo limit)"
+macro index,pager "<esc>o" "<enter-command>unset wait_key<enter><pipe-message>mutt-to-omnifocus.py <enter>" \ "Create OmniFocus task from message"
