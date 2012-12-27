@@ -36,6 +36,7 @@ alias knife="nocorrect knife"
 [ -n "$TMUX" ] && export TERM=screen-256color
 
 source ~/.profile
+bindkey '^R' history-incremental-search-backward
 
 export LC_ALL=en_US.UTF-8
 eval "$(hub alias -s)"
@@ -52,4 +53,5 @@ alias todos='vim -c "Simplenote -l todo"'
 alias inbox='vim -c "Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA"'
 alias simplenote='vim -c "Simplenote -l"'
 alias tma='tmux attach -d -t'
+alias irc='mosh batou.unwiredcouch.com -- tmux attach -d -t comm'
 
