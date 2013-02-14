@@ -52,12 +52,7 @@ function s:ShowErrors()
 	for error in getqflist()
 		let item         = {}
 		let item["lnum"] = error.lnum
-		if has_key(b:error_list, error.lnum)
-			let old_item = get(b:error_list, error.lnum)
-			let item["text"] = old_item.text . "\n" . error.text
-		else
-			let item["text"] = error.text
-		endif
+		let item["text"] = error.text
 		let b:error_list[error.lnum] = item
 		let type = error.type == "W" ? "ErlangWarning" : "ErlangError"
 		execute "sign place" b:next_sign_id "line=" . item.lnum "name=" . type "file=" . expand("%:p")

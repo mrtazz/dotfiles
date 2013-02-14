@@ -13,17 +13,15 @@ if exists("loaded_sparse_syntax_checker")
 endif
 let loaded_sparse_syntax_checker = 1
 
-" Bail if the user doesn't have `sparse.pl` or ./scripts/checkpatch.pl installed.
-if !executable("sparse")
-    finish
-endif
+function! SyntaxCheckers_c_sparse_IsAvailable()
+    return executable("sparse")
+endfunction
 
-function! SyntaxCheckers_c_GetLocList()
-    let makeprg = "sparse "
-
-    let makeprg .= ' '.syntastic#c#ReadConfig(g:syntastic_sparse_config_file).' '
-
-    let makeprg .= shellescape(expand('%'))
+function! SyntaxCheckers_c_sparse_GetLocList()
+    let makeprg = syntastic#makeprg#build({
+                \ 'exe': 'sparse',
+                \ 'args': syntastic#c#ReadConfig(g:syntastic_sparse_config_file) })
+                \ 'subchecker': ':parse' })
 
     let errorformat = '%f:%l:%c: %trror: %m,%f:%l:%c: %tarning: %m,'
 
@@ -32,3 +30,7 @@ function! SyntaxCheckers_c_GetLocList()
                                 \ 'defaults': {'bufnr': bufnr("")} })
     return loclist
 endfunction
+
+call g:SyntasticRegistry.CreateAndRegisterChecker({
+    \ 'filetype': 'c',
+    \ 'name': 'sparse'})

@@ -8,8 +8,19 @@
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
 "
 "============================================================================
-function! SyntaxCheckers_ruby_GetLocList()
-    let makeprg = 'RUBYOPT= macruby -W1 -c '.shellescape(expand('%'))
+function! SyntaxCheckers_ruby_macruby_IsAvailable()
+    return executable('macruby')
+endfunction
+
+function! SyntaxCheckers_ruby_macruby_GetLocList()
+    let makeprg = syntastic#makeprg#build({
+                \ 'exe': 'RUBYOPT= macruby',
+                \ 'args': '-W1 -c',
+                \ 'subchecker': 'macruby' })
     let errorformat =  '%-GSyntax OK,%E%f:%l: syntax error\, %m,%Z%p^,%W%f:%l: warning: %m,%Z%p^,%W%f:%l: %m,%-C%.%#'
     return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
 endfunction
+
+call g:SyntasticRegistry.CreateAndRegisterChecker({
+    \ 'filetype': 'ruby',
+    \ 'name': 'macruby'})

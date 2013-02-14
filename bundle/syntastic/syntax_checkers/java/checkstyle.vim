@@ -18,12 +18,17 @@ if !exists("g:syntastic_java_checkstyle_conf_file")
     let g:syntastic_java_checkstyle_conf_file = 'sun_checks.xml'
 endif
 
-function! SyntaxCheckers_java_GetLocList()
+function! SyntaxCheckers_java_checkstyle_IsAvailable()
+    return executable('java')
+endfunction
 
-    let makeprg = 'java -cp ' . g:syntastic_java_checkstyle_classpath . ' com.puppycrawl.tools.checkstyle.Main -c '
-               \. g:syntastic_java_checkstyle_conf_file . ' '
-               \. expand ( '%:p:h' ) . '/' . expand ( '%:t' )
-               \. ' 2>&1 '
+function! SyntaxCheckers_java_checkstyle_GetLocList()
+    let makeprg = syntastic#makeprg#build({
+                \ 'exe': 'java',
+                \ 'args': '-cp ' . g:syntastic_java_checkstyle_classpath . ' com.puppycrawl.tools.checkstyle.Main -c ' . g:syntastic_java_checkstyle_conf_file,
+                \ 'fname': expand ( '%:p:h' ) . '/' . expand ( '%:t' ),
+                \ 'tail': '2>&1',
+                \ 'subchecker': 'checkstyle' })
 
     " check style format
     let errorformat = '%f:%l:%c:\ %m,%f:%l:\ %m'
@@ -31,3 +36,8 @@ function! SyntaxCheckers_java_GetLocList()
     return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
 
 endfunction
+
+call g:SyntasticRegistry.CreateAndRegisterChecker({
+    \ 'filetype': 'java',
+    \ 'name': 'checkstyle'})
+
