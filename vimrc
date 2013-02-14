@@ -66,8 +66,10 @@ map <leader>i :Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
-" open ctags definition in split
+" open ctags definition in horizontal split
 map <C-\> :sp <CR>:exec("tag ".expand("<cword>"))<CR>
+" open ctags in vertical split
+map <C-[> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 
 " remove unneeded spaces for a good whitespace carbon footprint
 autocmd BufWritePre * :%s/\s\+$//e
