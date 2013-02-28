@@ -13,8 +13,8 @@ PLUGINS += "mrtazz/simplenote.vim"
 PLUGINS += "tpope/vim-commentary"
 PLUGINS += "altercation/vim-colors-solarized"
 PLUGINS += "jimenezrick/vimerl"
+PLUGINS += "vim-scripts/taglist.vim"
 
 # targets
-
 update-plugins:
 	@$(foreach dir,$(PLUGINS),${UPDATECMD} $(dir);)
