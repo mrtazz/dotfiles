@@ -35,11 +35,12 @@ set t_Co=256
 set switchbuf=useopen
 
 " use solarized palette incase it's used
+set background=light
 let g:solarized_termcolors=256
 
 syntax on
 if has("gui_running")
-    colorscheme molokai
+    colorscheme solarized
     set go-=T
     set guifont=Monaco:h12
     set antialias
