@@ -4,6 +4,8 @@ set nocompatible
 filetype on
 " this needs to be done to guarantee proper plugin loading
 filetype off
+" disable plugins
+"let g:pathogen_disabled = ["syntastic"]
 " load modules via pathogen
 call pathogen#infect()
 call pathogen#helptags()
@@ -32,6 +34,9 @@ set t_Co=256
 " use open buffers
 set switchbuf=useopen
 
+" use solarized palette incase it's used
+let g:solarized_termcolors=256
+
 syntax on
 if has("gui_running")
     colorscheme molokai
@@ -39,7 +44,7 @@ if has("gui_running")
     set guifont=Monaco:h12
     set antialias
 else
-    colorscheme molokai
+    colorscheme solarized
 endif
 " some information in the statusline
 set statusline=[%n]\ %t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m\ %P
