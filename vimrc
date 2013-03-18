@@ -44,7 +44,7 @@ if has("gui_running")
     set guifont=Monaco:h12
     set antialias
 else
-    colorscheme solarized
+    colorscheme molokai
 endif
 " some information in the statusline
 set statusline=[%n]\ %t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m\ %P
