@@ -12,8 +12,12 @@ setopt correct_all
 # Example format: plugins=(rails git textmate ruby lighthouse)
 plugins=(heroku brew knife)
 for plugin ($plugins); do
-  fpath=(${ZSH_DIR}/$plugin $fpath)
+  fpath=(${ZSHDIR}/$plugin $fpath)
 done
+
+# Load and run compinit
+autoload -U compinit
+compinit -i
 
 # Customize to your needs...
 export PATH=~/bin:/usr/local/bin:$PATH
