@@ -43,7 +43,7 @@ function graphline() {
   curl -s "${GRAPHITEHOST}/render?from=-${MINUTES}minutes&target=${1}&format=raw" | cut -d"|" -f 2 | spark ;
 }
 
-function grp(){ ARGS=($1 ${2-*}); grep -Ri "${ARGS[@]}" }
+function ack(){ ARGS=($1 ${2-*}); grep -Ri "${ARGS[@]}" }
 
 # todos are stored in simplenote
 alias todos='vim -c "Simplenote -l todo"'
