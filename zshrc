@@ -34,12 +34,16 @@ bindkey '^R' history-incremental-search-backward
 export LC_ALL=en_US.UTF-8
 eval "$(hub alias -s)"
 
+compdef mosh=ssh
+
 # shell function to graph graphite data via spark
 function graphline() {
   if [ ! -n "$1" ]; then print "Usage: $0 metric [minutes]"; return 1; fi
   if [ ! -n "$2" ]; then MINUTES=10 ; else MINUTES=$2; fi
   curl -s "${GRAPHITEHOST}/render?from=-${MINUTES}minutes&target=${1}&format=raw" | cut -d"|" -f 2 | spark ;
 }
+
+function grp(){ ARGS=($1 ${2-*}); grep -Ri "${ARGS[@]}" }
 
 # todos are stored in simplenote
 alias todos='vim -c "Simplenote -l todo"'
