@@ -7,6 +7,9 @@
   preloadindex = 1
   pager=less -R
 
+[include]
+  path = ~/.githubtokens
+
 [apply]
   whitespace = fix
 
