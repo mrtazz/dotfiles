@@ -30,6 +30,8 @@ alias knife="nocorrect knife"
 
 source ~/.profile
 bindkey '^R' history-incremental-search-backward
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
 
 export LC_ALL=en_US.UTF-8
 eval "$(hub alias -s)"
