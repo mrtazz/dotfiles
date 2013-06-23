@@ -12,7 +12,8 @@ set my_mutt_dir=$HOME/.mutt
 source $my_mutt_dir/identity
 
 # include all other settings
-source $my_mutt_dir/color-settings
+#source $my_mutt_dir/color-settings
+source $my_mutt_dir/mutt-colors-solarized-light-16.muttrc
 source $my_mutt_dir/compose-settings
 source $my_mutt_dir/keybind-settings
 source $my_mutt_dir/mime-settings
