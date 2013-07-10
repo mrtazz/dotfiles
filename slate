@@ -12,8 +12,8 @@ config windowHintsSpread true
 #config windowHintsOrder persist
 
 # Monitor Aliases
-alias mon-laptop      0
-alias mon-samsung    1
+alias mon-internal      0
+alias mon-external    1
 
 # Misc Aliases
 alias showHintsLeftHand hint AOEUIYQJKX
@@ -30,13 +30,13 @@ alias rightless     move screenOriginX+screenSizeX*0.6;screenOriginY  screenSize
 alias leftmost      move screenOriginX;screenOriginY                  screenSizeX*0.6;screenSizeY
 alias leftless      move screenOriginX;screenOriginY                  screenSizeX*0.4;screenSizeY
 # Concrete positions
-alias 1-full        move screenOriginX;screenOriginY screenSizeX;screenSizeY         ${mon-laptop}
-alias 1-left        move screenOriginX;screenOriginY screenSizeX/2;screenSizeY         ${mon-laptop}
-alias 1-right       move screenOriginX+screenSizeX/2;screenOriginY screenSizeX/2;screenSizeY         ${mon-laptop}
-alias 2-left        move screenOriginX;screenOriginY screenSizeX/2;screenSizeY         ${mon-samsung}
-alias 2-right       move screenOriginX+screenSizeX/2;screenOriginY screenSizeX/2;screenSizeY         ${mon-samsung}
-alias 2-righttop    move screenOriginX+screenSizeX/2;screenOriginY screenSizeX/2;screenSizeY/2       ${mon-samsung}
-alias 2-rightbottom move screenOriginX+screenSizeX/2;screenOriginY+screenSizeY/2    screenSizeX/2;screenSizeY/2       ${mon-samsung}
+alias 1-full        move screenOriginX;screenOriginY screenSizeX;screenSizeY         ${mon-internal}
+alias 1-left        move screenOriginX;screenOriginY screenSizeX/2;screenSizeY         ${mon-internal}
+alias 1-right       move screenOriginX+screenSizeX/2;screenOriginY screenSizeX/2;screenSizeY         ${mon-internal}
+alias 2-left        move screenOriginX;screenOriginY screenSizeX/2;screenSizeY         ${mon-external}
+alias 2-right       move screenOriginX+screenSizeX/2;screenOriginY screenSizeX/2;screenSizeY         ${mon-external}
+alias 2-righttop    move screenOriginX+screenSizeX/2;screenOriginY screenSizeX/2;screenSizeY/2       ${mon-external}
+alias 2-rightbottom move screenOriginX+screenSizeX/2;screenOriginY+screenSizeY/2    screenSizeX/2;screenSizeY/2       ${mon-external}
 
 # 2 Monitor layout
 layout 2monitors 'iTerm':MAIN_FIRST                       ${2-rightbottom} | ${1-left}
@@ -48,8 +48,8 @@ layout 1monitor 'MacVim':MAIN_FIRST              		 ${1-left}
 layout 1monitor 'iTunes':REPEAT                          ${1-full}
 
 # Default Layouts
-default 2monitors resolutions:${mon-laptop};${mon-samsung};
-default 1monitor  resolutions:${mon-laptop}
+default 2monitors resolutions:${mon-internal};${mon-external};
+default 1monitor  resolutions:${mon-internal}
 
 bind tab:alt  ${showNormalHint}
 
@@ -60,7 +60,7 @@ bind tab:alt  ${showNormalHint}
 alias hyper ctrl;alt;cmd
 
 # grid
-bind g:${hyper} grid padding:5 0:8,8 1:8,3
+bind g:cmd grid padding:5 0:8,8 1:8,8
 
 # Location bindings
 bind f:${hyper} ${full}
