@@ -32,6 +32,7 @@ source ~/.profile
 bindkey '^R' history-incremental-search-backward
 bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
+stty discard undef
 
 export LC_ALL=en_US.UTF-8
 eval "$(hub alias -s)"
@@ -45,7 +46,9 @@ function graphline() {
   curl -s "${GRAPHITEHOST}/render?from=-${MINUTES}minutes&target=${1}&format=raw" | cut -d"|" -f 2 | spark ;
 }
 
-function ack(){ ARGS=($1 ${2-*}); grep -Ri "${ARGS[@]}" }
+export GREP_OPTIONS="--exclude=tags --color=auto"
+export GREP_COLOR="1;32"
+function ack(){ ARGS=($1 ${2-*}); grep -nRi "${ARGS[@]}" }
 
 # todos are stored in simplenote
 alias todos='vim -c "Simplenote -l todo"'
@@ -54,4 +57,7 @@ alias simplenote='vim -c "Simplenote -l"'
 alias tma='tmux attach -d -t'
 alias irc='mosh batou.unwiredcouch.com -- tmux attach -d -t comm'
 alias etsyirc='mosh etsyvm -- tmux attach -d -t comm'
+alias mutt_home='MUTT_IDENTITY=unwiredcouch mutt'
+alias mutt_etsy='MUTT_IDENTITY=etsy mutt'
 
+unset TMUX
