@@ -18,12 +18,15 @@ bind index j next-entry
 
 # filtering macros
 macro index,pager R "<save-message>=gtd-to-read/<enter><sync-mailbox>"
-macro index,pager a "<enter-command>unset wait_key<enter><pipe-message>mutt-to-omnifocus.py <enter><save-message>=gtd-needs-reply/<enter><sync-mailbox>"
+macro index,pager a "<pipe-message>mutt-to-omnifocus.py <enter><save-message>=gtd-needs-reply/<enter><sync-mailbox>"
 macro index,pager A "<save-message>=Archive/<enter><sync-mailbox>"
 macro index Si "<change-folder>=INBOX/<enter>"
 macro index Sr "<change-folder>=gtd-to-read/<enter>"
 macro index Sa "<change-folder>=gtd-needs-reply/<enter>"
 macro index SA "<change-folder>=Archive/<enter>"
+# mailbox switches
+macro index SE "<change-folder>~/Mail/etsy/INBOX/<enter>"
+macro index SU "<change-folder>~/Mail/unwiredcouch/INBOX<enter>"
 
 # thread collapsing
 bind index - collapse-thread

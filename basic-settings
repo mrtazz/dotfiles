@@ -9,11 +9,11 @@ reset all
 set my_mutt_dir=$HOME/.mutt
 
 # import your identity
-source $my_mutt_dir/identity
+source $my_mutt_dir/identity-$MUTT_IDENTITY
 
 # include all other settings
-#source $my_mutt_dir/color-settings
-source $my_mutt_dir/mutt-colors-solarized-light-16.muttrc
+source $my_mutt_dir/color-settings
+#source $my_mutt_dir/mutt-colors-solarized-light-16.muttrc
 source $my_mutt_dir/compose-settings
 source $my_mutt_dir/keybind-settings
 source $my_mutt_dir/mime-settings
@@ -128,4 +128,7 @@ set delete=yes
 set sidebar_width=30
 set sidebar_visible=yes
 set sidebar_delim='|'
-set sidebar_sort=yes
+set sidebar_sort=no
+
+# no wait key
+unset wait_key
