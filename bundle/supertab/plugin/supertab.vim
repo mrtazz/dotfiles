@@ -13,7 +13,7 @@
 " }}}
 "
 " License: {{{
-"   Copyright (c) 2002 - 2012
+"   Copyright (c) 2002 - 2013
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -48,7 +48,7 @@
 " }}}
 "
 " Testing Info: {{{
-"   Running vim + supertab with the absolute bar minimum settings:
+"   Running vim + supertab with the absolute bare minimum settings:
 "     $ vim -u NONE -U NONE -c "set nocp | runtime plugin/supertab.vim"
 " }}}
 
@@ -353,13 +353,19 @@ function! s:SetDefaultCompletionType() " {{{
   endif
 endfunction " }}}
 
-function! s:SuperTab(command) " {{{
+function! SuperTab(command) " {{{
   " Used to perform proper cycle navigation as the user requests the next or
   " previous entry in a completion list, and determines whether or not to simply
   " retain the normal usage of <tab> based on the cursor position.
 
   if exists('b:SuperTabDisabled') && b:SuperTabDisabled
-    return g:SuperTabMappingForward ==? '<tab>' ? "\<tab>" : ''
+    if exists('s:Tab')
+      return s:Tab()
+    endif
+    return (
+        \ g:SuperTabMappingForward ==? '<tab>' ||
+        \ g:SuperTabMappingBackward ==? '<tab>'
+      \ ) ? "\<tab>" : ''
   endif
 
   call s:InitBuffer()
@@ -399,9 +405,9 @@ function! s:SuperTab(command) " {{{
     elseif pumvisible() && !b:complReset
       let type = b:complType == 'context' ? b:complTypeContext : b:complType
       if a:command == 'n'
-        return type == "\<c-p>" ? "\<c-p>" : "\<c-n>"
+        return type == "\<c-p>" || type == "\<c-x>\<c-p>" ? "\<c-p>" : "\<c-n>"
       endif
-      return type == "\<c-p>" ? "\<c-n>" : "\<c-p>"
+      return type == "\<c-p>" || type == "\<c-x>\<c-p>" ? "\<c-n>" : "\<c-p>"
     endif
 
     " handle 'context' completion.
@@ -418,6 +424,15 @@ function! s:SuperTab(command) " {{{
       let complType = s:CommandLineCompletion()
     else
       let complType = b:complType
+    endif
+
+    " switch <c-x><c-p> / <c-x><c-n> completion in <c-p> mode
+    if a:command == 'p'
+      if complType == "\<c-x>\<c-p>"
+        let complType = "\<c-x>\<c-n>"
+      elseif complType == "\<c-x>\<c-n>"
+        let complType = "\<c-x>\<c-p>"
+      endif
     endif
 
     " highlight first result if longest enabled
@@ -445,7 +460,13 @@ function! s:SuperTab(command) " {{{
     return complType
   endif
 
-  return g:SuperTabMappingForward ==? '<tab>' ? "\<tab>" : ''
+  if exists('s:Tab')
+    return s:Tab()
+  endif
+  return (
+      \ g:SuperTabMappingForward ==? '<tab>' ||
+      \ g:SuperTabMappingBackward ==? '<tab>'
+    \ ) ? "\<tab>" : ''
 endfunction " }}}
 
 function! s:SuperTabHelp() " {{{
@@ -459,13 +480,10 @@ function! s:SuperTabHelp() " {{{
     setlocal buftype=nowrite
     setlocal bufhidden=delete
 
-    let saved = @"
-    let @" = s:tabHelp
-    silent put
+    silent put =s:tabHelp
     call cursor(1, 1)
-    silent 1,delete
+    silent 1,delete _
     call cursor(4, 1)
-    let @" = saved
     exec "resize " . line('$')
 
     syntax match Special "|.\{-}|"
@@ -768,50 +786,41 @@ endfunction " }}}
   " map a regular tab to ctrl-tab (note: doesn't work in console vim)
   exec 'inoremap ' . g:SuperTabMappingTabLiteral . ' <tab>'
 
-  imap <c-x> <c-r>=<SID>ManualCompletionEnter()<cr>
+  imap <silent> <c-x> <c-r>=<SID>ManualCompletionEnter()<cr>
 
-  imap <script> <Plug>SuperTabForward <c-r>=<SID>SuperTab('n')<cr>
-  imap <script> <Plug>SuperTabBackward <c-r>=<SID>SuperTab('p')<cr>
+  imap <script> <Plug>SuperTabForward <c-r>=SuperTab('n')<cr>
+  imap <script> <Plug>SuperTabBackward <c-r>=SuperTab('p')<cr>
+
+  " support delegating to smart tabs plugin
+  if g:SuperTabMappingForward ==? '<tab>' || g:SuperTabMappingBackward ==? '<tab>'
+    let existing = maparg('<tab>', 'i')
+    if existing =~ '\d\+_InsertSmartTab()$'
+      let s:Tab = function(substitute(existing, '()$', '', ''))
+    endif
+  endif
 
   exec 'imap ' . g:SuperTabMappingForward . ' <Plug>SuperTabForward'
   exec 'imap ' . g:SuperTabMappingBackward . ' <Plug>SuperTabBackward'
 
-  " After hitting <Tab>, hitting it once more will go to next match
-  " (because in XIM mode <c-n> and <c-p> mappings are ignored)
-  " and wont start a brand new completion
-  " The side effect, that in the beginning of line <c-n> and <c-p> inserts a
-  " <Tab>, but I hope it may not be a problem...
-  let ctrl_n = maparg('<c-n>', 'i')
-  if ctrl_n != ''
-    let ctrl_n = substitute(ctrl_n, '<', '<lt>', 'g')
-    exec 'imap <c-n> <c-r>=<SID>ForwardBack("n", "' . ctrl_n . '")<cr>'
-  else
-    imap <c-n> <Plug>SuperTabForward
-  endif
-  let ctrl_p = maparg('<c-p>', 'i')
-  if ctrl_p != ''
-    let ctrl_p = substitute(ctrl_p, '<', '<lt>', 'g')
-    exec 'imap <c-p> <c-r>=<SID>ForwardBack("p", "' . ctrl_p . '")<cr>'
-  else
-    imap <c-p> <Plug>SuperTabBackward
-  endif
-  function! s:ForwardBack(command, map)
-    exec "let map = \"" . escape(a:map, '<') . "\""
-    return pumvisible() ? s:SuperTab(a:command) : map
-  endfunction
-
   if g:SuperTabCrMapping
     let expr_map = 0
-    try
+    if v:version > 703 || (v:version == 703 && has('patch32'))
       let map_dict = maparg('<cr>', 'i', 0, 1)
-      let expr_map = map_dict.expr
-    catch
+      let expr_map = has_key(map_dict, 'expr') && map_dict.expr
+    else
       let expr_map = maparg('<cr>', 'i') =~? '\<cr>'
-    endtry
+    endif
+
+    redir => iabbrevs
+    silent iabbrev
+    redir END
+    let iabbrev_map = iabbrevs =~? '\<cr>'
 
     if expr_map
       " Not compatible w/ expr mappings. This is most likely a user mapping,
       " typically with the same functionality anyways.
+    elseif iabbrev_map
+      " Not compatible w/ insert abbreviations containing <cr>
     elseif maparg('<CR>', 'i') =~ '<Plug>delimitMateCR'
       " Not compatible w/ delimitMate since it doesn't play well with others
       " and will always return a <cr> which we don't want when selecting a
@@ -822,7 +831,7 @@ endfunction " }}}
       let map = s:ExpandMap(map)
       exec "inoremap <script> <cr> <c-r>=<SID>SelectCompletion(" . cr . ")<cr>" . map
     else
-      inoremap <cr> <c-r>=<SID>SelectCompletion(1)<cr>
+      inoremap <silent> <cr> <c-r>=<SID>SelectCompletion(1)<cr>
     endif
     function! s:SelectCompletion(cr)
       " selecting a completion

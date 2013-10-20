@@ -10,25 +10,35 @@
 "
 "============================================================================
 
+if exists("g:loaded_syntastic_haskell_hdevtools_checker")
+    finish
+endif
+let g:loaded_syntastic_haskell_hdevtools_checker=1
+
 function! SyntaxCheckers_haskell_hdevtools_IsAvailable()
     return executable('hdevtools')
 endfunction
 
 function! SyntaxCheckers_haskell_hdevtools_GetLocList()
     let makeprg = syntastic#makeprg#build({
-                \ 'exe': 'hdevtools check',
-                \ 'args': get(g:, 'hdevtools_options', ''),
-                \ 'subchecker': 'hdevtools' })
+        \ 'exe': 'hdevtools check',
+        \ 'args': get(g:, 'hdevtools_options', ''),
+        \ 'filetype': 'haskell',
+        \ 'subchecker': 'hdevtools' })
 
     let errorformat= '\%-Z\ %#,'.
-                \ '%W%f:%l:%c:\ Warning:\ %m,'.
-                \ '%E%f:%l:%c:\ %m,'.
-                \ '%E%>%f:%l:%c:,'.
-                \ '%+C\ \ %#%m,'.
-                \ '%W%>%f:%l:%c:,'.
-                \ '%+C\ \ %#%tarning:\ %m,'
+        \ '%W%f:%l:%c:\ Warning:\ %m,'.
+        \ '%W%f:%l:%c:\ Warning:,'.
+        \ '%E%f:%l:%c:\ %m,'.
+        \ '%E%>%f:%l:%c:,'.
+        \ '%+C\ \ %#%m,'.
+        \ '%W%>%f:%l:%c:,'.
+        \ '%+C\ \ %#%tarning:\ %m,'
 
-    return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
+    return SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat,
+        \ 'postprocess': ['compressWhitespace'] })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

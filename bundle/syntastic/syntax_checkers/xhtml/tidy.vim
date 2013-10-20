@@ -9,6 +9,20 @@
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
 "
 "============================================================================
+"
+" Checker option:
+"
+" - g:syntastic_xhtml_tidy_ignore_errors (list; default: [])
+"   list of errors to ignore
+
+if exists("g:loaded_syntastic_xhtml_tidy_checker")
+    finish
+endif
+let g:loaded_syntastic_xhtml_tidy_checker=1
+
+if !exists('g:syntastic_xhtml_tidy_ignore_errors')
+    let g:syntastic_xhtml_tidy_ignore_errors = []
+endif
 
 function! SyntaxCheckers_xhtml_tidy_IsAvailable()
     return executable("tidy")
@@ -33,13 +47,41 @@ function! s:TidyEncOptByFenc()
     return get(tidy_opts, &fileencoding, '-utf8')
 endfunction
 
+function! s:IgnoreError(text)
+    for i in g:syntastic_xhtml_tidy_ignore_errors
+        if stridx(a:text, i) != -1
+            return 1
+        endif
+    endfor
+    return 0
+endfunction
+
 function! SyntaxCheckers_xhtml_tidy_GetLocList()
     let encopt = s:TidyEncOptByFenc()
     let makeprg = syntastic#makeprg#build({
-                \ 'exe': 'tidy',
-                \ 'args': encopt . ' -xml -e' })
-    let errorformat='%Wline %l column %c - Warning: %m,%Eline %l column %c - Error: %m,%-G%.%#,%-G%.%#'
-    return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat, 'defaults': {'bufnr': bufnr("")} })
+        \ 'exe': 'tidy',
+        \ 'args': encopt . ' -xml -e',
+        \ 'filetype': 'xhtml',
+        \ 'subchecker': 'tidy' })
+
+    let errorformat=
+        \ '%Wline %l column %v - Warning: %m,' .
+        \ '%Eline %l column %v - Error: %m,' .
+        \ '%-G%.%#'
+
+    let loclist = SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat,
+        \ 'defaults': {'bufnr': bufnr("")},
+        \ 'returns': [0, 1, 2] })
+
+    for n in range(len(loclist))
+        if loclist[n]['valid'] && s:IgnoreError(loclist[n]['text']) == 1
+            let loclist[n]['valid'] = 0
+        endif
+    endfor
+
+    return loclist
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

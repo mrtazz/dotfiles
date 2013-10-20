@@ -10,17 +10,31 @@
 "
 "============================================================================
 
+if exists("g:loaded_syntastic_cucumber_cucumber_checker")
+    finish
+endif
+let g:loaded_syntastic_cucumber_cucumber_checker=1
+
 function! SyntaxCheckers_cucumber_cucumber_IsAvailable()
     return executable('cucumber')
 endfunction
 
 function! SyntaxCheckers_cucumber_cucumber_GetLocList()
     let makeprg = syntastic#makeprg#build({
-                \ 'exe': 'cucumber',
-                \ 'args': '--dry-run --quiet --strict --format pretty' })
-    let errorformat =  '%f:%l:%c:%m,%W      %.%# (%m),%-Z%f:%l:%.%#,%-G%.%#'
+        \ 'exe': 'cucumber',
+        \ 'args': '--dry-run --quiet --strict --format pretty',
+        \ 'filetype': 'cucumber',
+        \ 'subchecker': 'cucumber' })
 
-    return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
+    let errorformat =
+        \ '%f:%l:%c:%m,' .
+        \ '%W      %.%# (%m),' .
+        \ '%-Z%f:%l:%.%#,'.
+        \ '%-G%.%#'
+
+    return SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

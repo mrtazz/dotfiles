@@ -1,16 +1,17 @@
-" Mustache syntax
-" Language:	Mustache
+" Mustache & Handlebars syntax
+" Language:	Mustache, Handlebars
 " Maintainer:	Juvenn Woo <machese@gmail.com>
 " Screenshot:   http://imgur.com/6F408
 " Version:	2
-" Last Change:  Jan 16th 2011
-" Remark:       
-"   It lexically hilights embedded mustaches (exclusively) in html file. 
+" Last Change:  Mar 24th 2013
+" Remark:
+"   It lexically hilights embedded mustaches (exclusively) in html file.
 "   While it was written for Ruby-based Mustache template system, it should
 "   work for Google's C-based *ctemplate* as well as Erlang-based *et*. All
 "   of them are, AFAIK, based on the idea of ctemplate.
-" References:	
+" References:
 "   [Mustache](http://github.com/defunkt/mustache)
+"   [Handlebars](https://github.com/wycats/handlebars.js)
 "   [ctemplate](http://code.google.com/p/google-ctemplate/)
 "   [ctemplate doc](http://google-ctemplate.googlecode.com/svn/trunk/doc/howto.html)
 "   [et](http://www.ivan.fomichev.name/2008/05/erlang-template-engine-prototype.html)
@@ -40,7 +41,7 @@ endif
 
 syntax match mustacheError '}}}\?'
 syntax match mustacheInsideError '{{[{#<>=!\/]\?' containedin=@mustacheInside
-syntax region mustacheVariable matchgroup=mustacheMarker start=/{{/ end=/}}/ containedin=@htmlMustacheContainer 
+syntax region mustacheVariable matchgroup=mustacheMarker start=/{{/ end=/}}/ containedin=@htmlMustacheContainer
 syntax region mustacheVariableUnescape matchgroup=mustacheMarker start=/{{{/ end=/}}}/ containedin=@htmlMustacheContainer
 syntax region mustacheSection matchgroup=mustacheMarker start='{{[#/]' end=/}}/ containedin=@htmlMustacheContainer
 syntax region mustachePartial matchgroup=mustacheMarker start=/{{[<>]/ end=/}}/
@@ -50,8 +51,7 @@ syntax region mustacheComment start=/{{!/ end=/}}/ contains=Todo containedin=htm
 
 " Clustering
 syntax cluster mustacheInside add=mustacheVariable,mustacheVariableUnescape,mustacheSection,mustachePartial,mustacheMarkerSet
-syntax cluster htmlMustacheContainer add=htmlHead,htmlTitle,htmlString,htmlH1,htmlH2,htmlH3,htmlH4,htmlH5,htmlH6
-
+syntax cluster htmlMustacheContainer add=htmlHead,htmlTitle,htmlString,htmlH1,htmlH2,htmlH3,htmlH4,htmlH5,htmlH6,htmlLink,htmlBold,htmlUnderline,htmlItalic
 
 " Hilighting
 " mustacheInside hilighted as Number, which is rarely used in html
@@ -63,13 +63,13 @@ HtmlHiLink mustacheSection Number
 HtmlHiLink mustacheMarkerSet Number
 
 HtmlHiLink mustacheComment Comment
-HtmlHiLink mustacheMarker Identifier
+HtmlHiLink mustacheMarker Special
 HtmlHiLink mustacheError Error
 HtmlHiLink mustacheInsideError Error
 
 syn region mustacheScriptTemplate start=+<script [^>]*type *=[^>]*text/mustache[^>]*>+
 \                       end=+</script>+me=s-1 keepend
-\                       contains=mustacheError,mustacheInsideError,mustacheVariable,mustacheVariableUnescape,mustacheSection,mustachePartial,mustacheMarkerSet,mustacheComment,htmlHead,htmlTitle,htmlString,htmlH1,htmlH2,htmlH3,htmlH4,htmlH5,htmlH6,htmlTag,htmlEndTag,htmlTagName,htmlSpecialChar,htmlLink
+\                       contains=mustacheError,mustacheInsideError,mustacheVariable,mustacheVariableUnescape,mustacheSection,mustachePartial,mustacheMarkerSet,mustacheComment,htmlHead,htmlTitle,htmlString,htmlH1,htmlH2,htmlH3,htmlH4,htmlH5,htmlH6,htmlTag,htmlEndTag,htmlTagName,htmlSpecialChar,htmlLink,htmlBold,htmlUnderline,htmlItalic
 
 let b:current_syntax = "mustache"
 delcommand HtmlHiLink

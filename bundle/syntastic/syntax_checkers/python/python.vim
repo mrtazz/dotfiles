@@ -7,26 +7,35 @@
 " http://www.vim.org/scripts/download_script.php?src_id=1392
 "
 "============================================================================
+if exists("g:loaded_syntastic_python_python_checker")
+    finish
+endif
+let g:loaded_syntastic_python_python_checker=1
+
 function! SyntaxCheckers_python_python_IsAvailable()
     return executable('python')
 endfunction
 
 function! SyntaxCheckers_python_python_GetLocList()
-    let l:path = shellescape(expand('%'))
-    let l:cmd = "compile(open(" . l:path . ").read(), " . l:path . ", 'exec')"
-    let l:makeprg = 'python -c "' . l:cmd . '"'
+    let fname = "'" . escape(expand('%'), "\\'") . "'"
 
-    let l:errorformat =
-        \ "\%A\ \ File\ \"%f\"\\\,\ line\ %l\\\,%m," .
-        \ "\%C\ \ \ \ %.%#," .
-        \ "\%+Z%.%#Error\:\ %.%#," .
-        \ "\%A\ \ File\ \"%f\"\\\,\ line\ %l," .
-        \ "\%+C\ \ %.%#," .
-        \ "\%-C%p^," .
-        \ "\%Z%m," .
-        \ "\%-G%.%#"
+    let makeprg = syntastic#makeprg#build({
+        \ 'exe': 'python',
+        \ 'args': '-c',
+        \ 'fname': syntastic#util#shescape("compile(open(" . fname . ").read(), " . fname . ", 'exec')"),
+        \ 'filetype': 'python',
+        \ 'subchecker': 'python' })
 
-    return SyntasticMake({ 'makeprg': l:makeprg, 'errorformat': l:errorformat })
+    let errorformat =
+        \ '%E  File "%f"\, line %l,' .
+        \ '%C    %p^,' .
+        \ '%C    %.%#,' .
+        \ '%Z%m,' .
+        \ '%-G%.%#'
+
+    return SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

@@ -69,18 +69,21 @@ let g:simplenote_scratch_buffer = 'Simplenote'
 
 " Function that opens or navigates to the scratch buffer.
 function! s:ScratchBufferOpen(name)
-	let exe_new = "new "
-	let exe_split = "split "
+    let exe_new = "new "
+    let exe_split = "split "
 
-	if s:vbuff > 0
-		let exe_new = "vert " . exe_new
-		let exe_split = "vert " . exe_split
-	endif
+    if s:vbuff > 0
+        let exe_new = "vert " . exe_new
+        let exe_split = "vert " . exe_split
+    endif
 
 
     let scr_bufnum = bufnr(a:name)
     if scr_bufnum == -1
         exe exe_new . a:name
+        if a:name == g:simplenote_scratch_buffer && NoModifiedBuffers()
+            exe 'only'
+        endif
     else
         let scr_winnum = bufwinnr(scr_bufnum)
         if scr_winnum != -1
@@ -89,6 +92,9 @@ function! s:ScratchBufferOpen(name)
             endif
         else
             exe  exe_split . "+buffer" . scr_bufnum
+            if a:name == g:simplenote_scratch_buffer && NoModifiedBuffers()
+                exe 'only'
+            endif
         endif
     endif
     call s:ScratchBuffer()
@@ -111,6 +117,18 @@ function! s:ScratchBuffer()
     endif
 endfunction
 
+function! NoModifiedBuffers()
+    let tablist = []
+    let noModifiedBuffers = 1
+    call extend(tablist, tabpagebuflist(tabpagenr()))
+    "if any open modified buffers in tab, not ok to set 'only' for index list
+    for n in tablist
+        if getbufvar(n,"&mod")
+            let noModifiedBuffers = 0
+        endif
+    endfor
+    return noModifiedBuffers
+endfunction
 
 "
 " python functions
@@ -131,6 +149,9 @@ import urllib
 import urllib2
 from urllib2 import HTTPError
 import base64
+from time import mktime
+from datetime import datetime
+
 try:
     import json
 except ImportError:
@@ -281,19 +302,23 @@ class Simplenote(object):
         else:
             return "No string or valid note.", -1
 
-    def get_note_list(self, qty=float("inf")):
+    def get_note_list(self, since=None):
         """ function to get the note list
 
         The function can be passed an optional argument to limit the
-        size of the list returned. If omitted a list of all notes is
-        returned.
+        date range of the list returned. If omitted a list of all notes
+        is returned.
 
         Arguments:
-            - quantity (integer number): of notes to list
+            - since(YYYY-MM-DD string): only return notes modified
+              since this date
 
         Returns:
-            An array of note objects with all properties set except
+            A tuple `(notes, status)`
+
+            - notes (list): A list of note objects with all properties set except
             `content`.
+            - status (int): 0 on sucesss and -1 otherwise
 
         """
         # initialize data
@@ -303,12 +328,15 @@ class Simplenote(object):
         notes = { "data" : [] }
 
         # get the note index
-        if qty < NOTE_FETCH_LENGTH:
-            params = 'auth=%s&email=%s&length=%s' % (self.get_token(), self.username,
-                                                 qty)
-        else:
-            params = 'auth=%s&email=%s&length=%s' % (self.get_token(), self.username,
+        params = 'auth=%s&email=%s&length=%s' % (self.get_token(), self.username,
                                                  NOTE_FETCH_LENGTH)
+        if since is not None:
+            try:
+                sinceUT = mktime(datetime.strptime(since, "%Y-%m-%d").timetuple())
+                params += '&since=%s' % sinceUT
+            except ValueError:
+                pass
+
         # perform initial HTTP request
         try:
             request = Request(INDX_URL+params)
@@ -318,12 +346,15 @@ class Simplenote(object):
             status = -1
 
         # get additional notes if bookmark was set in response
-        while response.has_key("mark") and len(notes["data"]) < qty:
-            if (qty - len(notes["data"])) < NOTE_FETCH_LENGTH:
-                vals = (self.get_token(), self.username, response["mark"], qty - len(notes["data"]))
-            else:
-                vals = (self.get_token(), self.username, response["mark"], NOTE_FETCH_LENGTH)
+        while response.has_key("mark"):
+            vals = (self.get_token(), self.username, response["mark"], NOTE_FETCH_LENGTH)
             params = 'auth=%s&email=%s&mark=%s&length=%s' % vals
+            if since is not None:
+                try:
+                    sinceUT = mktime(datetime.strptime(since, "%Y-%m-%d").timetuple())
+                    params += '&since=%s' % sinceUT
+                except ValueError:
+                    pass
 
             # perform the actual HTTP request
             try:
@@ -437,7 +468,6 @@ class SimplenoteVimInterface(object):
         vim.command("call s:ScratchBuffer()")
         vim.command("setlocal nocursorline")
         vim.command("setlocal buftype=acwrite")
-        vim.command("setlocal bufhidden=delete")
         vim.command("setlocal nomodified")
         vim.command("au! BufWriteCmd <buffer> call s:UpdateNoteFromCurrentBuffer()")
 
@@ -462,7 +492,7 @@ class SimplenoteVimInterface(object):
         width = int(width)
 
         # get note tags
-        tags = "[%s]" % ",".join([t.encode('utf-8') for t in note["tags"]])
+        tags = "[%s]" % ",".join(note["tags"])
 
         # format date
         mt = time.localtime(float(note["modifydate"]))
@@ -531,17 +561,37 @@ class SimplenoteVimInterface(object):
         vim.command("setlocal nocursorline")
         vim.command("setlocal modifiable")
         vim.command("setlocal buftype=acwrite")
-        vim.command("setlocal bufhidden=delete")
         vim.command("au! BufWriteCmd <buffer> call s:UpdateNoteFromCurrentBuffer()")
         buffer[:] = map(lambda x: str(x), note["content"].split("\n"))
+        if note.has_key("systemtags"):
+            if ("markdown" in note["systemtags"]):
+                vim.command("setlocal filetype=markdown")
         vim.command("setlocal nomodified")
 
     def update_note_from_current_buffer(self):
         """ updates the currently displayed note to the web service """
         note_id = self.get_current_note()
         content = "\n".join(str(line) for line in vim.current.buffer[:])
-        note, status = self.simplenote.update_note({"content": content,
-                                                  "key": note_id})
+        note, status = self.simplenote.get_note(note_id)
+        if status == 0:
+            if (vim.eval("&filetype") == "markdown"):
+                if note.has_key("systemtags"):
+                    if ("markdown" not in note["systemtags"]):
+                        note["systemtags"].append("markdown")
+                else:
+                    note["systemtags"] = ["markdown"]
+            else:
+                if note.has_key("systemtags"):
+                    if ("markdown" in note["systemtags"]):
+                        note["systemtags"].remove("markdown")
+            note, status = self.simplenote.update_note({"content": content,
+                                                      "key": note_id,
+                                                      "systemtags": note["systemtags"]})
+        else:
+            print "Could not set markdown status."
+            note, status = self.simplenote.update_note({"content": content,
+                                                      "key": note_id})
+
         if status == 0:
             print "Update successful."
             vim.command("setlocal nomodified")
@@ -588,22 +638,29 @@ class SimplenoteVimInterface(object):
     def create_new_note_from_current_buffer(self):
         """ get content of the current buffer and create new note """
         content = "\n".join(str(line) for line in vim.current.buffer[:])
-        note, status = self.simplenote.update_note({"content": content})
+        markdown = (vim.eval("&filetype") == "markdown")
+        if markdown:
+            note, status = self.simplenote.update_note({"content": content,
+                                                        "systemtags": ["markdown"]})
+        else:
+            note, status = self.simplenote.update_note({"content": content})
         if status == 0:
             self.transform_to_scratchbuffer()
+            if markdown:
+                vim.command("setlocal filetype=markdown")
             self.set_current_note(note["key"])
             print "New note created."
         else:
             print "Update failed.: %s" % note["key"]
 
-    def list_note_index_in_scratch_buffer(self, qty=float("inf"), tags=[]):
+    def list_note_index_in_scratch_buffer(self, since=None, tags=[]):
         """ get all available notes and display them in a scratchbuffer """
         # Initialize the scratch buffer
         self.scratch_buffer()
         vim.command("setlocal modifiable")
         # clear global note id storage
         buffer = vim.current.buffer
-        note_list, status = self.simplenote.get_note_list(qty)
+        note_list, status = self.simplenote.get_note_list(since)
         if (len(tags) > 0):
             note_list = [n for n in note_list if (n["deleted"] != 1 and
                             len(set(n["tags"]).intersection(tags)) > 0)]
@@ -747,8 +804,10 @@ optionsexist = True if (float(vim.eval("a:0"))>=1) else False
 if param == "-l":
     if optionsexist:
         try:
-            interface.list_note_index_in_scratch_buffer(qty=int(vim.eval("a:1")))
-        except:
+            # check for valid date string
+            datetime.strptime(vim.eval("a:1"), "%Y-%m-%d")
+            interface.list_note_index_in_scratch_buffer(since=vim.eval("a:1"))
+        except ValueError:
             interface.list_note_index_in_scratch_buffer(tags=vim.eval("a:1").split(","))
     else:
         interface.list_note_index_in_scratch_buffer()

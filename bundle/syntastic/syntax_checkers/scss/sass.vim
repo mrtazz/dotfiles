@@ -11,10 +11,13 @@
 "
 "============================================================================
 
-runtime syntax_checkers/sass/sass.vim
+if exists("g:loaded_syntastic_scss_sass_checker")
+    finish
+endif
+let g:loaded_syntastic_scss_sass_checker=1
 
 function! SyntaxCheckers_scss_sass_IsAvailable()
-    return executable("sass")
+    return SyntaxCheckers_sass_sass_IsAvailable()
 endfunction
 
 function! SyntaxCheckers_scss_sass_GetLocList()
@@ -24,3 +27,5 @@ endfunction
 call g:SyntasticRegistry.CreateAndRegisterChecker({
     \ 'filetype': 'scss',
     \ 'name': 'sass'})
+
+runtime! syntax_checkers/sass/*.vim

@@ -1,7 +1,7 @@
 if exists("g:loaded_syntastic_checker")
     finish
 endif
-let g:loaded_syntastic_checker=1
+let g:loaded_syntastic_checker = 1
 
 let g:SyntasticChecker = {}
 
@@ -27,16 +27,23 @@ function! g:SyntasticChecker.New(args)
     return newObj
 endfunction
 
-function! g:SyntasticChecker.filetype()
+function! g:SyntasticChecker.getFiletype()
     return self._filetype
 endfunction
 
-function! g:SyntasticChecker.name()
+function! g:SyntasticChecker.getName()
     return self._name
 endfunction
 
 function! g:SyntasticChecker.getLocList()
-    let list = self._locListFunc()
+    try
+        let list = self._locListFunc()
+        call syntastic#util#debug('getLocList: checker ' . self._filetype . '/' . self._name . ' returned ' . v:shell_error)
+    catch /\m\C^Syntastic: checker error$/
+        let list = []
+        call syntastic#util#error('checker ' . self._filetype . '/' . self._name . ' returned abnormal status ' . v:shell_error)
+    endtry
+    call self._populateHighlightRegexes(list)
     return g:SyntasticLoclist.New(list)
 endfunction
 
@@ -50,6 +57,23 @@ endfunction
 
 function! g:SyntasticChecker.isAvailable()
     return self._isAvailableFunc()
+endfunction
+
+" Private methods {{{1
+
+function! g:SyntasticChecker._populateHighlightRegexes(list)
+    let list = a:list
+    if !empty(self._highlightRegexFunc)
+        for i in range(0, len(list)-1)
+            if list[i]['valid']
+                let term = self._highlightRegexFunc(list[i])
+                if len(term) > 0
+                    let list[i]['hl'] = term
+                endif
+            endif
+        endfor
+    endif
+    return list
 endfunction
 
 " vim: set sw=4 sts=4 et fdm=marker:

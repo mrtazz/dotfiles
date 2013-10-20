@@ -13,17 +13,30 @@
 " See here for details of phpcs
 "    - phpcs (see http://pear.php.net/package/PHP_CodeSniffer)
 "
+if exists("g:loaded_syntastic_php_phpcs_checker")
+    finish
+endif
+let g:loaded_syntastic_php_phpcs_checker=1
+
 function! SyntaxCheckers_php_phpcs_IsAvailable()
     return executable('phpcs')
 endfunction
 
 function! SyntaxCheckers_php_phpcs_GetLocList()
     let makeprg = syntastic#makeprg#build({
-                \ 'exe': 'phpcs',
-                \ 'args': '--report=csv',
-                \ 'subchecker': 'phpcs' })
-    let errorformat = '%-GFile\,Line\,Column\,Type\,Message\,Source\,Severity,"%f"\,%l\,%c\,%t%*[a-zA-Z]\,"%m"\,%*[a-zA-Z0-9_.-]\,%*[0-9]'
-    return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat, 'subtype': 'Style' })
+        \ 'exe': 'phpcs',
+        \ 'args': '--report=csv',
+        \ 'filetype': 'php',
+        \ 'subchecker': 'phpcs' })
+
+    let errorformat =
+        \ '%-GFile\,Line\,Column\,Type\,Message\,Source\,Severity,'.
+        \ '"%f"\,%l\,%c\,%t%*[a-zA-Z]\,"%m"\,%*[a-zA-Z0-9_.-]\,%*[0-9]'
+
+    return SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat,
+        \ 'subtype': 'Style' })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

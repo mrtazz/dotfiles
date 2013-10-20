@@ -2,9 +2,13 @@
 " Language: Erlang
 " Author:   Ricardo Catalinas Jiménez <jimenezrick@gmail.com>
 " License:  Vim license
-" Version:  2012/11/26
+" Version:  2013/09/11
 
-if exists('b:did_indent')
+if !exists('g:erlang_force_use_vimerl_indent')
+	let g:erlang_force_use_vimerl_indent = 0
+endif
+
+if exists('b:did_indent') || (v:version >= 704 && !g:erlang_force_use_vimerl_indent)
 	finish
 else
 	let b:did_indent = 1

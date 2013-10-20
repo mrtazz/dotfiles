@@ -13,23 +13,44 @@
 " We use rst2pseudoxml.py, as it is ever so marginally faster than the other
 " rst2${x} tools in docutils.
 
+if exists("g:loaded_syntastic_rst_rst2pseudoxml_checker")
+    finish
+endif
+let g:loaded_syntastic_rst_rst2pseudoxml_checker=1
+
 function! SyntaxCheckers_rst_rst2pseudoxml_IsAvailable()
     return executable("rst2pseudoxml.py") || executable("rst2pseudoxml")
 endfunction
 
 function! SyntaxCheckers_rst_rst2pseudoxml_GetLocList()
     let makeprg = syntastic#makeprg#build({
-                \ 'exe': s:exe(),
-                \ 'args': '--report=2 --exit-status=1',
-                \ 'tail': syntastic#util#DevNull() })
+        \ 'exe': s:exe(),
+        \ 'args': '--report=2 --exit-status=1',
+        \ 'tail': syntastic#util#DevNull(),
+        \ 'filetype': 'rst',
+        \ 'subchecker': 'rst2pseudoxml' })
 
-    let errorformat = '%f:%l:\ (%tNFO/1)\ %m,
-      \%f:%l:\ (%tARNING/2)\ %m,
-      \%f:%l:\ (%tRROR/3)\ %m,
-      \%f:%l:\ (%tEVERE/4)\ %m,
-      \%-G%.%#'
+    let errorformat =
+        \ '%f:%l: (%tNFO/1) %m,'.
+        \ '%f:%l: (%tARNING/2) %m,'.
+        \ '%f:%l: (%tRROR/3) %m,'.
+        \ '%f:%l: (%tEVERE/4) %m,'.
+        \ '%-G%.%#'
 
-    return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
+    let loclist = SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat })
+
+    for n in range(len(loclist))
+        if loclist[n]['type'] ==? 'S'
+            let loclist[n]['type'] = 'E'
+        elseif loclist[n]['type'] ==? 'I'
+            let loclist[n]['type'] = 'W'
+            let loclist[n]['subtype'] = 'Style'
+        endif
+    endfor
+
+    return loclist
 endfunction
 
 function s:exe()

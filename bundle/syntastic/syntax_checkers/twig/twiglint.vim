@@ -10,7 +10,12 @@
 "
 "============================================================================
 
-function! SyntaxCheckers_twig_GetHighlightRegex(item)
+if exists("g:loaded_syntastic_twig_twiglint_checker")
+    finish
+endif
+let g:loaded_syntastic_twig_twiglint_checker=1
+
+function! SyntaxCheckers_twig_twiglint_GetHighlightRegex(item)
     " Let's match the full line for now
     return '\V'
 endfunction
@@ -21,12 +26,16 @@ endfunction
 
 function! SyntaxCheckers_twig_twiglint_GetLocList()
     let makeprg = syntastic#makeprg#build({
-                \ 'exe': 'twig-lint',
-                \ 'args': 'lint --format=csv',
-                \ 'subchecker': 'twiglint' })
+        \ 'exe': 'twig-lint',
+        \ 'args': 'lint --format=csv',
+        \ 'filetype': 'twig',
+        \ 'subchecker': 'twiglint' })
 
     let errorformat = '"%f"\,%l\,%m'
-    return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat})
+
+    return SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat})
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

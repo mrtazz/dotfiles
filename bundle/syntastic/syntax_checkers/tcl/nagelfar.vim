@@ -11,18 +11,30 @@
 "             See nagelfar homepage http://nagelfar.berlios.de/.
 "
 "============================================================================
+if exists("g:loaded_syntastic_tcl_nagelfar_checker")
+    finish
+endif
+let g:loaded_syntastic_tcl_nagelfar_checker=1
+
 function! SyntaxCheckers_tcl_nagelfar_IsAvailable()
     return executable('nagelfar')
 endfunction
 
 function! SyntaxCheckers_tcl_nagelfar_GetLocList()
     let makeprg = syntastic#makeprg#build({
-                \ 'exe': 'nagelfar',
-                \ 'args': '-H ' . g:syntastic_tcl_nagelfar_conf,
-                \ 'subchecker': 'nagelfar' })
-    let errorformat='%I%f: %l: N %m, %f: %l: %t %m, %-GChecking file %f'
+        \ 'exe': 'nagelfar',
+        \ 'args': '-H',
+        \ 'filetype': 'tcl',
+        \ 'subchecker': 'nagelfar' })
 
-    return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
+    let errorformat =
+        \ '%I%f: %l: N %m,'.
+        \ '%f: %l: %t %m,'.
+        \ '%-GChecking file %f'
+
+    return SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

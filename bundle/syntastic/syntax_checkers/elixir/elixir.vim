@@ -9,19 +9,35 @@
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
 "
 "============================================================================
+if exists("g:loaded_syntastic_elixir_elixir_checker")
+    finish
+endif
+let g:loaded_syntastic_elixir_elixir_checker=1
+
+" TODO: we should probably split this into separate checkers
 function! SyntaxCheckers_elixir_elixir_IsAvailable()
-    return executable('elixir')
+    return executable('elixir') && executable('mix')
 endfunction
 
 function! SyntaxCheckers_elixir_elixir_GetLocList()
-    let makeprg = syntastic#makeprg#build({ 'exe': 'elixir' })
-    let errorformat = '** %*[^\ ] %f:%l: %m'
 
-    let elixir_results = SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
+    let make_options = {}
+    let compile_command = 'elixir'
+    let mix_file = syntastic#util#findInParent('mix.exs', expand('%:p:h'))
 
-    if !empty(elixir_results)
-        return elixir_results
+    if filereadable(mix_file)
+        let compile_command = 'mix compile'
+        let make_options['cwd'] = fnamemodify(mix_file, ':p:h')
     endif
+
+    let make_options['makeprg'] = syntastic#makeprg#build({
+        \ 'exe': compile_command,
+        \ 'filetype': 'elixir',
+        \ 'subchecker': 'elixir' })
+
+    let make_options['errorformat'] = '** %*[^\ ] %f:%l: %m'
+
+    return SyntasticMake(make_options)
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

@@ -10,26 +10,35 @@
 "
 "============================================================================
 
-if !exists('g:syntastic_haskell_checker_args')
-    let g:syntastic_haskell_checker_args = '--ghcOpt="-fno-code" --hlintOpt="--language=XmlSyntax"'
+if exists('g:loaded_syntastic_haskell_ghc_mod_checker')
+    finish
 endif
+let g:loaded_syntastic_haskell_ghc_mod_checker = 1
 
 function! SyntaxCheckers_haskell_ghc_mod_IsAvailable()
     return executable('ghc-mod')
 endfunction
 
 function! SyntaxCheckers_haskell_ghc_mod_GetLocList()
-    let ghcmod = 'ghc-mod ' . g:syntastic_haskell_checker_args
-    let makeprg =
-          \ "{ ".
-          \ ghcmod . " check ". shellescape(expand('%')) . "; " .
-          \ ghcmod . " lint " . shellescape(expand('%')) . ";" .
-          \ " }"
-    let errorformat = '%-G\\s%#,%f:%l:%c:%trror: %m,%f:%l:%c:%tarning: %m,'.
-                \ '%f:%l:%c: %trror: %m,%f:%l:%c: %tarning: %m,%f:%l:%c:%m,'.
-                \ '%E%f:%l:%c:,%Z%m,'
+    let makeprg = syntastic#makeprg#build({
+        \ 'exe': 'ghc-mod check',
+        \ 'filetype': 'haskell',
+        \ 'subchecker': 'ghc_mod' })
 
-    return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
+    let errorformat =
+        \ '%-G%\s%#,' .
+        \ '%f:%l:%c:%trror: %m,' .
+        \ '%f:%l:%c:%tarning: %m,'.
+        \ '%f:%l:%c: %trror: %m,' .
+        \ '%f:%l:%c: %tarning: %m,' .
+        \ '%f:%l:%c:%m,' .
+        \ '%E%f:%l:%c:,' .
+        \ '%Z%m'
+
+    return SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat,
+        \ 'postprocess': ['compressWhitespace'] })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

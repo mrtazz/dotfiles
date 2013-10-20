@@ -13,18 +13,28 @@
 "
 "============================================================================
 
+if exists("g:loaded_syntastic_yaml_jsyaml_checker")
+    finish
+endif
+let g:loaded_syntastic_yaml_jsyaml_checker=1
+
 function! SyntaxCheckers_yaml_jsyaml_IsAvailable()
     return executable("js-yaml")
 endfunction
 
 function! SyntaxCheckers_yaml_jsyaml_GetLocList()
     let makeprg = syntastic#makeprg#build({
-                \ 'exe': 'js-yaml',
-                \ 'args': '--compact' })
+        \ 'exe': 'js-yaml',
+        \ 'args': '--compact',
+        \ 'filetype': 'yaml',
+        \ 'subchecker': 'jsyaml' })
+
     let errorformat='Error on line %l\, col %c:%m,%-G%.%#'
-    return SyntasticMake({ 'makeprg': makeprg,
-                         \ 'errorformat': errorformat,
-                         \ 'defaults': {'bufnr': bufnr("")} })
+
+    return SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat,
+        \ 'defaults': {'bufnr': bufnr("")} })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

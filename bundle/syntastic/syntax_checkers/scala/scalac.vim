@@ -10,23 +10,32 @@
 "
 "============================================================================
 
+if exists("g:loaded_syntastic_scala_scalac_checker")
+    finish
+endif
+let g:loaded_syntastic_scala_scalac_checker=1
+
 function! SyntaxCheckers_scala_scalac_IsAvailable()
     return executable("scalac")
 endfunction
 
-if !exists("g:syntastic_scala_options")
-    let g:syntastic_scala_options = " "
+if !exists('g:syntastic_scala_options')
+    let g:syntastic_scala_options = ''
 endif
 
 
 function! SyntaxCheckers_scala_scalac_GetLocList()
     let makeprg = syntastic#makeprg#build({
-                \ 'exe': 'scalac',
-                \ 'args': '-Ystop-after:parser '. g:syntastic_scala_options })
+        \ 'exe': 'scalac',
+        \ 'args': '-Ystop-after:parser ' . g:syntastic_scala_options,
+        \ 'filetype': 'scala',
+        \ 'subchecker': 'scalac' })
 
-    let errorformat = '%f\:%l: %trror: %m'
+    let errorformat = '%f:%l: %trror: %m'
 
-    return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
+    return SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

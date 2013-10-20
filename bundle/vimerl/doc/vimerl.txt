@@ -244,6 +244,14 @@ process (default: 1, values: 0 or 1): >
 Note: it could be useful to disable this cache in order to get always fresh
       info whenever a module is recompiled.
 
+------------------------------------------------------------------------------
+                                            *'erlang_force_use_vimerl_indent'*
+
+Vim 7.4 comes with an Erlang indent script, thus Vimerl tries to use it when
+available. This option forces to use the Vimerl indent script always
+(default: 0, values: 0 or 1): >
+	:let erlang_force_use_vimerl_indent = 0
+
 ==============================================================================
 5. License                                                    *vimerl-license*
 
