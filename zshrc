@@ -20,7 +20,7 @@ autoload -U compinit
 compinit -i
 
 # Customize to your needs...
-export PATH=~/bin:/usr/local/bin:$PATH
+export PATH=~/bin:/usr/local/bin:/usr/local/sbin:$PATH
 
 export EDITOR="vim"
 
@@ -46,6 +46,14 @@ function graphline() {
   curl -s "${GRAPHITEHOST}/render?from=-${MINUTES}minutes&target=${1}&format=raw" | cut -d"|" -f 2 | spark ;
 }
 
+# function to create a new jekyll post
+function create_post() {
+  if [ -d ./_posts ]; then
+    echo "---\nlayout: post\ntitle: \"$1\"\npublished: true\n---\n\n ##[{{page.title}}]({{ page.url }})" > ./_posts/$(date +"%Y-%m-%d")-$(echo $1 | sed 's/ /-/g').markdown
+  fi
+}
+
+
 export GREP_OPTIONS="--exclude=tags --color=auto"
 export GREP_COLOR="1;32"
 function ack(){ ARGS=($1 ${2-*}); grep -nRi "${ARGS[@]}" }
@@ -57,7 +65,11 @@ alias simplenote='vim -c "Simplenote -l"'
 alias tma='tmux attach -d -t'
 alias irc='mosh batou.unwiredcouch.com -- tmux attach -d -t comm'
 alias etsyirc='mosh etsyvm -- tmux attach -d -t comm'
-alias mutt_home='MUTT_IDENTITY=unwiredcouch mutt'
-alias mutt_etsy='MUTT_IDENTITY=etsy mutt'
+alias mutt='MUTT_IDENTITY=unwiredcouch /usr/local/bin/mutt'
+alias mutt_home='MUTT_IDENTITY=unwiredcouch /usr/local/bin/mutt'
+alias mutt_etsy='MUTT_IDENTITY=etsy /usr/local/bin/mutt'
+alias git-tmux='tmux new -s $(basename $(pwd))'
 
 unset TMUX
+eval "$(uru_rt admin install)"
+uru 1.9.3 > /dev/null
