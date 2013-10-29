@@ -33,6 +33,8 @@ bindkey '^R' history-incremental-search-backward
 bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
 
+stty discard undef
+
 export LC_ALL=en_US.UTF-8
 eval "$(hub alias -s)"
 
@@ -47,6 +49,8 @@ function graphline() {
 
 function ack(){ ARGS=($1 ${2-*}); grep -Ri "${ARGS[@]}" }
 
+unset TMUX
+
 # todos are stored in simplenote
 alias todos='vim -c "Simplenote -l todo"'
 alias inbox='vim -c "Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA"'
@@ -55,3 +59,11 @@ alias tma='tmux attach -d -t'
 alias irc='mosh batou.unwiredcouch.com -- tmux attach -d -t comm'
 alias etsyirc='mosh etsyvm -- tmux attach -d -t comm'
 
+
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"
+case "$TERM" in
+  screen*)
+    PROMPT_COMMAND="printf '\033k$(hostname)\033\\';"${PROMPT_COMMAND}
+    ;;
+esac
