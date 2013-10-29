@@ -20,7 +20,7 @@ autoload -U compinit
 compinit -i
 
 # Customize to your needs...
-export PATH=~/bin:/usr/local/bin:$PATH
+export PATH=~/bin:/usr/local/bin:/usr/local/sbin:$PATH
 
 export EDITOR="vim"
 
@@ -32,6 +32,7 @@ source ~/.profile
 bindkey '^R' history-incremental-search-backward
 bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
+stty discard undef
 
 stty discard undef
 
@@ -47,7 +48,17 @@ function graphline() {
   curl -s "${GRAPHITEHOST}/render?from=-${MINUTES}minutes&target=${1}&format=raw" | cut -d"|" -f 2 | spark ;
 }
 
-function ack(){ ARGS=($1 ${2-*}); grep -Ri "${ARGS[@]}" }
+# function to create a new jekyll post
+function create_post() {
+  if [ -d ./_posts ]; then
+    echo "---\nlayout: post\ntitle: \"$1\"\npublished: true\n---\n\n ##[{{page.title}}]({{ page.url }})" > ./_posts/$(date +"%Y-%m-%d")-$(echo $1 | sed 's/ /-/g').markdown
+  fi
+}
+
+
+export GREP_OPTIONS="--exclude=tags --color=auto"
+export GREP_COLOR="1;32"
+function ack(){ ARGS=($1 ${2-*}); grep -nRi "${ARGS[@]}" }
 
 unset TMUX
 
@@ -58,7 +69,10 @@ alias simplenote='vim -c "Simplenote -l"'
 alias tma='tmux attach -d -t'
 alias irc='mosh batou.unwiredcouch.com -- tmux attach -d -t comm'
 alias etsyirc='mosh etsyvm -- tmux attach -d -t comm'
-
+alias mutt='MUTT_IDENTITY=unwiredcouch /usr/local/bin/mutt'
+alias mutt_home='MUTT_IDENTITY=unwiredcouch /usr/local/bin/mutt'
+alias mutt_etsy='MUTT_IDENTITY=etsy /usr/local/bin/mutt'
+alias git-tmux='tmux new -s $(basename $(pwd))'
 
 ### Added by the Heroku Toolbelt
 export PATH="/usr/local/heroku/bin:$PATH"
@@ -67,3 +81,6 @@ case "$TERM" in
     PROMPT_COMMAND="printf '\033k$(hostname)\033\\';"${PROMPT_COMMAND}
     ;;
 esac
+
+eval "$(uru_rt admin install)"
+uru 1.9.3 > /dev/null
