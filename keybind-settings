@@ -18,7 +18,6 @@ bind index j next-entry
 
 # filtering macros
 macro index,pager R "<save-message>=gtd-to-read/<enter><sync-mailbox>"
-macro index,pager a "<pipe-message>mutt-to-omnifocus.py <enter><save-message>=gtd-needs-reply/<enter><sync-mailbox>"
 macro index,pager A "<save-message>=Archive/<enter><sync-mailbox>"
 macro index Si "<change-folder>=INBOX/<enter>"
 macro index Sr "<change-folder>=gtd-to-read/<enter>"
@@ -51,7 +50,7 @@ bind index,pager \CO sidebar-open
 
 # b toggles sidebar visibility
 macro index b "<enter-command>toggle sidebar_visible<enter><refresh>"
-macro pager b "<enter-command>toggle sidebar_visible<enter><redraw-screen>"
+#macro pager b "<enter-command>toggle sidebar_visible<enter><redraw-screen>"
 
 # Remap bounce-message function to “B”
 bind index B bounce-message
