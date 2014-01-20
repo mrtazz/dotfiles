@@ -37,6 +37,8 @@ bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
 stty discard undef
 
+stty discard undef
+
 export LC_ALL=en_US.UTF-8
 eval "$(hub alias -s)"
 
@@ -67,6 +69,8 @@ export GREP_COLOR="1;32"
 #function ack(){ ARGS=($1 ${2-*}); grep -nRi "${ARGS[@]}" }
 alias ack='ag'
 
+unset TMUX
+
 # todos are stored in simplenote
 alias tma='tmux attach -d -t'
 alias irc='mosh vlad.unwiredcouch.com -- tmux attach -d -t comm'
@@ -77,7 +81,14 @@ alias mutt_etsy='MUTT_IDENTITY=etsy /usr/local/bin/mutt'
 alias git-tmux='tmux new -s $(basename $(pwd))'
 alias notes='vim -c "cd ~/ownCloud/Notebooks" -c "NERDTreeToggle"'
 
-unset TMUX
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"
+case "$TERM" in
+  screen*)
+    PROMPT_COMMAND="printf '\033k$(hostname)\033\\';"${PROMPT_COMMAND}
+    ;;
+esac
+
 eval "$(uru_rt admin install)"
 uru 1.9.3 > /dev/null
 
