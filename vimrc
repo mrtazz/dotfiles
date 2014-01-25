@@ -48,6 +48,18 @@ else
     "colorscheme molokai
     colorscheme solarized
 endif
+
+" quick function to count the number of words in the buffer
+if !exists("*WordCount")
+function WordCount()
+  let s:old_status = v:statusmsg
+  exe "silent normal g\<c-g>"
+  let s:word_count = str2nr(split(v:statusmsg)[11])
+  let v:statusmsg = s:old_status
+  return s:word_count
+endfunction
+endif
+
 " some information in the statusline
 set statusline=[%n]\ %t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m\ %P
 set statusline+=%#warningmsg#
@@ -70,6 +82,7 @@ map <leader>b :sb
 map <leader>m :make<CR>
 map <leader>p :CtrlP<CR>
 map <leader>i :Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA<CR>
+map <leader>n :NERDTreeToggle<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
@@ -121,3 +134,4 @@ noremap   <Right>  <NOP>
 let g:SimplenoteListHeight=30
 let g:SimplenoteFiletype="markdown"
 let g:SimplenoteSortOrder="pinned,modifydate"
+
