@@ -135,309 +135,12 @@ endfunction
 "
 
 python << ENDPYTHON
-"""
-    simplenote.py
-    ~~~~~~~~~~~~~~
 
-    Python library for accessing the Simplenote API
-
-    :copyright: (c) 2011 by Daniel Schauenberg
-    :license: MIT, see LICENSE for more details.
-"""
-
-import urllib
-import urllib2
-from urllib2 import HTTPError
-import base64
-from time import mktime
-from datetime import datetime
-
-try:
-    import json
-except ImportError:
-    try:
-        import simplejson as json
-    except ImportError:
-        # For Google AppEngine
-        from django.utils import simplejson as json
-
-AUTH_URL = 'https://simple-note.appspot.com/api/login'
-DATA_URL = 'https://simple-note.appspot.com/api2/data'
-INDX_URL = 'https://simple-note.appspot.com/api2/index?'
-NOTE_FETCH_LENGTH = 100
-
-class Simplenote(object):
-    """ Class for interacting with the simplenote web service """
-
-    def __init__(self, username, password):
-        """ object constructor """
-        self.username = urllib2.quote(username)
-        self.password = urllib2.quote(password)
-        self.token = None
-
-    def authenticate(self, user, password):
-        """ Method to get simplenote auth token
-
-        Arguments:
-            - user (string):     simplenote email address
-            - password (string): simplenote password
-
-        Returns:
-            Simplenote API token as string
-
-        """
-        auth_params = "email=%s&password=%s" % (user, password)
-        values = base64.encodestring(auth_params)
-        request = Request(AUTH_URL, values)
-        try:
-            res = urllib2.urlopen(request).read()
-            token = urllib2.quote(res)
-        except IOError: # no connection exception
-            token = None
-        return token
-
-    def get_token(self):
-        """ Method to retrieve an auth token.
-
-        The cached global token is looked up and returned if it exists. If it
-        is `None` a new one is requested and returned.
-
-        Returns:
-            Simplenote API token as string
-
-        """
-        if self.token == None:
-            self.token = self.authenticate(self.username, self.password)
-        return self.token
-
-
-    def get_note(self, noteid):
-        """ method to get a specific note
-
-        Arguments:
-            - noteid (string): ID of the note to get
-
-        Returns:
-            A tuple `(note, status)`
-
-            - note (dict): note object
-            - status (int): 0 on sucesss and -1 otherwise
-
-        """
-        # request note
-        params = '/%s?auth=%s&email=%s' % (str(noteid), self.get_token(),
-                                           self.username)
-        request = Request(DATA_URL+params)
-        try:
-            response = urllib2.urlopen(request)
-        except HTTPError, e:
-            return e, -1
-        except IOError, e:
-            return e, -1
-        note = json.loads(response.read())
-        # use UTF-8 encoding
-        note["content"] = note["content"].encode('utf-8')
-        note["tags"] = [t.encode('utf-8') for t in note["tags"]]
-        return note, 0
-
-    def update_note(self, note):
-        """ function to update a specific note object, if the note object does not
-        have a "key" field, a new note is created
-
-        Arguments
-            - note (dict): note object to update
-
-        Returns:
-            A tuple `(note, status)`
-
-            - note (dict): note object
-            - status (int): 0 on sucesss and -1 otherwise
-
-        """
-        # use UTF-8 encoding
-        note["content"] = unicode(note["content"], 'utf-8')
-        if note.has_key("tags"):
-            note["tags"] = [unicode(t, 'utf-8') for t in note["tags"]]
-
-
-        # determine whether to create a new note or updated an existing one
-        if note.has_key("key"):
-            # set modification timestamp in milli-seconds since epoch
-            note["modifydate"] = int(round(time.time() * 1000))
-
-            url = '%s/%s?auth=%s&email=%s' % (DATA_URL, note["key"],
-                                              self.get_token(), self.username)
-        else:
-            url = '%s?auth=%s&email=%s' % (DATA_URL, self.get_token(), self.username)
-        request = Request(url, urllib.quote(json.dumps(note)))
-        response = ""
-        try:
-            response = urllib2.urlopen(request).read()
-        except IOError, e:
-            return e, -1
-        return json.loads(response), 0
-
-    def add_note(self, note):
-        """wrapper function to add a note
-
-        The function can be passed the note as a dict with the `content`
-        property set, which is then directly send to the web service for
-        creation. Alternatively, only the body as string can also be passed. In
-        this case the parameter is used as `content` for the new note.
-
-        Arguments:
-            - note (dict or string): the note to add
-
-        Returns:
-            A tuple `(note, status)`
-
-            - note (dict): the newly created note
-            - status (int): 0 on sucesss and -1 otherwise
-
-        """
-        if type(note) == str:
-            return self.update_note({"content": note})
-        elif (type(note) == dict) and note.has_key("content"):
-            return self.update_note(note)
-        else:
-            return "No string or valid note.", -1
-
-    def get_note_list(self, since=None):
-        """ function to get the note list
-
-        The function can be passed an optional argument to limit the
-        date range of the list returned. If omitted a list of all notes
-        is returned.
-
-        Arguments:
-            - since(YYYY-MM-DD string): only return notes modified
-              since this date
-
-        Returns:
-            A tuple `(notes, status)`
-
-            - notes (list): A list of note objects with all properties set except
-            `content`.
-            - status (int): 0 on sucesss and -1 otherwise
-
-        """
-        # initialize data
-        status = 0
-        ret = []
-        response = {}
-        notes = { "data" : [] }
-
-        # get the note index
-        params = 'auth=%s&email=%s&length=%s' % (self.get_token(), self.username,
-                                                 NOTE_FETCH_LENGTH)
-        if since is not None:
-            try:
-                sinceUT = mktime(datetime.strptime(since, "%Y-%m-%d").timetuple())
-                params += '&since=%s' % sinceUT
-            except ValueError:
-                pass
-
-        # perform initial HTTP request
-        try:
-            request = Request(INDX_URL+params)
-            response = json.loads(urllib2.urlopen(request).read())
-            notes["data"].extend(response["data"])
-        except IOError:
-            status = -1
-
-        # get additional notes if bookmark was set in response
-        while response.has_key("mark"):
-            vals = (self.get_token(), self.username, response["mark"], NOTE_FETCH_LENGTH)
-            params = 'auth=%s&email=%s&mark=%s&length=%s' % vals
-            if since is not None:
-                try:
-                    sinceUT = mktime(datetime.strptime(since, "%Y-%m-%d").timetuple())
-                    params += '&since=%s' % sinceUT
-                except ValueError:
-                    pass
-
-            # perform the actual HTTP request
-            try:
-                request = Request(INDX_URL+params)
-                response = json.loads(urllib2.urlopen(request).read())
-                notes["data"].extend(response["data"])
-            except IOError:
-                status = -1
-
-        # parse data fields in response
-        ret = notes["data"]
-
-        return ret, status
-
-    def trash_note(self, note_id):
-        """ method to move a note to the trash
-
-        Arguments:
-            - note_id (string): key of the note to trash
-
-        Returns:
-            A tuple `(note, status)`
-
-            - note (dict): the newly created note or an error message
-            - status (int): 0 on sucesss and -1 otherwise
-
-        """
-        # get note
-        note, status = self.get_note(note_id)
-        if (status == -1):
-            return note, status
-        # set deleted property
-        note["deleted"] = 1
-        # update note
-        return self.update_note(note)
-
-    def delete_note(self, note_id):
-        """ method to permanently delete a note
-
-        Arguments:
-            - note_id (string): key of the note to trash
-
-        Returns:
-            A tuple `(note, status)`
-
-            - note (dict): an empty dict or an error message
-            - status (int): 0 on sucesss and -1 otherwise
-
-        """
-        # notes have to be trashed before deletion
-        note, status = self.trash_note(note_id)
-        if (status == -1):
-            return note, status
-
-        params = '/%s?auth=%s&email=%s' % (str(note_id), self.get_token(),
-                                           self.username)
-        request = Request(url=DATA_URL+params, method='DELETE')
-        try:
-            urllib2.urlopen(request)
-        except IOError, e:
-            return e, -1
-        return {}, 0
-
-
-class Request(urllib2.Request):
-    """ monkey patched version of urllib2's Request to support HTTP DELETE
-        Taken from http://python-requests.org, thanks @kennethreitz
-    """
-
-    def __init__(self, url, data=None, headers={}, origin_req_host=None,
-                unverifiable=False, method=None):
-        urllib2.Request.__init__(self, url, data, headers, origin_req_host, unverifiable)
-        self.method = method
-
-    def get_method(self):
-        if self.method:
-            return self.method
-
-        return urllib2.Request.get_method(self)
-
-
-
+import os
 import vim
+sys.path.append(vim.eval("expand('<sfile>:p:h')") + "/simplenote.py/simplenote/")
+from simplenote import Simplenote
+import datetime
 import time
 import math as m
 from threading import Thread
@@ -554,7 +257,8 @@ class SimplenoteVimInterface(object):
 
         # get note and open it in scratch buffer
         note, status = self.simplenote.get_note(note_id)
-        vim.command("""call s:ScratchBufferOpen("%s")""" % note_id)
+        if not vim.eval("exists('g:vader_file')"):
+            vim.command("""call s:ScratchBufferOpen("%s")""" % note_id)
         self.set_current_note(note_id)
         buffer = vim.current.buffer
         # remove cursorline
@@ -569,9 +273,10 @@ class SimplenoteVimInterface(object):
         vim.command("setlocal nomodified")
 
     def update_note_from_current_buffer(self):
-        """ updates the currently displayed note to the web service """
+        """ updates the currently displayed note to the web service or creates new"""
         note_id = self.get_current_note()
         content = "\n".join(str(line) for line in vim.current.buffer[:])
+        # Need to get note details first to assess remote markdown status
         note, status = self.simplenote.get_note(note_id)
         if status == 0:
             if (vim.eval("&filetype") == "markdown"):
@@ -587,14 +292,14 @@ class SimplenoteVimInterface(object):
             note, status = self.simplenote.update_note({"content": content,
                                                       "key": note_id,
                                                       "systemtags": note["systemtags"]})
-        else:
-            print "Could not set markdown status."
-            note, status = self.simplenote.update_note({"content": content,
-                                                      "key": note_id})
-
-        if status == 0:
-            print "Update successful."
-            vim.command("setlocal nomodified")
+            if status == 0:
+                print "Update successful."
+                vim.command("setlocal nomodified")
+            else:
+                print "Update failed.: %s" % note
+        elif note.code == 404:
+            # API returns 404 if note doesn't exist, so create new
+            self.create_new_note_from_current_buffer()
         else:
             print "Update failed.: %s" % note
 
@@ -621,7 +326,9 @@ class SimplenoteVimInterface(object):
         note, status = self.simplenote.trash_note(note_id)
         if status == 0:
             print "Note moved to trash."
-            vim.command("quit!")
+            """ when running tests don't want to close buffer """
+            if not vim.eval("exists('g:vader_file')"):
+                vim.command("quit!")
         else:
             print "Moving note to trash failed.: %s" % note
 
@@ -631,7 +338,9 @@ class SimplenoteVimInterface(object):
         note, status = self.simplenote.delete_note(note_id)
         if status == 0:
             print "Note deleted."
-            vim.command("quit!")
+            """ when running tests don't want to close buffer """
+            if not vim.eval("exists('g:vader_file')"):
+                vim.command("quit!")
         else:
             print "Deleting note failed.: %s" % note
 
@@ -656,7 +365,8 @@ class SimplenoteVimInterface(object):
     def list_note_index_in_scratch_buffer(self, since=None, tags=[]):
         """ get all available notes and display them in a scratchbuffer """
         # Initialize the scratch buffer
-        self.scratch_buffer()
+        if not vim.eval("exists('g:vader_file')"):
+            self.scratch_buffer()
         vim.command("setlocal modifiable")
         # clear global note id storage
         buffer = vim.current.buffer
@@ -805,7 +515,7 @@ if param == "-l":
     if optionsexist:
         try:
             # check for valid date string
-            datetime.strptime(vim.eval("a:1"), "%Y-%m-%d")
+            datetime.datetime.strptime(vim.eval("a:1"), "%Y-%m-%d")
             interface.list_note_index_in_scratch_buffer(since=vim.eval("a:1"))
         except ValueError:
             interface.list_note_index_in_scratch_buffer(tags=vim.eval("a:1").split(","))
