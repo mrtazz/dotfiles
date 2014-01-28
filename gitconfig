@@ -7,9 +7,6 @@
   preloadindex = 1
   pager=less -R
 
-[include]
-  path = ~/.githubtokens
-
 [apply]
   whitespace = fix
 
@@ -44,3 +41,6 @@
   email = d@unwiredcouch.com
   name  = Daniel Schauenberg
 
+[include]
+  path = ~/.githubtokens
+  path = ~/.dotoverrides/gitconfig
