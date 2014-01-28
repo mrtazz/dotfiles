@@ -18,17 +18,22 @@ alias mon-external    1
 # Misc Aliases
 alias showHintsLeftHand hint AOEUIYQJKX
 alias showNormalHint hint AOEUIDHTNSYXFBPKGMCW
-alias browser 'Google Chrome'
+alias browser 'Firefox'
 alias editor 'MacVim'
+alias twitter 'Tweetbot'
+alias terminal 'iTerm'
+alias todo 'OmniFocus'
 
 # Abstract positions
-alias full          move screenOriginX;screenOriginY                  screenSizeX;screenSizeY
-alias lefthalf      move screenOriginX;screenOriginY                  screenSizeX/2;screenSizeY
-alias righthalf     move screenOriginX+screenSizeX/2;screenOriginY    screenSizeX/2;screenSizeY
-alias rightmost     move screenOriginX+screenSizeX*0.4;screenOriginY  screenSizeX*0.6;screenSizeY
-alias rightless     move screenOriginX+screenSizeX*0.6;screenOriginY  screenSizeX*0.4;screenSizeY
-alias leftmost      move screenOriginX;screenOriginY                  screenSizeX*0.6;screenSizeY
-alias leftless      move screenOriginX;screenOriginY                  screenSizeX*0.4;screenSizeY
+alias full              move screenOriginX;screenOriginY                  screenSizeX;screenSizeY
+alias lefthalf          move screenOriginX;screenOriginY                  screenSizeX/2;screenSizeY
+alias righthalf         move screenOriginX+screenSizeX/2;screenOriginY    screenSizeX/2;screenSizeY
+alias rightmost         move screenOriginX+screenSizeX*0.4;screenOriginY  screenSizeX*0.6;screenSizeY
+alias rightless         move screenOriginX+screenSizeX*0.6;screenOriginY  screenSizeX*0.4;screenSizeY
+alias leftmost          move screenOriginX;screenOriginY                  screenSizeX*0.6;screenSizeY
+alias leftless          move screenOriginX;screenOriginY                  screenSizeX*0.4;screenSizeY
+alias leftthird         move screenOriginX;screenOriginY                  screenSizeX*0.37;screenSizeY
+alias righttwothirds    move screenOriginX+screenSizeX*0.37;screenOriginY    (screenSizeX*0.63);screenSizeY
 # Concrete positions
 alias 1-full        move screenOriginX;screenOriginY screenSizeX;screenSizeY         ${mon-internal}
 alias 1-left        move screenOriginX;screenOriginY screenSizeX/2;screenSizeY         ${mon-internal}
@@ -57,20 +62,20 @@ bind tab:alt  ${showNormalHint}
 # The HYPER key
 # ======================================
 
-alias hyper ctrl;alt;cmd
+alias hyper ctrl;cmd
 
 # grid
-bind g:cmd grid padding:5 0:8,8 1:8,8
+bind g:cmd grid padding:5 0:8,8 1:20,20
 
 # Location bindings
 bind f:${hyper} ${full}
 bind l:${hyper} ${lefthalf}
-bind r:${hyper} ${righthalf}
-#bind r:${hyper} throw next
+#bind r:${hyper} ${righthalf}
+bind t:${hyper} throw next
 
 # Resize Bindings
-#bind r:${hyper} ${leftmost}
-#bind g:${hyper} ${rightmost}
+bind r:${hyper} ${leftthird}
+bind g:${hyper} ${righttwothirds}
 
 # Focus Bindings
 bind right:${hyper}    focus right
@@ -81,4 +86,6 @@ bind down:${hyper}     focus down
 # App bindings
 bind e:${hyper} focus ${browser}
 bind u:${hyper} focus ${editor}
-bind i:${hyper} focus 'iTerm'
+bind i:${hyper} focus ${terminal}
+bind t:${hyper} focus ${twitter}
+bind o:${hyper} focus ${todo}
