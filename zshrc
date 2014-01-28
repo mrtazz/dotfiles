@@ -35,9 +35,11 @@ source ~/.profile
 bindkey '^R' history-incremental-search-backward
 bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
-stty discard undef
 
+# turn off weird ctrl-O behaviour on OSX
+if [ "$(uname)" = "Darwin" ]; then
 stty discard undef
+fi
 
 export LC_ALL=en_US.UTF-8
 eval "$(hub alias -s)"
