@@ -89,8 +89,14 @@ case "$TERM" in
     ;;
 esac
 
-eval "$(uru_rt admin install)"
-uru 1.9.3 > /dev/null
+which uru_rt &> /dev/null
+if [ $? -eq 0 ]; then
+  eval "$(uru_rt admin install)"
+  uru 1.9.3 > /dev/null
+fi
 
 # added by travis gem
-[ -f /Users/mrtazz/.travis/travis.sh ] && source /Users/mrtazz/.travis/travis.sh
+[ -f ${HOME}/.travis/travis.sh ] && source ${HOME}/.travis/travis.sh
+
+# source overrides (should be the last line)
+[ -f ${HOME}/.dotoverrides/zshrc ] && source ${HOME}/.dotoverrides/zshrc
