@@ -135,3 +135,7 @@ let g:SimplenoteListHeight=30
 let g:SimplenoteFiletype="markdown"
 let g:SimplenoteSortOrder="pinned,modifydate"
 
+" source overrides configs
+if filereadable($HOME."/.dotoverrides/vimrc")
+  exec ":source ". $HOME . "/.dotoverrides/vimrc"
+endif
