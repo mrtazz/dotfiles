@@ -17,7 +17,6 @@ source $my_mutt_dir/compose-settings
 source $my_mutt_dir/keybind-settings
 source $my_mutt_dir/mime-settings
 source $my_mutt_dir/regex-settings
-source $my_mutt_dir/smtp-settings
 source $my_mutt_dir/subscription-settings
 set mailcap_path=$my_mutt_dir/mailcap
 
@@ -129,3 +128,5 @@ set sidebar_sort=yes
 
 # cypher settings
 set ssl_ciphers = "ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128:AES256-SHA:AES128-SHA"
+# source override
+source $HOME/.dotoverrides/muttrc
