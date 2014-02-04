@@ -9,7 +9,7 @@ reset all
 set my_mutt_dir=$MUTT_HOME
 
 # import your identity
-source $my_mutt_dir/identity-$MUTT_IDENTITY
+source $MUTT_IDENTITY
 
 # include all other settings
 source $my_mutt_dir/mutt-colors-solarized-light-16.muttrc
@@ -18,7 +18,7 @@ source $my_mutt_dir/keybind-settings
 source $my_mutt_dir/mime-settings
 source $my_mutt_dir/regex-settings
 source $my_mutt_dir/subscription-settings
-set mailcap_path=$my_mutt_dir/mailcap
+set mailcap_path=$HOME/.dotoverrides/mailcap
 
 # keep a cache of headers and bodies for faster loading
 set header_cache=$my_mutt_dir/cache/headers
