@@ -6,7 +6,7 @@
 reset all
 
 # set the homedir
-set my_mutt_dir=$HOME/.mutt
+set my_mutt_dir=$MUTT_HOME
 
 # import your identity
 source $my_mutt_dir/identity-$MUTT_IDENTITY
