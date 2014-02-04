@@ -12,16 +12,13 @@ set my_mutt_dir=$HOME/.mutt
 source $my_mutt_dir/identity-$MUTT_IDENTITY
 
 # include all other settings
-source $my_mutt_dir/color-settings
-#source $my_mutt_dir/mutt-colors-solarized-light-16.muttrc
+source $my_mutt_dir/mutt-colors-solarized-light-16.muttrc
 source $my_mutt_dir/compose-settings
 source $my_mutt_dir/keybind-settings
 source $my_mutt_dir/mime-settings
 source $my_mutt_dir/regex-settings
 source $my_mutt_dir/smtp-settings
 source $my_mutt_dir/subscription-settings
-
-# where dat mailcap at?
 set mailcap_path=$my_mutt_dir/mailcap
 
 # keep a cache of headers and bodies for faster loading
@@ -125,10 +122,10 @@ set confirmappend=no
 set delete=yes
 
 # sidebar options
-set sidebar_width=30
-set sidebar_visible=yes
+set sidebar_width=25
+set sidebar_visible=no
 set sidebar_delim='|'
-set sidebar_sort=no
+set sidebar_sort=yes
 
-# no wait key
-unset wait_key
+# cypher settings
+set ssl_ciphers = "ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128:AES256-SHA:AES128-SHA"
