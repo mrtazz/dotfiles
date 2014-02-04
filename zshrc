@@ -83,6 +83,12 @@ alias mutt_etsy='MUTT_IDENTITY=etsy /usr/local/bin/mutt'
 alias git-tmux='tmux new -s $(basename $(pwd))'
 alias notes='vim -c "cd ~/ownCloud/Notebooks" -c "NERDTreeToggle"'
 
+if [ -d ~/.dotfiles/mutt ]; then
+  export MUTT_HOME=$HOME/.dotfiles/mutt
+else
+  export MUTT_HOME=$HOME/.mutt
+fi
+
 ### Added by the Heroku Toolbelt
 export PATH="/usr/local/heroku/bin:$PATH"
 case "$TERM" in
