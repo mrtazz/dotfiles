@@ -3,5 +3,4 @@ autocmd BufNewFile,BufRead *.markdown,*.md,*.mdown,*.mkd,*.mkdn
       \   set ft=markdown |
       \ else |
       \   setf markdown |
-      \   setlocal statusline=[%n]\ %t\ %y\ words:%{WordCount()}\ (%l,%c)\ %m\ %P |
       \ endif
