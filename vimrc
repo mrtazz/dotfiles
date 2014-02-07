@@ -83,6 +83,7 @@ map <leader>m :make<CR>
 map <leader>p :CtrlP<CR>
 map <leader>i :Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA<CR>
 map <leader>n :NERDTreeToggle<CR>
+map <leader>t :VoomToggle markdown<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
