@@ -141,3 +141,8 @@ let g:SimplenoteSortOrder="pinned,modifydate"
 if filereadable($HOME."/.dotoverrides/vimrc")
   exec ":source ". $HOME . "/.dotoverrides/vimrc"
 endif
+
+let g:markdown_fold_style = 'nested'
+set foldlevel=2
+set foldminlines=10
+set foldnestmax=2
