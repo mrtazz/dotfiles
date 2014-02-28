@@ -14,7 +14,7 @@ filetype plugin indent on
 
 " general settings
 set ruler
-set number
+set nonumber
 set textwidth=78
 set copyindent
 set shiftwidth=2           " tab indention
