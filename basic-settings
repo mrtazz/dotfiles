@@ -18,6 +18,7 @@ source $my_mutt_dir/keybind-settings
 source $my_mutt_dir/mime-settings
 source $my_mutt_dir/regex-settings
 source $my_mutt_dir/subscription-settings
+source $my_mutt_dir/gpg-settings
 set mailcap_path=$HOME/.dotoverrides/mailcap
 
 # keep a cache of headers and bodies for faster loading
