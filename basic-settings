@@ -52,6 +52,9 @@ set move="no"
 # display help in top line
 set help
 
+# stop at the end of a message
+set pager_stop
+
 # certificates
 set certificate_file =$my_mutt_dir/certificates
 
