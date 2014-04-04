@@ -9,7 +9,7 @@ reset all
 set my_mutt_dir=$MUTT_HOME
 
 # import your identity
-source $MUTT_IDENTITY
+source $my_mutt_dir/identity-$MUTT_IDENTITY
 
 # include all other settings
 source $my_mutt_dir/mutt-colors-solarized-light-16.muttrc
