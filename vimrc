@@ -93,6 +93,9 @@ map <C-\> :sp <CR>:exec("tag ".expand("<cword>"))<CR>
 " open ctags in vertical split
 map <leader>] :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 
+" see if this makes me happy
+imap jj <Esc>
+
 " remove unneeded spaces for a good whitespace carbon footprint
 autocmd BufWritePre * :%s/\s\+$//e
 
