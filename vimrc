@@ -37,6 +37,8 @@ set switchbuf=useopen
 " use solarized palette incase it's used
 set background=light
 let g:solarized_termcolors=256
+let g:solarized_contrast="high"
+let g:solarized_visibility="high"
 
 syntax on
 if has("gui_running")
@@ -84,6 +86,7 @@ map <leader>p :CtrlP<CR>
 map <leader>i :Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA<CR>
 map <leader>n :NERDTreeToggle<CR>
 map <leader>t :VoomToggle markdown<CR>
+map <leader>T :TagbarToggle<CR>
 map <leader>M :set filetype=markdown<CR>
 
 " open ctags definition in new tab
