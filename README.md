@@ -23,5 +23,11 @@ a file called `identity` in your mutt folder with the following settings:
     # smtp login
     set my_smtp_url="smtp://login:password@smtpserver:port/"
 
+    # context to use for sending mail to OF
+    set my_OF_CONTEXT='EMail'
+
+    # address book completion
+    set query_command="mutt_ldap.py '%s'"
+
 
 This should get you going with mutt.
