@@ -51,17 +51,6 @@ else
     colorscheme solarized
 endif
 
-" quick function to count the number of words in the buffer
-if !exists("*WordCount")
-function WordCount()
-  let s:old_status = v:statusmsg
-  exe "silent normal g\<c-g>"
-  let s:word_count = str2nr(split(v:statusmsg)[11])
-  let v:statusmsg = s:old_status
-  return s:word_count
-endfunction
-endif
-
 " some information in the statusline
 set statusline=[%n]\ %t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m\ %P
 set statusline+=%#warningmsg#
@@ -83,7 +72,6 @@ map <leader>w <C-w>
 map <leader>b :sb
 map <leader>m :make<CR>
 map <leader>p :CtrlP<CR>
-map <leader>i :Simplenote -o agtzaW1wbGUtbm90ZXINCxIETm90ZRjVvJMNDA<CR>
 map <leader>n :NERDTreeToggle<CR>
 map <leader>t :VoomToggle markdown<CR>
 map <leader>T :TagbarToggle<CR>
@@ -139,16 +127,9 @@ noremap   <Down>   <NOP>
 noremap   <Left>   <NOP>
 noremap   <Right>  <NOP>
 
-let g:SimplenoteListHeight=30
-let g:SimplenoteFiletype="markdown"
-let g:SimplenoteSortOrder="pinned,modifydate"
-
 " source overrides configs
 if filereadable($HOME."/.dotoverrides/vimrc")
   exec ":source ". $HOME . "/.dotoverrides/vimrc"
 endif
 
-let g:markdown_fold_style = 'nested'
-set foldlevel=2
-set foldminlines=10
-set foldnestmax=2
+let g:StencilTemplatepath = "~/.vim/templates/"
