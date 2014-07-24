@@ -1,5 +1,7 @@
 # %%DATE%%
 
+## Notes
+
 ## Questions
 
 ## Todos
