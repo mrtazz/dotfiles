@@ -1,3 +1,0 @@
-[submodule "autoload/simplenote.py"]
-	path = autoload/simplenote.py
-	url = https://github.com/mrtazz/simplenote.py.git
