@@ -132,4 +132,4 @@ if filereadable($HOME."/.dotoverrides/vimrc")
   exec ":source ". $HOME . "/.dotoverrides/vimrc"
 endif
 
-let g:StencilTemplatepath = "~/.vim/templates/"
+let g:StencilTemplatepath = $HOME . "/.vim/templates/"
