@@ -65,6 +65,12 @@ set wildmode=longest,list,full
 set wildmenu
 set wildignorecase
 
+function! Today()
+  let today = strftime("%A %m\/%d\/%Y")
+  exe "normal a". today
+endfunction
+command! Today :call Today()
+
 " command shortcuts
 let mapleader=","
 
@@ -76,6 +82,7 @@ map <leader>n :NERDTreeToggle<CR>
 map <leader>t :VoomToggle markdown<CR>
 map <leader>T :TagbarToggle<CR>
 map <leader>M :set filetype=markdown<CR>
+map <leader>d :Today<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
