@@ -58,3 +58,7 @@ bind index B bounce-message
 # keybindings for postponing messages
 bind compose p postpone-message
 bind index p recall-message
+
+# tab complete names
+bind editor <Tab> complete-query
+bind editor ^T    complete
