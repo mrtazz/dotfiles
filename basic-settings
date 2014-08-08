@@ -130,6 +130,8 @@ set sidebar_visible=no
 set sidebar_delim='|'
 set sidebar_sort=yes
 
+set narrow_tree=yes
+
 # cypher settings
 set ssl_ciphers = "ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128:AES256-SHA:AES128-SHA"
 # source override
