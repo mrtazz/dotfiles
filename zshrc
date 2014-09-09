@@ -21,9 +21,10 @@ compinit -i
 
 export GOPATH=$HOME/development/go
 if [ ! -d $GOPATH ] ;then mkdir -p $GOPATH ; fi
+export GOROOT=`/usr/local/bin/go env GOROOT`
 
 # Customize to your needs...
-export PATH=~/bin:$GOPATH/bin:/usr/local/bin:/usr/local/sbin:$PATH
+export PATH=~/bin:$GOPATH/bin:$GOROOT/bin:/usr/local/bin:/usr/local/sbin:$PATH
 
 export EDITOR="vim"
 
@@ -42,7 +43,7 @@ stty discard undef
 fi
 
 export LC_ALL=en_US.UTF-8
-eval "$(hub alias -s)"
+#eval "$(hub alias -s)"
 
 compdef mosh=ssh
 
