@@ -30,6 +30,7 @@
   pullr = pull --rebase
   unstage = reset
   dfc = diff --cached
+  mergemaster = mergetool
 
 [merge]
   tool = vimdiff
