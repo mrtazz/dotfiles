@@ -54,6 +54,7 @@ macro pager b "<enter-command>toggle sidebar_visible<enter><redraw-screen>"
 
 # Remap bounce-message function to “B”
 bind index B bounce-message
+bind pager B bounce-message
 
 # keybindings for postponing messages
 bind compose p postpone-message
