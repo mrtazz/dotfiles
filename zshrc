@@ -19,9 +19,13 @@ done
 autoload -U compinit
 compinit -i
 
-export GOPATH=$HOME/development/go
-if [ ! -d $GOPATH ] ;then mkdir -p $GOPATH ; fi
-export GOROOT=`/usr/local/bin/go env GOROOT`
+HAS_GO=`which go`
+
+if [ -z ${HAS_GO} ]; then
+  export GOPATH=$HOME/development/go
+  if [ ! -d $GOPATH ] ;then mkdir -p $GOPATH ; fi
+  export GOROOT=`/usr/local/bin/go env GOROOT`
+fi
 
 # Customize to your needs...
 export PATH=~/bin:$GOPATH/bin:$GOROOT/bin:/usr/local/bin:/usr/local/sbin:$PATH
