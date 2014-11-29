@@ -33,7 +33,7 @@ function! LoadTemplate(name)
 
     " replace occurrences of WEEKDAY with the current weekday
     let weekday = strftime("%A")
-    silent exe "1,$g/%%WEEKDAY%%/s/%%WEEKDAY%%/" . thedate
+    silent exe "1,$g/%%WEEKDAY%%/s/%%WEEKDAY%%/" . weekday
 
     "if the cursor was previously on a blank line, delete it
     if getline(line(".")-1) =~ '^\s*$'
