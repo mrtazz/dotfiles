@@ -15,8 +15,7 @@ endif
 let g:loaded_stencil_vim = 1
 
 if !exists("g:StencilTemplatepath")
-  echoerr "Stencil: Please set g:StencilTemplatepath for the plugin to work."
-  finish
+  let g:StencilTemplatepath = "~/.vim/templates/"
 endif
 
 "define the Stencil() command
@@ -28,9 +27,13 @@ function! LoadTemplate(name)
     "read in the template
     execute 'read ' . g:StencilTemplatepath . a:name
 
-    " replace occurrences of THEDATE with the actual date
+    " replace occurrences of DATE with the actual date
     let thedate = strftime("%m\\/%d\\/%Y")
     silent exe "1,$g/%%DATE%%/s/%%DATE%%/" . thedate
+
+    " replace occurrences of WEEKDAY with the current weekday
+    let weekday = strftime("%A")
+    silent exe "1,$g/%%WEEKDAY%%/s/%%WEEKDAY%%/" . thedate
 
     "if the cursor was previously on a blank line, delete it
     if getline(line(".")-1) =~ '^\s*$'
