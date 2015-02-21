@@ -19,16 +19,10 @@ done
 autoload -U compinit
 compinit -i
 
-HAS_GO=`which go`
+# go, maybe?
+source ${ZSHDIR}/go.zsh
 
-if [ -z ${HAS_GO} ]; then
-  export GOPATH=$HOME/development/go
-  if [ ! -d $GOPATH ] ;then mkdir -p $GOPATH ; fi
-  export GOROOT=`/usr/local/bin/go env GOROOT`
-fi
-
-# Customize to your needs...
-export PATH=~/bin:$GOPATH/bin:$GOROOT/bin:/usr/local/bin:/usr/local/sbin:$PATH
+export PATH=~/bin:/usr/local/bin:/usr/local/sbin:$PATH
 
 export EDITOR="vim"
 
