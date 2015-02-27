@@ -31,7 +31,7 @@ set include="yes"
 set reply_to="ask-yes"
 
 # use the address the mail has been sent to
-set reverse_name
+# set reverse_name
 
 # how to start a reply mail and where to quote
 set attribution="Hi!\n\nOn %d, %n wrote:"
