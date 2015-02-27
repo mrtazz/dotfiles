@@ -35,7 +35,10 @@ set sort_aux="last-date-received"
 # thread sorting only by In-Reply-To header and Subject
 set strict_threads="yes"
 # collapse threads with unread messages
-unset collapse_unread
+set collapse_unread
+
+# collapse by default
+folder-hook . "exec collapse-all"
 
 # check at most once every 5 seconds
 set check_new
