@@ -84,7 +84,7 @@ set date_format="!%a, %b %d, %Y at %I:%M:%S%p %Z"
 set folder_format="%N %F %2l %-8.8u %-8.8g %8s %d %f"
 
 # line format for the mail index
-set index_format="%4C %Z %{%b %d} %-15.15L (%4c) %s"
+set index_format="%4C %Z %2M %{%b %d} %-15.15L %s"
 
 # pages status line
 set pager_format="-%S- %C/%m: %-20.20n   %s"
