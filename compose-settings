@@ -37,7 +37,7 @@ set reply_to="ask-yes"
 set attribution="Hi!\n\nOn %d, %n wrote:"
 
 # how to start a forward mail
-set forward_format="[%a: %s]"
+set forward_format="Fwd: %s"
 
 # use the > as the indent string
 set indent_string=">"
