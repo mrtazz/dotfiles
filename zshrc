@@ -82,11 +82,3 @@ fi
 
 # source overrides (should be the last line)
 [ -f ${HOME}/.dotoverrides/zshrc ] && source ${HOME}/.dotoverrides/zshrc
-
-# let's give a notice if we have changes in the dotfiles repo
-DOTFILES_REPO=${HOME}/.dotfiles
-CHANGES=$(git --git-dir=${DOTFILES_REPO}/.git/ --work-tree=${DOTFILES_REPO} status --short | wc -l)
-ORIGIN_DIFF=$(git --git-dir=${DOTFILES_REPO}/.git/ --work-tree=${DOTFILES_REPO} diff origin/master --stat | wc -l)
-
-[ ${CHANGES} -ne 0 ] && echo "$fg[red]NOTICE:$reset_color There are pending changes in the dotfiles repo (${DOTFILES_REPO})."
-[ ${ORIGIN_DIFF} -ne 0 ] && echo "$fg[red]NOTICE:$reset_color There are unpushed changes in the dotfiles repo (${DOTFILES_REPO})."
