@@ -8,7 +8,7 @@ METAS := README.md Makefile ackrc
 FILES := $(shell ls)
 SOURCES := $(filter-out $(METAS),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
-NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc
+NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin
 
 # tasks
 .PHONY : uninstall update
@@ -24,6 +24,9 @@ ${HOME}/.muttrc:
 
 ${HOME}/.zshrc:
 	ln -s $(PWD)/zsh/zshrc $@
+
+${HOME}/.zlogin:
+	ln -s $(PWD)/zsh/zlogin $@
 
 install: $(DOTFILES) $(NESTED_DOTFILES)
 
