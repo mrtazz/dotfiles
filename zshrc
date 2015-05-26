@@ -3,6 +3,7 @@ ZSHDIR="${HOME}/.zsh"
 source ${ZSHDIR}/history.zsh
 source ${ZSHDIR}/completion.zsh
 source ${ZSHDIR}/look.zsh
+source ${ZSHDIR}/iterm.zsh
 
 # autocorrect
 setopt correct_all
