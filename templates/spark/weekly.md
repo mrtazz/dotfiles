@@ -17,3 +17,5 @@
 ### Friday
 
 ## Journal
+
+
