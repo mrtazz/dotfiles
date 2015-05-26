@@ -53,7 +53,7 @@ unset TMUX
 
 # todos are stored in simplenote
 alias tma='tmux attach -d -t'
-alias irc='mosh vlad.unwiredcouch.com -- tmux attach -d -t comm'
+alias irc='set_iTerm_title irc;mosh leviathan.unwiredcouch.com -- tmux attach -d -t werk'
 alias mutt='MUTT_IDENTITY=~/.dotoverrides/identity-unwiredcouch /usr/local/bin/mutt'
 alias git-tmux='tmux new -s $(basename $(pwd))'
 alias notes='vim -c "cd ~/ownCloud/Notebooks" -c "NERDTreeToggle"'
