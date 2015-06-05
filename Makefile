@@ -16,6 +16,7 @@ PLUGINS += "altercation/vim-colors-solarized"
 PLUGINS += "vim-scripts/taglist.vim"
 PLUGINS += "mrtazz/vim-stencil"
 PLUGINS += "jnwhiteh/vim-golang"
+PLUGINS += "vim-voom/VOoM"
 
 # targets
 .PHONY : uninstall
