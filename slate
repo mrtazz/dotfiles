@@ -36,6 +36,8 @@ alias leftthird         move screenOriginX;screenOriginY                  screen
 alias righttwothirds    move screenOriginX+screenSizeX*0.37;screenOriginY    (screenSizeX*0.63);screenSizeY
 alias lefttwothirds     move screenOriginX;screenOriginY                  (screenSizeX*0.63);screenSizeY
 alias center            move screenOriginX+screenSizeX*0.125;screenOriginY+screenSizeY*0.125                  (screenSizeX*0.75);(screenSizeY*0.75)
+alias lowerleft         move screenOriginX;screenOriginY+screenSizeY*0.67                  (screenSizeX*0.33);(screenSizeY*0.33)
+
 # Concrete positions
 alias 1-full        move screenOriginX;screenOriginY screenSizeX;screenSizeY         ${mon-internal}
 alias 1-left        move screenOriginX;screenOriginY screenSizeX/2;screenSizeY         ${mon-internal}
@@ -73,6 +75,7 @@ bind g:cmd grid padding:5 0:8,8 1:20,20
 bind f:${hyper} ${full}
 bind l:${hyper} ${lefthalf}
 bind r:${hyper} ${righthalf}
+bind e:${hyper} ${lowerleft}
 bind t:${hyper} throw next
 
 # Resize Bindings
@@ -88,7 +91,7 @@ bind up:${hyper}       focus up
 bind down:${hyper}     focus down
 
 # App bindings
-bind e:${hyper} focus ${browser}
+#bind e:${hyper} focus ${browser}
 bind u:${hyper} focus ${editor}
 bind i:${hyper} focus ${terminal}
 bind t:${hyper} focus ${twitter}
