@@ -19,9 +19,10 @@ completion for choosing the template. The template loader will always load the
 template after the first line of the file.
 
 ## Variable expansion
-Stencil supports only one expansion right now but there might be more to come:
+Stencil supports expansion of some simple variables. Those are:
 
 - %%DATE%% will be replaced by the current date in the format mm/dd/yyyy
+- %%WEEKDAY%% will be replaced by the full name of the weekday (e.g. Friday)
 
 
 [pathogen]: https://github.com/tpope/vim-pathogen
