@@ -116,9 +116,19 @@ autocmd BufNewFile,BufRead *.json set filetype=javascript
 set backupdir=~/.vim/tmp
 set directory=~/.vim/tmp
 
+" spell checking settings
+" set the spellfile for added words if it exists
+if filereadable($HOME."/.vim/vim-spell.add")
+  set spellfile=$HOME/.vim/vim-spell.add
+endif
+
+" Autocomplete with dictionary words when spell check is on
+set complete+=kspell
+
 " activate spell checker in insert mode
 autocmd InsertEnter *.tex setlocal spell
 autocmd InsertLeave *.tex setlocal nospell
+autocmd FileType markdown setlocal spell
 
 if filereadable($HOME."/.simplenoterc")
   exec ":source ". $HOME . "/.simplenoterc"
