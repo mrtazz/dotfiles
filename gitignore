@@ -72,3 +72,4 @@ Icon?
 
 # ignore ctags
 tags
+.tmux
