@@ -83,6 +83,7 @@ map <leader>t :VoomToggle markdown<CR>
 map <leader>T :TagbarToggle<CR>
 map <leader>M :set filetype=markdown<CR>
 map <leader>d :Today<CR>
+map <leader>g :Goyo<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
