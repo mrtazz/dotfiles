@@ -57,6 +57,7 @@ alias irc='set_iTerm_title irc;mosh leviathan.unwiredcouch.com -- tmux attach -d
 alias mutt='MUTT_IDENTITY=~/.dotoverrides/identity-unwiredcouch /usr/local/bin/mutt'
 alias git-tmux='tmux new -s $(basename $(pwd))'
 alias notes='vim -c "cd ~/ownCloud/Notebooks" -c "NERDTreeToggle"'
+alias leoric='leoric -I ~/.leoric/macros -s ~/.leoric '
 
 if [ -d ~/.dotfiles/mutt ]; then
   export MUTT_HOME=$HOME/.dotfiles/mutt
