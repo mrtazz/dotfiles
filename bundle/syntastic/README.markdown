@@ -35,7 +35,7 @@
 4.8. [How can I pass additional arguments to a checker?](#faqargs)  
 4.9. [Syntastic supports several checkers for my filetype - how do I tell which one(s) to use?](#faqcheckers)  
 4.10. [What is the difference between syntax checkers and style checkers?](#faqstyle)  
-4.11. [I have enabled multiple checkers for the current filetype.  How can I display all of the errors from all of the checkers together?](#faqaggregate)  
+4.11. [I have enabled multiple checkers for the current filetype.  How can I display all errors from all checkers together?](#faqaggregate)  
 4.12. [How can I jump between the different errors without using the location list at the bottom of the window?](#faqlnext)  
 4.13. [The error window is closed automatically when I :quit the current buffer but not when I :bdelete it?](#faqbdelete)  
 5. [Resources](#otherresources)  
@@ -59,11 +59,11 @@ DocBook, Dust, Elixir, Erlang, eRuby, Fortran, Gentoo metadata, GLSL, Go, Haml,
 Haskell, Haxe, Handlebars, HSS, HTML, Java, JavaScript, JSON, JSX, LESS, Lex,
 Limbo, LISP, LLVM intermediate language, Lua, Markdown, MATLAB, Mercury, NASM,
 Nix, Objective-C, Objective-C++, OCaml, Perl, Perl POD, PHP, gettext Portable
-Object, OS X and iOS property lists, Puppet, Python, R, Racket, Relax NG,
-reStructuredText, RPM spec, Ruby, SASS/SCSS, Scala, Slim, SML, Sphinx, Tcl,
-TeX, Texinfo, Twig, TypeScript, Vala, Verilog, VHDL, VimL, xHtml, XML, XSLT,
-YACC, YAML, z80, Zope page templates, and zsh.  See the [wiki][3] for details
-about the corresponding supported checkers.
+Object, OS X and iOS property lists, Puppet, Python, QML, R, Racket, Relax NG,
+reStructuredText, RPM spec, Ruby, SASS/SCSS, Scala, Slim, SML, Sphinx, SQL,
+Stylus, Tcl, TeX, Texinfo, Twig, TypeScript, Vala, Verilog, VHDL, VimL, xHtml,
+XML, XSLT, YACC, YAML, z80, Zope page templates, and zsh.  See the [wiki][3]
+for details about the corresponding supported checkers.
 
 A number of third-party Vim plugins also provide checkers for syntastic,
 for example: [omnisharp-vim][25], [rust.vim][12], [syntastic-extras][26],
@@ -159,10 +159,10 @@ following:
 
 ## 3\. Recommended settings
 
-Syntastic has a large number of options that can be configured, and the
-defaults are not particularly well suitable for new users.  It is recommended
-that you start by adding the following lines to your `vimrc` file, and return
-to them after reading the manual (see `:help syntastic` in Vim):
+Syntastic has numerous options that can be configured, and the defaults
+are not particularly well suitable for new users.  It is recommended
+that you start by adding the following lines to your `vimrc` file, and
+return to them after reading the manual (see `:help syntastic` in Vim):
 ```vim
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
@@ -380,7 +380,7 @@ See `:help syntastic_quiet_messages` for details.
 <a name="faqaggregate"></a>
 
 __4.11. Q. I have enabled multiple checkers for the current filetype.  How can I
-display all of the errors from all of the checkers together?__
+display all errors from all checkers together?__
 
 A. Set `g:syntastic_aggregate_errors` to 1 in your `vimrc`:
 ```vim

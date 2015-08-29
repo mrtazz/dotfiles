@@ -9,7 +9,7 @@
 "
 "============================================================================
 
-if exists('g:loaded_syntastic_plugin')
+if exists('g:loaded_syntastic_plugin') || &compatible
     finish
 endif
 let g:loaded_syntastic_plugin = 1
@@ -19,10 +19,15 @@ if has('reltime')
     lockvar! g:_SYNTASTIC_START
 endif
 
-let g:_SYNTASTIC_VERSION = '3.6.0-117'
+let g:_SYNTASTIC_VERSION = '3.6.0-149'
 lockvar g:_SYNTASTIC_VERSION
 
 " Sanity checks {{{1
+
+if v:version < 700 || (v:version == 700 && !has('patch175'))
+    call syntastic#log#error('need Vim version 7.175 or later')
+    finish
+endif
 
 for s:feature in [
             \ 'autocmd',
@@ -130,7 +135,7 @@ let s:_DEBUG_DUMP_OPTIONS = [
         \ 'shelltemp',
         \ 'shellxquote'
     \ ]
-if v:version > 703 || (v:version == 703 && has('patch446'))
+if exists('+shellxescape')
     call add(s:_DEBUG_DUMP_OPTIONS, 'shellxescape')
 endif
 lockvar! s:_DEBUG_DUMP_OPTIONS
@@ -231,12 +236,13 @@ endfunction " }}}2
 " Autocommands {{{1
 
 augroup syntastic
-    autocmd BufReadPost  * call s:BufReadPostHook()
-    autocmd BufWritePost * call s:BufWritePostHook()
-    autocmd BufEnter     * call s:BufEnterHook()
+    autocmd!
+    autocmd BufReadPost  * nested call s:BufReadPostHook()
+    autocmd BufWritePost * nested call s:BufWritePostHook()
+    autocmd BufEnter     *        call s:BufEnterHook()
 augroup END
 
-if v:version > 703 || (v:version == 703 && has('patch544'))
+if exists('##QuitPre')
     " QuitPre was added in Vim 7.3.544
     augroup syntastic
         autocmd QuitPre * call s:QuitPreHook()
@@ -296,17 +302,23 @@ function! s:UpdateErrors(auto_invoked, checker_names) abort " {{{2
     call syntastic#log#debugDump(g:_SYNTASTIC_DEBUG_VARIABLES)
     call syntastic#log#debug(g:_SYNTASTIC_DEBUG_TRACE, 'UpdateErrors' . (a:auto_invoked ? ' (auto)' : '') .
         \ ': ' . (len(a:checker_names) ? join(a:checker_names) : 'default checkers'))
+
+    call s:modemap.synch()
+
     if s:_skip_file()
         return
     endif
 
-    call s:modemap.synch()
     let run_checks = !a:auto_invoked || s:modemap.doAutoChecking()
     if run_checks
         call s:CacheErrors(a:checker_names)
         unlockvar! b:syntastic_changedtick
         let b:syntastic_changedtick = b:changedtick
         lockvar! b:syntastic_changedtick
+    else
+        if a:auto_invoked
+            return
+        endif
     endif
 
     let loclist = g:SyntasticLoclist.current()
