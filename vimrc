@@ -131,10 +131,6 @@ autocmd InsertEnter *.tex setlocal spell
 autocmd InsertLeave *.tex setlocal nospell
 autocmd FileType markdown setlocal spell
 
-if filereadable($HOME."/.simplenoterc")
-  exec ":source ". $HOME . "/.simplenoterc"
-endif
-
 " let's see if we can work without arrow keys
 inoremap  <Up>     <NOP>
 inoremap  <Down>   <NOP>
