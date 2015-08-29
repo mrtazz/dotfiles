@@ -58,6 +58,7 @@ alias mutt='MUTT_IDENTITY=~/.dotoverrides/identity-unwiredcouch /usr/local/bin/m
 alias git-tmux='tmux new -s $(basename $(pwd))'
 alias notes='vim -c "cd ~/ownCloud/Notebooks" -c "NERDTreeToggle"'
 alias leoric='leoric -I ~/.leoric/macros -s ~/.leoric '
+alias journal='vim -c Goyo ~/ownCloud/Notebooks/Writing/journal/current.md'
 
 if [ -d ~/.dotfiles/mutt ]; then
   export MUTT_HOME=$HOME/.dotfiles/mutt
