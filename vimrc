@@ -141,9 +141,32 @@ noremap   <Down>   <NOP>
 noremap   <Left>   <NOP>
 noremap   <Right>  <NOP>
 
+let g:StencilTemplatepath = $HOME . "/.vim/templates/"
+
+" close goyo buffer completely if it's the only one
+
+function! Goyo_before()
+  let b:quitting = 0
+  let b:quitting_bang = 0
+  autocmd QuitPre <buffer> let b:quitting = 1
+  cabbrev <buffer> q! let b:quitting_bang = 1 <bar> q!
+endfunction
+
+function! Goyo_after()
+  " Quit Vim if this is the only remaining buffer
+  if b:quitting && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) == 1
+    if b:quitting_bang
+      qa!
+    else
+      qa
+    endif
+  endif
+endfunction
+
+let g:goyo_callbacks = [function('Goyo_before'), function('Goyo_after')]
+
 " source overrides configs
 if filereadable($HOME."/.dotoverrides/vimrc")
   exec ":source ". $HOME . "/.dotoverrides/vimrc"
 endif
 
-let g:StencilTemplatepath = $HOME . "/.vim/templates/"
