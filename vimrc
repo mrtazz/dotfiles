@@ -130,6 +130,7 @@ set complete+=kspell
 autocmd InsertEnter *.tex setlocal spell
 autocmd InsertLeave *.tex setlocal nospell
 autocmd FileType markdown setlocal spell
+autocmd FileType mail setlocal spell
 
 " let's see if we can work without arrow keys
 inoremap  <Up>     <NOP>
