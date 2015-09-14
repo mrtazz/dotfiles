@@ -11,10 +11,13 @@ function check_dirty_git_repos() {
 
     # let's check for changes
     CHANGES=$(git --git-dir=${repo}/.git/ --work-tree=${repo} status --short | wc -l)
-    ORIGIN_DIFF=$(git --git-dir=${repo}/.git/ --work-tree=${repo} diff origin/master --stat | wc -l)
-
     [ ${CHANGES} -ne 0 ] && echo "$fg[red]NOTICE:$reset_color There are pending changes in the repo: (${repo})."
-    [ ${ORIGIN_DIFF} -ne 0 ] && echo "$fg[red]NOTICE:$reset_color There are unpushed changes in the repo: (${repo})."
+
+    if git ls-remote --git-dir=${repo}/.git/ --work-tree=${repo} > /dev/null 2>&1 ; then
+      REMOTE_BRANCH=$(git symbolic-ref  --git-dir=${repo}/.git/ --work-tree=${repo} HEAD | cut -d "/" -f 3)
+      ORIGIN_DIFF=$(git --git-dir=${repo}/.git/ --work-tree=${repo} diff origin/${REMOTE_BRANCH} --stat | wc -l)
+      [ ${ORIGIN_DIFF} -ne 0 ] && echo "$fg[red]NOTICE:$reset_color There are unpushed changes in the repo: (${repo})."
+    fi
 
   done
 }
