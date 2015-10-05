@@ -2,9 +2,7 @@
 
 ## Goals
 
-## Reflect and Celebrate
-
-## Time Blocks
+## Journal
 
 ### Monday
 
