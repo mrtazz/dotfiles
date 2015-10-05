@@ -42,7 +42,7 @@ folder-hook . "exec collapse-all"
 
 # check at most once every 5 seconds
 set check_new
-set mail_check="5"
+set mail_check="60"
 set timeout="100"
 
 # beep for new mail
