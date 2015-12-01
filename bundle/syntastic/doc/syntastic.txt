@@ -247,7 +247,8 @@ You can selectively disable some of the errors found by checkers either
 using |'syntastic_quiet_messages'|, or by specifying a list of patterns in
 |'syntastic_ignore_files'|.
 
-See also: |'syntastic_<filetype>_<checker>_quiet_messages'|.
+See also: |'syntastic_<filetype>_<checker>_quiet_messages'| and
+|'b:syntastic_skip_checks'|.
 
 ==============================================================================
 3. Commands                                               *syntastic-commands*
@@ -356,7 +357,7 @@ Default: 1
 This option controls which errors are echoed to the command window if
 |'syntastic_echo_current_error'| is set and multiple errors are found on the
 same line. When the option is enabled, the first error corresponding to the
-current column is show. Otherwise, the first error on the current line is
+current column is shown. Otherwise, the first error on the current line is
 echoed, regardless of the cursor position on the current line.
 
 When dealing with very large lists of errors, disabling this option can speed
@@ -572,12 +573,25 @@ ones produced by "pylint": >
 Default: [Syntax: line:%F (%t)]
 Use this option to control what the syntastic statusline text contains. Several
 magic flags are available to insert information:
-    %e - number of errors
-    %w - number of warnings
-    %t - total number of warnings and errors
+    %e  - number of errors
+    %w  - number of warnings
+    %t  - total number of warnings and errors
+    %ne - filename of file containing first error
+    %nw - filename of file containing first warning
+    %N  - filename of file containing first warning or error
+    %pe - filename with path of file containing first error
+    %pw - filename with path of file containing first warning
+    %P  - filename with path of file containing first warning or error
     %fe - line number of first error
     %fw - line number of first warning
-    %F - line number of first warning or error
+    %F  - line number of first warning or error
+
+These flags accept width and alignment controls similar to the ones used by
+|'statusline'| flags:
+    %-0{minwid}.{maxwid}{flag}
+
+All fields except {flag} are optional. A single percent sign can be given as
+"%%".
 
 Several additional flags are available to hide text under certain conditions:
     %E{...} - hide the text in the brackets unless there are errors
@@ -619,7 +633,6 @@ The above variable can be used to disable exit code checks in syntastic.
 
                                                            *'syntastic_shell'*
 Default: Vim's 'shell'
-
 This is the (full path to) the shell syntastic will use to run the checkers.
 On UNIX and Mac OS-X this shell must accept Bourne-compatible syntax for
 file "stdout" and "stderr" redirections ">file" and "2>file".  Examples of
@@ -631,6 +644,13 @@ operations.  It must take care to initialize all environment variables needed
 by the checkers you're using.  Example: >
     let g:syntastic_shell = "/bin/sh"
 <
+                                             *'syntastic_nested_autocommands'*
+Default: 0
+Controls whether syntastic's autocommands |BufReadPost| and |BufWritePost|
+are called from other |BufReadPost| and |BufWritePost| autocommands (see
+|autocmd-nested|).  This is known to trigger interoperability problems with
+other plugins, so only enable it if you actually need that functionality.
+
                                                            *'syntastic_debug'*
 Default: 0
 Set this to the sum of one or more of the following flags to enable
@@ -923,8 +943,8 @@ https://github.com/klen/python-mode). However, they both run syntax checks by
 default when you save buffers to disk, and this is probably not what you want.
 To avoid both plugins opening error windows, you can either set passive mode
 for python in syntastic (see |'syntastic_mode_map'|), or disable lint checks in
-"python-mode", by setting |pymode_lint_write| to 0. E.g.: >
-    let g:pymode_lint_write = 0
+"python-mode", by setting |pymode_lint_on_write| to 0. E.g.: >
+    let g:pymode_lint_on_write = 0
 <
 ------------------------------------------------------------------------------
 7.9. vim-auto-save                                   *syntastic-vim-auto-save*
