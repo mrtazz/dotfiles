@@ -18,7 +18,7 @@ PLUGINS += "mrtazz/vim-stencil"
 PLUGINS += "jnwhiteh/vim-golang"
 PLUGINS += "vim-voom/VOoM"
 PLUGINS += "junegunn/goyo.vim"
-PLUGINS += "amix/vim-zenroom2"
+PLUGINS += "mrtazz/vim-zenroom2"
 
 # targets
 .PHONY : uninstall
