@@ -157,6 +157,7 @@ function! Goyo_before()
   let b:quitting_bang = 0
   autocmd QuitPre <buffer> let b:quitting = 1
   cabbrev <buffer> q! let b:quitting_bang = 1 <bar> q!
+  !/usr/local/bin/tmux set status off
 endfunction
 
 function! Goyo_after()
@@ -168,6 +169,7 @@ function! Goyo_after()
       qa
     endif
   endif
+  !/usr/local/bin/tmux set status on
 endfunction
 
 let g:goyo_callbacks = [function('Goyo_before'), function('Goyo_after')]
