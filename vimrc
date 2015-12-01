@@ -60,6 +60,12 @@ let g:syntastic_auto_loc_list=1
 let g:syntastic_loc_list_height=5
 set laststatus=2
 
+" C++11 for syntastic
+let g:syntastic_cpp_compiler = 'clang++'
+let g:syntastic_cpp_compiler_options = ' -std=c++11 -stdlib=libc++'
+" add vendorized gtest to include path
+let syntastic_cpp_include_dirs = ['vendor/gtest-1.7.0/include']
+
 " tab completion for file opening
 set wildmode=longest,list,full
 set wildmenu
