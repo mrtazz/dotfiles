@@ -104,6 +104,11 @@ imap jj <Esc>
 " remove unneeded spaces for a good whitespace carbon footprint
 autocmd BufWritePre * :%s/\s\+$//e
 
+" enable all syntastic checkers for go
+let g:syntastic_go_checkers = ["go", "gofmt", "golint", "govet"]
+let g:syntastic_aggregate_errors = 1
+
+
 " Supertab settings
 let g:SuperTabDefaultCompletionTypeDiscovery = [
 \ "&completefunc:<c-x><c-u>",
