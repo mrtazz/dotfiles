@@ -31,6 +31,7 @@
   unstage = reset
   dfc = diff --cached
   mergemaster = mergetool
+  ci = commit -v
 
 [merge]
   tool = vimdiff
