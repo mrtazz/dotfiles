@@ -109,21 +109,7 @@ let g:syntastic_go_checkers = ["go", "gofmt", "golint", "govet"]
 let g:syntastic_aggregate_errors = 1
 
 " ripped from the original golang vim plugin
-if exists("b:did_ftplugin_go_fmt")
-    finish
-endif
-
-if !exists("g:go_fmt_commands")
-    let g:go_fmt_commands = 1
-endif
-
-if !exists("g:gofmt_command")
-    let g:gofmt_command = "gofmt"
-endif
-
-if g:go_fmt_commands
-    command! -buffer Fmt call s:GoFormat()
-endif
+let g:gofmt_command = "gofmt"
 
 function! s:GoFormat()
     let view = winsaveview()
@@ -150,8 +136,7 @@ function! s:GoFormat()
     endif
     call winrestview(view)
 endfunction
-
-let b:did_ftplugin_go_fmt = 1
+command! Fmt call s:GoFormat()
 
 autocmd FileType go autocmd BufWritePre <buffer> Fmt
 
