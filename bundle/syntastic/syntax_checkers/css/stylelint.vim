@@ -40,3 +40,4 @@ let &cpo = s:save_cpo
 unlet s:save_cpo
 
 " vim: set sw=4 sts=4 et fdm=marker:
+
