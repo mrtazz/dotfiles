@@ -37,6 +37,7 @@ alias righttwothirds    move screenOriginX+screenSizeX*0.37;screenOriginY    (sc
 alias lefttwothirds     move screenOriginX;screenOriginY                  (screenSizeX*0.63);screenSizeY
 alias center            move screenOriginX+screenSizeX*0.125;screenOriginY+screenSizeY*0.125                  (screenSizeX*0.75);(screenSizeY*0.75)
 alias lowerleft         move screenOriginX;screenOriginY+screenSizeY*0.67                  (screenSizeX*0.33);(screenSizeY*0.33)
+alias quarter           move screenOriginX;screenOriginY                  screenSizeX/2;screenSizeY/2
 
 # Concrete positions
 alias 1-full        move screenOriginX;screenOriginY screenSizeX;screenSizeY         ${mon-internal}
@@ -83,6 +84,7 @@ bind t:${hyper} throw next
 bind g:${hyper} ${righttwothirds}
 bind h:${hyper} ${lefttwothirds}
 bind c:${hyper} ${center}
+bind 4:${hyper} ${quarter}
 
 # Focus Bindings
 bind right:${hyper}    focus right
