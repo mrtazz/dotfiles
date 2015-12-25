@@ -32,6 +32,7 @@
   dfc = diff --cached
   mergemaster = mergetool
   ci = commit -v
+  push-with-tags = "!git push && git push --tags"
 
 [merge]
   tool = vimdiff
