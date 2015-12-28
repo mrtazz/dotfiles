@@ -21,10 +21,10 @@
   default = tracking
 
 [alias]
-  lol = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
+  lol = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
   st = status -sb
-  lerl = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
-  changelog = "!f() { git whatchanged --stat --pretty=oneline --abbrev-commit --since=$1; }; f"
+  lerl = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  changelog = log --graph --pretty=format:'[%h] -%d %s (%cr) (%an)' --abbrev-commit --no-merges
   df = diff
   rpull = pull --rebase --stat
   pullr = pull --rebase
