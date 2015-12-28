@@ -23,6 +23,10 @@ compinit -i
 # go, maybe?
 source ${ZSHDIR}/go.zsh
 
+if [ "$(uname)" = "Darwin" ]; then
+  source ${ZSHDIR}/osx.zsh
+fi
+
 export PATH=~/bin:/usr/local/bin:/usr/local/sbin:$PATH
 
 export EDITOR="vim"
@@ -35,11 +39,6 @@ source ~/.profile
 bindkey '^R' history-incremental-search-backward
 bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
-
-# turn off weird ctrl-O behaviour on OSX
-if [ "$(uname)" = "Darwin" ]; then
-stty discard undef
-fi
 
 export LC_ALL=en_US.UTF-8
 
