@@ -1,7 +1,7 @@
 "============================================================================
-"File:        jscs.vim
-"Description: Javascript syntax checker - using jscs
-"Maintainer:  LCD 47 <lcd047@gmail.com>
+"File:        mixedindentlint.vim
+"Description: Mixed indentation linter for vim
+"Maintainer:  Payton Swick <payton@foolord.com>
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
@@ -9,42 +9,30 @@
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
 "============================================================================
 
-if exists('g:loaded_syntastic_javascript_jscs_checker')
+if exists('g:loaded_syntastic_javascript_mixedindentlint_checker')
     finish
 endif
-let g:loaded_syntastic_javascript_jscs_checker = 1
-
-if !exists('g:syntastic_javascript_jscs_sort')
-    let g:syntastic_javascript_jscs_sort = 1
-endif
+let g:loaded_syntastic_javascript_mixedindentlint_checker = 1
 
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! SyntaxCheckers_javascript_jscs_IsAvailable() dict
-    if !executable(self.getExec())
-        return 0
-    endif
-    return syntastic#util#versionIsAtLeast(self.getVersion(), [2, 1])
-endfunction
+function! SyntaxCheckers_javascript_mixedindentlint_GetLocList() dict
+    let makeprg = self.makeprgBuild({})
 
-function! SyntaxCheckers_javascript_jscs_GetLocList() dict
-    let makeprg = self.makeprgBuild({ 'args_after': '--no-colors --reporter json' })
-
-    let errorformat = '%f:%l:%c:%m'
+    let errorformat = 'Line %l in "%f" %.%#'
 
     return SyntasticMake({
         \ 'makeprg': makeprg,
         \ 'errorformat': errorformat,
         \ 'subtype': 'Style',
-        \ 'preprocess': 'jscs',
-        \ 'defaults': {'type': 'E'},
-        \ 'returns': [0, 2] })
+        \ 'defaults': { 'text': 'Indentation differs from rest of file' },
+        \ 'returns': [0, 1] })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({
     \ 'filetype': 'javascript',
-    \ 'name': 'jscs'})
+    \ 'name': 'mixedindentlint'})
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
