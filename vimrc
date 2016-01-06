@@ -154,6 +154,8 @@ au FileType python setl autoindent tabstop=4 expandtab shiftwidth=4 softtabstop=
 au FileType php setl autoindent tabstop=4 expandtab shiftwidth=4 softtabstop=4
 " handle .json files as javascript
 autocmd BufNewFile,BufRead *.json set filetype=javascript
+" make .md files markdown
+autocmd BufNewFile,BufReadPost *.md set filetype=markdown
 
 " set backup and swap dir to specific folder to play nice with open files in
 " dropbox

@@ -8,7 +8,6 @@ DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 UPDATECMD = vim-bundle update
 PLUGINS  = "kien/ctrlp.vim"
 PLUGINS += "tpope/vim-fugitive"
-PLUGINS += "tpope/vim-markdown"
 PLUGINS += "ervandew/supertab"
 PLUGINS += "scrooloose/syntastic"
 PLUGINS += "tpope/vim-commentary"
