@@ -11,7 +11,6 @@ stty discard undef
 #   $2 - Subtitle of the notification
 #   $3 - Message of the notification
 function notify {
-  set -x
   local title=${1}
   local subtitle=${2}
   local message=${3}
