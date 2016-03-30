@@ -27,7 +27,7 @@ if [ "$(uname)" = "Darwin" ]; then
   source ${ZSHDIR}/osx.zsh
 fi
 
-export PATH=~/bin:/usr/local/bin:/usr/local/sbin:$PATH
+export PATH=~/bin:/usr/local/bin:/usr/local/sbin:/usr/local/texlive/2015/bin/universal-darwin:$PATH
 
 export EDITOR="vim"
 
