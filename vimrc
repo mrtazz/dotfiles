@@ -60,11 +60,15 @@ let g:syntastic_auto_loc_list=1
 let g:syntastic_loc_list_height=5
 set laststatus=2
 
+" cpplint for syntastic
+let g:syntastic_cpp_cpplint_exec = 'cpplint'
+let g:syntastic_cpp_cpplint_args = '--filter=-legal/copyright'
+
 " C++11 for syntastic
 let g:syntastic_cpp_compiler = 'clang++'
 let g:syntastic_cpp_compiler_options = ' -std=c++11 -stdlib=libc++'
-" add vendorized gtest to include path
-let syntastic_cpp_include_dirs = ['vendor/gtest-1.7.0/include']
+" add vendorized gtest and json.h  to include path
+let syntastic_cpp_include_dirs = ['vendor/gtest-1.7.0/include', 'vendor/jsoncpp-0.10.5/dist']
 
 " tab completion for file opening
 set wildmode=longest,list,full
