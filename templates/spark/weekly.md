@@ -1,6 +1,6 @@
-# Week of %%WEEKDAY%%, %%DATE%%
+## Week of %%WEEKDAY%%, %%DATE%%
 
-## Goals
+### Goals
 
-## Journal
+### Journal
 
