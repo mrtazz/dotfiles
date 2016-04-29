@@ -52,7 +52,7 @@ else
 endif
 
 " some information in the statusline
-set statusline=[%n]\ %t\ %y\ %{fugitive#statusline()}\ (%l,%c)\ %m\ %P
+set statusline=[%n]\ %t\ %y\ (%l,%c)\ %m\ %P
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
