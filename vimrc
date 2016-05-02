@@ -105,43 +105,6 @@ map <leader>] :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 " remove unneeded spaces for a good whitespace carbon footprint
 autocmd BufWritePre * :%s/\s\+$//e
 
-" enable all syntastic checkers for go
-let g:syntastic_go_checkers = ["go", "gofmt", "golint", "govet"]
-let g:syntastic_aggregate_errors = 1
-
-" ripped from the original golang vim plugin
-let g:gofmt_command = "gofmt"
-
-function! s:GoFormat()
-    let view = winsaveview()
-    silent execute "%!" . g:gofmt_command
-    if v:shell_error
-        let errors = []
-        for line in getline(1, line('$'))
-            let tokens = matchlist(line, '^\(.\{-}\):\(\d\+\):\(\d\+\)\s*\(.*\)')
-            if !empty(tokens)
-                call add(errors, {"filename": @%,
-                                 \"lnum":     tokens[2],
-                                 \"col":      tokens[3],
-                                 \"text":     tokens[4]})
-            endif
-        endfor
-        if empty(errors)
-            % | " Couldn't detect gofmt error format, output errors
-        endif
-        undo
-        if !empty(errors)
-            call setqflist(errors, 'r')
-        endif
-        echohl Error | echomsg "Gofmt returned error" | echohl None
-    endif
-    call winrestview(view)
-endfunction
-command! Fmt call s:GoFormat()
-
-autocmd FileType go autocmd BufWritePre <buffer> Fmt
-
-
 " Supertab settings
 let g:SuperTabDefaultCompletionTypeDiscovery = [
 \ "&completefunc:<c-x><c-u>",
