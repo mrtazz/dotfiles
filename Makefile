@@ -5,7 +5,7 @@ FILES := vimrc
 SOURCES := $(filter-out $(METAS),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 
-UPDATECMD = vim-bundle update
+UPDATECMD = ./vim-bundle update
 PLUGINS  = "kien/ctrlp.vim"
 PLUGINS += "tpope/vim-fugitive"
 PLUGINS += "ervandew/supertab"
@@ -17,7 +17,7 @@ PLUGINS += "mrtazz/vim-stencil"
 PLUGINS += "vim-voom/VOoM"
 PLUGINS += "junegunn/goyo.vim"
 PLUGINS += "mrtazz/vim-zenroom2"
-PLUGINS += "kalafut/vim-taskjuggler"
+PLUGINS += "mrtazz/vim-tinygo"
 
 # targets
 .PHONY : uninstall
