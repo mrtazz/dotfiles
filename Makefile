@@ -6,13 +6,12 @@ SOURCES := $(filter-out $(METAS),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 
 UPDATECMD = ./vim-bundle update
-PLUGINS  = "kien/ctrlp.vim"
+
 PLUGINS += "tpope/vim-fugitive"
 PLUGINS += "ervandew/supertab"
 PLUGINS += "scrooloose/syntastic"
 PLUGINS += "tpope/vim-commentary"
 PLUGINS += "altercation/vim-colors-solarized"
-PLUGINS += "vim-scripts/taglist.vim"
 PLUGINS += "mrtazz/vim-stencil"
 PLUGINS += "vim-voom/VOoM"
 PLUGINS += "junegunn/goyo.vim"

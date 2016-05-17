@@ -12,4 +12,8 @@ manageable feature set. So I pulled out the things I want into some settings
 in my vimrc. Eventually my vimrc got too big, so I decided to move all the
 things into here.
 
+## Features
+- enable go, gofmt, golint, and govet syntastic checkers
+- run go fmt on buffer write
+
 [vim_go]: https://github.com/fatih/vim-go

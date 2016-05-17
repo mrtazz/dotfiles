@@ -41,15 +41,7 @@ let g:solarized_contrast="high"
 let g:solarized_visibility="high"
 
 syntax on
-if has("gui_running")
-    colorscheme solarized
-    set go-=T
-    set guifont=Monaco:h12
-    set antialias
-else
-    "colorscheme molokai
-    colorscheme solarized
-endif
+colorscheme solarized
 
 " some information in the statusline
 set statusline=[%n]\ %t\ %y\ (%l,%c)\ %m\ %P
@@ -87,10 +79,7 @@ let mapleader=","
 map <leader>w <C-w>
 map <leader>b :sb
 map <leader>m :make<CR>
-map <leader>p :CtrlP<CR>
-map <leader>n :NERDTreeToggle<CR>
 map <leader>t :VoomToggle markdown<CR>
-map <leader>T :TagbarToggle<CR>
 map <leader>M :set filetype=markdown<CR>
 map <leader>d :Today<CR>
 map <leader>g :Goyo<CR>
