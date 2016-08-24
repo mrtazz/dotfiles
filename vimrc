@@ -33,6 +33,8 @@ set t_Co=256
 
 " use open buffers
 set switchbuf=useopen
+" allow buffers to be hidden
+set hidden
 
 " use solarized palette incase it's used
 set background=light
@@ -77,7 +79,7 @@ command! Today :call Today()
 let mapleader=","
 
 map <leader>w <C-w>
-map <leader>b :sb
+map <leader>b :buffer
 map <leader>m :make<CR>
 map <leader>t :VoomToggle markdown<CR>
 map <leader>M :set filetype=markdown<CR>
