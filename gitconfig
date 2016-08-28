@@ -45,10 +45,12 @@
 [user]
   email = d@unwiredcouch.com
   name  = Daniel Schauenberg
-  signingkey = 57182B3886AE7F3C
 
 [commit]
   gpgsign = true
+
+[gpg]
+  program = gpg2
 
 [include]
   path = ~/.githubtokens
