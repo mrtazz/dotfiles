@@ -24,7 +24,7 @@
   default = tracking
 
 [alias]
-  lol = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  lol = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue) %an [%Cred%G?%Creset]' --abbrev-commit
   st = status -sb
   lerl = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
   changelog = log --graph --pretty=format:'[%h] -%d %s (%cr) (%an)' --abbrev-commit --no-merges
