@@ -6,6 +6,9 @@
   safecrlf = true
   preloadindex = 1
   pager=less -R
+  # Make `git rebase` safer on OS X
+  # More info: <http://www.git-tower.com/blog/make-git-rebase-safe-on-osx/>
+  trustctime = false
 
 [apply]
   whitespace = fix
