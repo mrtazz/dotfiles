@@ -3,7 +3,7 @@ GO=$(which go 2> /dev/null)
 rc=$?
 if [[ $rc -eq 0 ]]; then
 
-  export GOPATH=$HOME/code/go
+  export GOPATH=$HOME
   if [ ! -d $GOPATH ] ;then mkdir -p $GOPATH ; fi
 
   # Customize to your needs...
