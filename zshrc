@@ -20,8 +20,9 @@ done
 autoload -U compinit
 compinit -i
 
-# go, maybe?
-source ${ZSHDIR}/go.zsh
+# go setup
+export GOPATH=$HOME
+export GO15VENDOREXPERIMENT=1
 
 if [ "$(uname)" = "Darwin" ]; then
   source ${ZSHDIR}/osx.zsh
