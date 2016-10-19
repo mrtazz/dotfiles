@@ -1,51 +1,51 @@
 "============================================================================
-"File:        dockerfile_lint.vim
-"Description: Syntax checking plugin for syntastic.vim using dockerfile-lint
-"             (https://github.com/projectatomic/dockerfile_lint).
-"Maintainer:  Tim Carry <tim at pixelastic dot com>
+"File:        tern_lint.vim
+"Description: Syntax checking plugin for syntastic
+"Maintainer:  LCD 47 <lcd047@gmail.com>
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
 "             Want To Public License, Version 2, as published by Sam Hocevar.
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
-"
 "============================================================================
 
-if exists('g:loaded_syntastic_dockerfile_dockerfile_lint_checker')
+if exists('g:loaded_syntastic_javascript_tern_lint_checker')
     finish
 endif
-let g:loaded_syntastic_dockerfile_dockerfile_lint_checker = 1
+let g:loaded_syntastic_javascript_tern_lint_checker = 1
 
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! SyntaxCheckers_dockerfile_dockerfile_lint_GetLocList() dict
-    let makeprg = self.makeprgBuild({
-        \ 'args_after': '-j',
-        \ 'fname_before': '-f' })
+function! SyntaxCheckers_javascript_tern_lint_IsAvailable() dict
+    return has('byte_offset') && executable(self.getExec())
+endfunction
 
-    let errorformat = '%t:%n:%l:%m'
+function! SyntaxCheckers_javascript_tern_lint_GetLocList() dict
+    let makeprg = self.makeprgBuild({})
+
+    let errorformat = '%f:%t:%l:%c:%n:%m'
 
     let loclist = SyntasticMake({
         \ 'makeprg': makeprg,
         \ 'errorformat': errorformat,
-        \ 'preprocess': 'dockerfile_lint',
-        \ 'defaults': {'bufnr': bufnr('')},
-        \ 'returns': [0, 1] })
+        \ 'preprocess': 'tern_lint',
+        \ 'returns': [0] })
 
     for e in loclist
-        if e['nr']
-            let e['subtype'] = 'Style'
+        if get(e, 'col', 0) && get(e, 'nr', 0)
+            let e['hl'] = '\%>' . (e['col'] - 1) . 'c\%<' . (e['nr'] + 1) . 'c'
         endif
-        call remove(e, 'nr')
+        let e['nr'] = 0
     endfor
 
     return loclist
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({
-    \ 'filetype': 'dockerfile',
-    \ 'name': 'dockerfile_lint'})
+    \ 'filetype': 'javascript',
+    \ 'name': 'tern_lint',
+    \ 'exec': 'tern-lint' })
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

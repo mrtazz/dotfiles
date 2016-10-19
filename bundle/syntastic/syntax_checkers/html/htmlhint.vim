@@ -1,7 +1,7 @@
 "============================================================================
-"File:        nasm.vim
-"Description: Syntax checking plugin for syntastic.vim
-"Maintainer:  Håvard Pettersson <haavard.pettersson at gmail dot com>
+"File:        html.vim
+"Description: Syntax checking plugin for syntastic
+"Maintainer:  LCD 47 <lcd047 at gmail dot com>
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
@@ -10,30 +10,35 @@
 "
 "============================================================================
 
-if exists('g:loaded_syntastic_nasm_nasm_checker')
+if exists('g:loaded_syntastic_html_htmlhint_checker')
     finish
 endif
-let g:loaded_syntastic_nasm_nasm_checker = 1
+let g:loaded_syntastic_html_htmlhint_checker = 1
 
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! SyntaxCheckers_nasm_nasm_GetLocList() dict
-    let makeprg = self.makeprgBuild({
-        \ 'args_after': '-X gnu' .
-        \       ' -I ' . syntastic#util#shescape(expand('%:p:h', 1) . syntastic#util#Slash()) .
-        \       ' ' . syntastic#c#NullOutput() })
+function! SyntaxCheckers_html_htmlhint_IsAvailable() dict
+    if !executable(self.getExec())
+        return 0
+    endif
+    return syntastic#util#versionIsAtLeast(self.getVersion(), [0, 9, 13])
+endfunction
 
-    let errorformat = '%f:%l: %t%*[^:]: %m'
+function! SyntaxCheckers_html_htmlhint_GetLocList() dict
+    let makeprg = self.makeprgBuild({ 'args_before': '--format unix' })
+
+    let errorformat = '%f:%l:%c: %m'
 
     return SyntasticMake({
         \ 'makeprg': makeprg,
-        \ 'errorformat': errorformat })
+        \ 'errorformat': errorformat,
+        \ 'returns': [0, 1] })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({
-    \ 'filetype': 'nasm',
-    \ 'name': 'nasm'})
+    \ 'filetype': 'html',
+    \ 'name': 'htmlhint'})
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

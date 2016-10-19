@@ -1,7 +1,7 @@
 "============================================================================
-"File:        fsc.vim
-"Description: Syntax checking plugin for syntastic.vim
-"Maintainer:  Gregor Uhlenheuer <kongo2002 at gmail dot com>
+"File:        sass_lint.vim
+"Description: Syntax checking plugin for syntastic
+"Maintainer:  LCD 47 <lcd047 at gmail dot com>
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
@@ -10,38 +10,40 @@
 "
 "============================================================================
 
-if exists('g:loaded_syntastic_scala_fsc_checker')
+if exists('g:loaded_syntastic_sass_sass_lint_checker')
     finish
 endif
-let g:loaded_syntastic_scala_fsc_checker = 1
+let g:loaded_syntastic_sass_sass_lint_checker = 1
 
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! SyntaxCheckers_scala_fsc_GetLocList() dict
-    call syntastic#log#deprecationWarn('scala_options', 'scala_fsc_args')
+function! SyntaxCheckers_sass_sass_lint_IsAvailable() dict
+    if !executable(self.getExec())
+        return 0
+    endif
+    return syntastic#util#versionIsAtLeast(self.getVersion(), [1, 5])
+endfunction
 
-    " fsc has some serious problems with the
-    " working directory changing after being started
-    " that's why we better pass an absolute path
+function! SyntaxCheckers_sass_sass_lint_GetLocList() dict
     let makeprg = self.makeprgBuild({
-        \ 'args': '-Ystop-after:parser',
-        \ 'fname': syntastic#util#shexpand('%:p') })
+        \ 'args': '-v',
+        \ 'args_after': '-q -f compact' })
 
     let errorformat =
-        \ '%E%f:%l: %trror: %m,' .
-        \ '%W%f:%l: %tarning:%m,' .
-        \ '%Z%p^,' .
-        \ '%-G%.%#'
+        \ '%f: line %l\, col %c\, %trror - %m,' .
+        \ '%f: line %l\, col %c\, %tarning - %m'
 
     return SyntasticMake({
         \ 'makeprg': makeprg,
-        \ 'errorformat': errorformat })
+        \ 'errorformat': errorformat,
+        \ 'returns': [0, 1] })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({
-    \ 'filetype': 'scala',
-    \ 'name': 'fsc'})
+    \ 'filetype': 'sass',
+    \ 'name': 'sass_lint',
+    \ 'exec': 'sass-lint' })
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
