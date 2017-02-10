@@ -80,6 +80,16 @@ if [ $? -eq 0 ]; then
   uru system > /dev/null
 fi
 
+function tmux_in_directory() {
+  local dir="${1}"
+  (cd "${dir}" && ~/bin/mx)
+}
+
+function reload_gpg_agent() {
+  killall gpg-agent
+  gpg-agent --daemon
+}
+
 # added by travis gem
 [ -f ${HOME}/.travis/travis.sh ] && source ${HOME}/.travis/travis.sh
 
