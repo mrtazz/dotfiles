@@ -85,6 +85,8 @@ function tmux_in_directory() {
   (cd "${dir}" && ~/bin/mx)
 }
 
+alias tid='tmux_in_directory'
+
 function reload_gpg_agent() {
   killall gpg-agent
   gpg-agent --daemon
