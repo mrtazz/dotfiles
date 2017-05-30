@@ -44,6 +44,8 @@ folder-hook . "exec collapse-all"
 set check_new
 set mail_check="60"
 set timeout="100"
+set mail_check_stats
+set mail_check_stats_interval=60
 
 # beep for new mail
 set beep_new
@@ -130,8 +132,9 @@ set delete=yes
 # sidebar options
 set sidebar_width=25
 set sidebar_visible=yes
-set sidebar_delim='|'
-set sidebar_sort=yes
+set sidebar_delim_chars='/.'
+set sidebar_sort_method=unsorted
+set sidebar_format='%B%* %N/%S'
 
 set narrow_tree=yes
 
