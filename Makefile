@@ -20,6 +20,7 @@ PLUGINS += "mrtazz/vim-tinygo"
 PLUGINS += "tpope/vim-rhubarb"
 PLUGINS += "rust-lang/rust.vim"
 PLUGINS += "martinda/Jenkinsfile-vim-syntax"
+PLUGINS += "scrooloose/nerdtree"
 
 # targets
 .PHONY : uninstall
