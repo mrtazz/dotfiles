@@ -1,7 +1,7 @@
-*rust.txt*      Filetype plugin for Rust
+*ft_rust.txt*      Filetype plugin for Rust
 
 ==============================================================================
-CONTENTS                                                      *rust* *ft-rust*
+CONTENTS                                                      *rust*
 
 1. Introduction                                                   |rust-intro|
 2. Settings                                                    |rust-settings|
@@ -126,6 +126,12 @@ g:rust_shortener_url~
 	    let g:rust_shortener_url = 'https://is.gd/'
 <
 
+                                                        *g:rust_clip_command*
+g:rust_clip_command~
+	Set this option to the command used in your OS to copy the Rust Play
+	url to the clipboard: >
+	    let g:rust_clip_command = 'xclip -selection clipboard'
+<
 
 ==============================================================================
 COMMANDS                                                       *rust-commands*
@@ -201,6 +207,9 @@ COMMANDS                                                       *rust-commands*
 
 		|g:rust_shortener_url| is the base url for the shorterner, by
 		default "https://is.gd/"
+
+		|g:rust_clip_command| is the command to run to copy the
+		playpen url to the clipboard of your system.
 
 :RustFmt                                                       *:RustFmt*
 		Runs |g:rustfmt_command| on the current buffer. If

@@ -264,13 +264,55 @@ function! syntastic#preprocess#perl(errors) abort " {{{2
     return syntastic#util#unique(out)
 endfunction " }}}2
 
-function! syntastic#preprocess#prospector(errors) abort " {{{2
+function! syntastic#preprocess#perl6(errors) abort " {{{2
+    if a:errors[0] ==# 'Syntax OK'
+        return []
+    endif
+
     let errs = s:_decode_JSON(join(a:errors, ''))
 
     let out = []
-    if type(errs) == type({}) && has_key(errs, 'messages')
-        if type(errs['messages']) == type([])
-            for e in errs['messages']
+    if type(errs) == type({})
+        try
+            for val in values(errs)
+                let line = get(val, 'line', 0)
+                let pos = get(val, 'pos', 0)
+                if pos && has('byte_offset')
+                    let line_pos = byte2line(pos + 1)
+                    let column = line_pos > 0 ? pos - line2byte(line_pos) + 2 : 0
+                else
+                    let column = 0
+                endif
+
+                call add(out, join([
+                    \ get(val, 'filename', ''),
+                    \ line,
+                    \ column,
+                    \ get(val, 'message', '') ], ':'))
+            endfor
+        catch /\m^Vim\%((\a\+)\)\=:E716/
+            call syntastic#log#warn('checker perl6/perl6: unrecognized error item ' . string(val))
+            let out = []
+        endtry
+    else
+        call syntastic#log#warn('checker perl6/perl6: unrecognized error format')
+    endif
+
+    return out
+endfunction " }}}2
+
+function! syntastic#preprocess#prospector(errors) abort " {{{2
+    let errs = join(a:errors, '')
+    if errs ==# ''
+        return []
+    endif
+
+    let json = s:_decode_JSON(errs)
+
+    let out = []
+    if type(json) == type({}) && has_key(json, 'messages')
+        if type(json['messages']) == type([])
+            for e in json['messages']
                 if type(e) == type({})
                     try
                         if e['source'] ==# 'pylint'
@@ -300,6 +342,8 @@ function! syntastic#preprocess#prospector(errors) abort " {{{2
         else
             call syntastic#log#warn('checker python/prospector: unrecognized error format (crashed checker?)')
         endif
+    else
+        call syntastic#log#warn('checker python/prospector: unrecognized error format (crashed checker?)')
     endif
 
     return out

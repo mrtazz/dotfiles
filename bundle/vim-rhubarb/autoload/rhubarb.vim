@@ -75,6 +75,9 @@ function! s:credentials() abort
 endfunction
 
 function! rhubarb#json_parse(string) abort
+  if exists('*json_decode')
+    return json_decode(a:string)
+  endif
   let [null, false, true] = ['', 0, 1]
   let stripped = substitute(a:string,'\C"\(\\.\|[^"\\]\)*"','','g')
   if stripped !~# "[^,:{}\\[\\]0-9.\\-+Eaeflnr-u \n\r\t]"
@@ -87,6 +90,9 @@ function! rhubarb#json_parse(string) abort
 endfunction
 
 function! rhubarb#json_generate(object) abort
+  if exists('*json_encode')
+    return json_encode(a:object)
+  endif
   if type(a:object) == type('')
     return '"' . substitute(a:object, "[\001-\031\"\\\\]", '\=printf("\\u%04x", char2nr(submatch(0)))', 'g') . '"'
   elseif type(a:object) == type([])
@@ -132,7 +138,7 @@ function! s:curl_arguments(path, ...) abort
   elseif has_key(options, 'data')
     call extend(args, ['-d', options.data])
   endif
-  call add(args, a:path =~# '://' ? a:path : 'https://api.github.com'.a:path)
+  call add(args, a:path)
   return args
 endfunction
 
@@ -140,8 +146,21 @@ function! rhubarb#request(path, ...) abort
   if !executable('curl')
     call s:throw('cURL is required')
   endif
+  if a:path =~# '://'
+    let path = a:path
+  elseif a:path =~# '^/'
+    let path = 'https://api.github.com' . a:path
+  else
+    let base = s:repo_homepage()
+    let path = substitute(a:path, '%s', matchstr(base, '[^/]\+/[^/]\+$'), '')
+    if base =~# '//github\.com/'
+      let path = 'https://api.github.com/' . path
+    else
+      let path = substitute(base, '[^/]\+/[^/]\+$', 'api/v3/', '') . path
+    endif
+  endif
   let options = a:0 ? a:1 : {}
-  let args = s:curl_arguments(a:path, options)
+  let args = s:curl_arguments(path, options)
   let raw = system('curl '.join(map(copy(args), 's:shellesc(v:val)'), ' '))
   if raw ==# ''
     return raw
@@ -151,32 +170,45 @@ function! rhubarb#request(path, ...) abort
 endfunction
 
 function! rhubarb#repo_request(...) abort
-  let base = s:repo_homepage()
-  if base =~# '//github\.com/'
-    let base = substitute(base, '//github\.com/', '//api.github.com/repos/', '')
-  else
-    let base = substitute(base, '//[^/]\+/\zs', 'api/v3/repos/', '')
-  endif
-  return rhubarb#request(base . (a:0 && a:1 !=# '' ? '/' . a:1 : ''), a:0 > 1 ? a:2 : {})
+  return rhubarb#request('repos/%s' . (a:0 && a:1 !=# '' ? '/' . a:1 : ''), a:0 > 1 ? a:2 : {})
+endfunction
+
+function! s:url_encode(str) abort
+  return substitute(a:str, '[?@=&<>%#/:+[:space:]]', '\=submatch(0)==" "?"+":printf("%%%02X", char2nr(submatch(0)))', 'g')
+endfunction
+
+function! rhubarb#repo_search(type, q) abort
+  return rhubarb#request('search/'.a:type.'?per_page=100&q=repo:%s'.s:url_encode(' '.a:q))
 endfunction
 
 " Section: Issues
 
+let s:reference = '\<\%(\c\%(clos\|resolv\|referenc\)e[sd]\=\|\cfix\%(e[sd]\)\=\)\>'
 function! rhubarb#omnifunc(findstart,base) abort
   if a:findstart
-    let existing = matchstr(getline('.')[0:col('.')-1],'#\d*$\|@[[:alnum:]-]*$')
+    let existing = matchstr(getline('.')[0:col('.')-1],s:reference.'\s\+\zs[^#/,.;]*$\|[#@[:alnum:]-]*$')
     return col('.')-1-strlen(existing)
   endif
   try
     if a:base =~# '^@'
       return map(rhubarb#repo_request('collaborators'), '"@".v:val.login')
     else
-      let prefix = (a:base =~# '^#' ? '#' : s:repo_homepage().'/issues/')
-      let issues = rhubarb#repo_request('issues')
-      if type(issues) == type({})
-        call s:throw(get(issues, 'message', 'unknown error'))
+      if a:base =~# '^#'
+        let prefix = '#'
+        let query = ''
+      else
+        let prefix = s:repo_homepage().'/issues/'
+        let query = a:base
       endif
-      return map(issues, '{"word": prefix.v:val.number, "menu": v:val.title, "info": substitute(v:val.body,"\\r","","g")}')
+      let response = rhubarb#repo_search('issues', 'state:open '.query)
+      if type(response) != type({})
+        call s:throw('unknown error')
+      elseif has_key(response, 'message')
+        call s:throw(response.message)
+      else
+        let issues = get(response, 'items', [])
+      endif
+      return map(issues, '{"word": prefix.v:val.number, "abbr": "#".v:val.number, "menu": v:val.title, "info": substitute(v:val.body,"\\r","","g")}')
     endif
   catch /^\%(fugitive\|rhubarb\):/
     echoerr v:errmsg

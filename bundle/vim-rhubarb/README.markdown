@@ -3,8 +3,10 @@
 If [fugitive.vim][] is the Git, rhubarb.vim is the Hub.  Here's the full list
 of features:
 
-* Enables `:Gbrowse` from fugitive.vim to open GitHub URLs.  (`:Gbrowse`
-  currently has native support for this, but it is slated to be removed.)
+* Enables `:Gbrowse` from fugitive.vim to open GitHub URLs.
+
+* Sets up `:Git` to use [`hub`](https://github.com/github/hub) if installed
+  rather than `git`.
 
 * In commit messages, GitHub issues, issue URLs, and collaborators can be
   omni-completed (`<C-X><C-O>`, see `:help compl-omni`).  This makes inserting
@@ -23,22 +25,17 @@ then simply copy and paste:
     git clone https://github.com/tpope/vim-rhubarb.git
     vim -u NONE -c "helptags vim-rhubarb/doc" -c q
 
-In addition to [fugitive.vim][], [Curl](http://curl.haxx.se/) is
-required (included with macOS).
+You'll also need [fugitive.vim][].
 
-Provide your GitHub credentials by adding them to your netrc:
+[Curl](http://curl.haxx.se/) (included with macOS) is required for features
+that use the GitHub API (i.e., `:Gbrowse` doesn't need it).
+[Generate a personal access token](https://github.com/settings/tokens/new)
+with repo permissions and add it to your `.netrc`:
 
-    echo 'machine api.github.com login <user> password <password>' >> ~/.netrc
+    echo 'machine api.github.com login <user> password <token>' >> ~/.netrc
 
-If you'd rather not store your password in plain text, you can
-[generate a personal access token](https://github.com/settings/tokens/new)
-and use that instead:
-
-    echo 'machine api.github.com login <token> password x-oauth-basic' \
-      >> ~/.netrc
-
-If you are using GitHub Enterprise, repeat those steps for each domain (omit
-the `api.` portion). You'll also need to tell Rhubarb the root URLs:
+If you are using GitHub Enterprise, repeat this step for each domain (omit the
+`api.` portion). You'll also need to tell Rhubarb the root URLs:
 
     let g:github_enterprise_urls = ['https://example.com']
 
