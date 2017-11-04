@@ -31,6 +31,11 @@ set cursorline
 " set colors
 set t_Co=256
 
+" set gui font
+if has('gui_running')
+  set guifont=Ubuntu\ Mono:h12
+endif
+
 " use open buffers
 set switchbuf=useopen
 " allow buffers to be hidden
