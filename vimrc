@@ -90,6 +90,8 @@ map <leader>t :VoomToggle markdown<CR>
 map <leader>M :set filetype=markdown<CR>
 map <leader>d :Today<CR>
 map <leader>g :Goyo<CR>
+map <leader>n :NERDTreeToggle<CR>
+map <leader>1 :set foldlevel=1<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
