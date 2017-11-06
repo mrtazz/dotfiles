@@ -74,6 +74,40 @@ var righthalf = function () {
   }
 }
 
+var tophalf = function () {
+
+  var screen = Screen.main().flippedVisibleFrame();
+  var window = Window.focused();
+
+  if (window) {
+    window.setTopLeft({
+      x: screen.x,
+      y: screen.y
+    });
+    window.setSize({
+      width: screen.width,
+      height: screen.height * 0.5
+    });
+  }
+}
+
+var bottomhalf = function () {
+
+  var screen = Screen.main().flippedVisibleFrame();
+  var window = Window.focused();
+
+  if (window) {
+    window.setTopLeft({
+      x: screen.x,
+      y: screen.y + screen.height * 0.5
+    });
+    window.setSize({
+      width: screen.width,
+      height: screen.height * 0.5
+    });
+  }
+}
+
 var quarterScreen = function (position) {
 
   var screen = Screen.main().flippedVisibleFrame();
@@ -123,3 +157,5 @@ Key.on('q', mash, function() { quarterScreen('lefttop'); });
 Key.on('w', mash, function() { quarterScreen('righttop'); });
 Key.on('a', mash, function() { quarterScreen('leftbottom'); });
 Key.on('s', mash, function() { quarterScreen('rightbottom'); });
+Key.on('e', mash, tophalf);
+Key.on('d', mash, bottomhalf);
