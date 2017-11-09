@@ -4,6 +4,7 @@ set nocompatible
 filetype on
 " this needs to be done to guarantee proper plugin loading
 filetype off
+runtime bundle/vim-pathogen/autoload/pathogen.vim
 " disable plugins
 "let g:pathogen_disabled = ["syntastic"]
 " load modules via pathogen

@@ -7,6 +7,7 @@ DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 
 UPDATECMD = ./vim-bundle update
 
+PLUGINS += "tpope/vim-pathogen"
 PLUGINS += "tpope/vim-fugitive"
 PLUGINS += "ervandew/supertab"
 PLUGINS += "scrooloose/syntastic"
