@@ -26,6 +26,7 @@ PLUGINS += "MarcWeber/vim-addon-mw-utils"
 PLUGINS += "tomtom/tlib_vim"
 PLUGINS += "garbas/vim-snipmate"
 PLUGINS += "honza/vim-snippets"
+PLUGINS += "ledger/vim-ledger"
 
 # targets
 .PHONY : uninstall
