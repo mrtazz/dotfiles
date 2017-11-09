@@ -22,6 +22,10 @@ PLUGINS += "rust-lang/rust.vim"
 PLUGINS += "martinda/Jenkinsfile-vim-syntax"
 PLUGINS += "scrooloose/nerdtree"
 PLUGINS += "itspriddle/vim-marked"
+PLUGINS += "MarcWeber/vim-addon-mw-utils"
+PLUGINS += "tomtom/tlib_vim"
+PLUGINS += "garbas/vim-snipmate"
+PLUGINS += "honza/vim-snippets"
 
 # targets
 .PHONY : uninstall
