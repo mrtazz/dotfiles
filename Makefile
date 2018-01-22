@@ -28,6 +28,7 @@ PLUGINS += "tomtom/tlib_vim"
 PLUGINS += "garbas/vim-snipmate"
 PLUGINS += "honza/vim-snippets"
 PLUGINS += "ledger/vim-ledger"
+PLUGINS += "vimwiki/vimwiki"
 
 # targets
 .PHONY : uninstall
