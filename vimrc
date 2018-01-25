@@ -176,6 +176,8 @@ endfunction
 
 let g:goyo_callbacks = [function('Goyo_before'), function('Goyo_after')]
 
+let g:vimwiki_list = [{ 'path': '~/Documents/notes/', 'diary_rel_path': 'Plan/2018/diary/', 'syntax': 'markdown', 'ext': '.md' } ]
+
 " source overrides configs
 if filereadable($HOME."/.dotoverrides/vimrc")
   exec ":source ". $HOME . "/.dotoverrides/vimrc"
