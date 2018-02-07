@@ -81,15 +81,7 @@ function! Today()
 endfunction
 command! Today :call Today()
 
-function! GetCurrentPlanByMonth()
-  let planMonth = strftime('%B')
-  let planYear = strftime('%Y')
-  let planFile = g:PlanPath . "/Plan/" . planYear . "/" . planMonth . ".md"
-  execute 'edit' planFile
-endfunction
-command! OpenPlanFile :call GetCurrentPlanByMonth()
-
-let g:PlanPath = $HOME . '/Documents/notes'
+let g:PlanPath = $HOME . '/Documents/notes/Plan/'
 
 " command shortcuts
 let mapleader=","
@@ -103,7 +95,8 @@ map <leader>d :Today<CR>
 map <leader>g :Goyo<CR>
 map <leader>n :NERDTreeToggle<CR>
 map <leader>1 :set foldlevel=1<CR>
-map <leader>p :OpenPlanFile<CR>
+map <leader>pw :OpenWeekPlan<CR>
+map <leader>pm :OpenMonthPlan<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
