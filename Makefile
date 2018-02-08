@@ -29,6 +29,7 @@ PLUGINS += "garbas/vim-snipmate"
 PLUGINS += "honza/vim-snippets"
 PLUGINS += "ledger/vim-ledger"
 PLUGINS += "vimwiki/vimwiki"
+PLUGINS += "mrtazz/vim-plan"
 
 # targets
 .PHONY : uninstall
