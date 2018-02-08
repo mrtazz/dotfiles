@@ -82,7 +82,6 @@ function! plan#OpenCurrentPlanByMonth()
       execute 'read ' . tmplPath
       call plan#replaceTemplateVariables()
     endif
-    call plan#replaceTemplateVariables()
   endif
 endfunction
 
@@ -99,7 +98,7 @@ function! plan#OpenCurrentPlanByYear()
   endif
 endfunction
 
-function! plan Today()
+function! plan#Today()
   let today = strftime("%A %m\/%d\/%Y")
   exe "normal a". today
 endfunction
