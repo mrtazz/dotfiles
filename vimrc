@@ -95,8 +95,6 @@ map <leader>d :Today<CR>
 map <leader>g :Goyo<CR>
 map <leader>n :NERDTreeToggle<CR>
 map <leader>1 :set foldlevel=1<CR>
-map <leader>pw :OpenWeekPlan<CR>
-map <leader>pm :OpenMonthPlan<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
