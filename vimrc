@@ -75,13 +75,8 @@ set wildmode=longest,list,full
 set wildmenu
 set wildignorecase
 
-function! Today()
-  let today = strftime("%A %m\/%d\/%Y")
-  exe "normal a". today
-endfunction
-command! Today :call Today()
-
 let g:PlanPath = $HOME . '/Documents/notes/Plan/'
+let g:PlanTemplatePath = $HOME . "/.vim/templates/plan/"
 
 " command shortcuts
 let mapleader=","
@@ -91,7 +86,6 @@ map <leader>b :buffer
 map <leader>m :make<CR>
 map <leader>t :VoomToggle markdown<CR>
 map <leader>M :set filetype=markdown<CR>
-map <leader>d :Today<CR>
 map <leader>g :Goyo<CR>
 map <leader>n :NERDTreeToggle<CR>
 map <leader>1 :set foldlevel=1<CR>
