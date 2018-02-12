@@ -41,6 +41,7 @@ endfunction
 function! plan#GetCurrentPlanByYear()
   let planYear = strftime('%Y')
   let planFile = g:PlanPath . planYear . "/year.md"
+  call plan#EnsureDirectoryExists(g:PlanPath . planYear)
   return planFile
 endfunction
 
@@ -49,6 +50,7 @@ function! plan#GetCurrentPlanByMonth()
   let planMonthNumber = strftime('%m')
   let planYear = strftime('%Y')
   let planFile = g:PlanPath . planYear . "/" . planMonthNumber . '-' .planMonth . ".md"
+  call plan#EnsureDirectoryExists(g:PlanPath . planYear)
   return planFile
 endfunction
 
@@ -56,6 +58,7 @@ function! plan#GetCurrentPlanByWeek()
   let planWeek = strftime('%V')
   let planYear = strftime('%Y')
   let planFile = g:PlanPath . planYear . "/weeks/" . planWeek . ".md"
+  call plan#EnsureDirectoryExists(g:PlanPath . planYear . "/weeks")
   return planFile
 endfunction
 
@@ -101,4 +104,10 @@ endfunction
 function! plan#Today()
   let today = strftime("%A %m\/%d\/%Y")
   exe "normal a". today
+endfunction
+
+function! plan#EnsureDirectoryExists(dir)
+  if !isdirectory(a:dir)
+    call mkdir(a:dir, "p")
+  endif
 endfunction
