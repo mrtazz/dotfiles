@@ -20,6 +20,7 @@ PLUGINS += "martinda/Jenkinsfile-vim-syntax"
 PLUGINS += "scrooloose/nerdtree"
 PLUGINS += "ledger/vim-ledger"
 PLUGINS += "vimwiki/vimwiki"
+PLUGINS += "ctrlpvim/ctrlp.vim"
 
 # my plugins
 PLUGINS += "mrtazz/vim-stencil"
