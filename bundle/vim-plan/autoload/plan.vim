@@ -73,6 +73,7 @@ function! plan#OpenCurrentPlanByWeek()
       call plan#replaceTemplateVariables()
     endif
   endif
+  call plan#setupBuffer()
 endfunction
 
 function! plan#OpenCurrentPlanByMonth()
@@ -86,6 +87,7 @@ function! plan#OpenCurrentPlanByMonth()
       call plan#replaceTemplateVariables()
     endif
   endif
+  call plan#setupBuffer()
 endfunction
 
 function! plan#OpenCurrentPlanByYear()
@@ -99,6 +101,7 @@ function! plan#OpenCurrentPlanByYear()
       call plan#replaceTemplateVariables()
     endif
   endif
+  call plan#setupBuffer()
 endfunction
 
 function! plan#Today()
@@ -110,4 +113,8 @@ function! plan#EnsureDirectoryExists(dir)
   if !isdirectory(a:dir)
     call mkdir(a:dir, "p")
   endif
+endfunction
+
+function! plan#setupBuffer()
+  execute 'lcd' g:PlanPath
 endfunction
