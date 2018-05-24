@@ -50,3 +50,5 @@ color index magenta default ~T
 # deleted messages
 color index black yellow ~D
 
+# add some solarized light inspired sidebar highlight colors
+color sidebar_highlight white cyan
