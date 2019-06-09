@@ -13,20 +13,12 @@ PLUGINS += "ervandew/supertab"
 PLUGINS += "scrooloose/syntastic"
 PLUGINS += "tpope/vim-commentary"
 PLUGINS += "altercation/vim-colors-solarized"
-PLUGINS += "vim-voom/VOoM"
-PLUGINS += "junegunn/goyo.vim"
 PLUGINS += "tpope/vim-rhubarb"
-PLUGINS += "martinda/Jenkinsfile-vim-syntax"
-PLUGINS += "scrooloose/nerdtree"
 PLUGINS += "ledger/vim-ledger"
-PLUGINS += "vimwiki/vimwiki"
 PLUGINS += "ctrlpvim/ctrlp.vim"
 
 # my plugins
-PLUGINS += "mrtazz/vim-stencil"
-PLUGINS += "mrtazz/vim-zenroom2"
 PLUGINS += "mrtazz/vim-tinygo"
-PLUGINS += "mrtazz/vim-plan"
 
 # targets
 .PHONY : uninstall
