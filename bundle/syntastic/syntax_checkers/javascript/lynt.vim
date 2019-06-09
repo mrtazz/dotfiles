@@ -1,44 +1,47 @@
 "============================================================================
-"File:        verapp.vim
+"File:        lynt.vim
 "Description: Syntax checking plugin for syntastic
-"Maintainer:  Lucas Verney <phyks@phyks.me>
+"Maintainer:  LCD 47 <lcd047@gmail.com>
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
 "             Want To Public License, Version 2, as published by Sam Hocevar.
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
-"
-" Tested with Vera++ 1.3.0
 "============================================================================
 
-if exists('g:loaded_syntastic_cpp_verapp_checker')
+if exists('g:loaded_syntastic_javascript_lynt_checker')
     finish
 endif
-let g:loaded_syntastic_cpp_verapp_checker = 1
+let g:loaded_syntastic_javascript_lynt_checker = 1
 
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! SyntaxCheckers_cpp_verapp_GetLocList() dict
-    let buf = bufnr('')
+function! SyntaxCheckers_javascript_lynt_GetLocList() dict
+    let makeprg = self.makeprgBuild({ 'args_after': '--json' })
 
-    let makeprg = self.makeprgBuild({
-        \ 'args': syntastic#c#ReadConfig(syntastic#util#bufVar(buf, 'verapp_config_file')),
-        \ 'args_after': '--show-rule --no-duplicate -S -c -' })
+    let errorformat = '%f:%l:%c:%n:%m'
 
-    let errorformat = '%f:%t:%l:%c:%m'
-
-    return SyntasticMake({
+    let loclist = SyntasticMake({
         \ 'makeprg': makeprg,
         \ 'errorformat': errorformat,
-        \ 'preprocess': 'checkstyle',
-        \ 'subtype': 'Style' })
+        \ 'preprocess': 'lynt',
+        \ 'defaults': {'type': 'E'},
+        \ 'returns': [0, 1] })
+
+    for e in loclist
+        if get(e, 'col', 0) && get(e, 'nr', 0)
+            let e['hl'] = '\%>' . (e['col'] - 1) . 'c\%<' . (e['nr']) . 'c'
+            let e['nr'] = 0
+        endif
+    endfor
+
+    return loclist
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({
-    \ 'filetype': 'cpp',
-    \ 'name': 'verapp',
-    \ 'exec': 'vera++'})
+    \ 'filetype': 'javascript',
+    \ 'name': 'lynt'})
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
