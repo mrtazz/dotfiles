@@ -32,11 +32,6 @@ set cursorline
 " set colors
 set t_Co=256
 
-" set gui font
-if has('gui_running')
-  set guifont=Ubuntu\ Mono:h12
-endif
-
 " use open buffers
 set switchbuf=useopen
 " allow buffers to be hidden
@@ -75,20 +70,13 @@ set wildmode=longest,list,full
 set wildmenu
 set wildignorecase
 
-let g:PlanPath = $HOME . '/Documents/notes/Plan/'
-let g:PlanTemplatePath = $HOME . "/.vim/templates/plan/"
-
 " command shortcuts
 let mapleader=","
 
 map <leader>w <C-w>
 map <leader>b :buffer
 map <leader>m :make<CR>
-map <leader>t :VoomToggle markdown<CR>
 map <leader>M :set filetype=markdown<CR>
-map <leader>g :Goyo<CR>
-map <leader>n :NERDTreeToggle<CR>
-map <leader>1 :set foldlevel=1<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
@@ -116,11 +104,6 @@ autocmd BufNewFile,BufRead *.json set filetype=javascript
 " make .md files markdown
 autocmd BufNewFile,BufReadPost *.md set filetype=markdown
 
-" set backup and swap dir to specific folder to play nice with open files in
-" dropbox
-set backupdir=~/.vim/tmp
-set directory=~/.vim/tmp
-
 " spell checking settings
 " set the spellfile for added words if it exists
 if filereadable($HOME."/.vim/vim-spell.add")
@@ -145,36 +128,6 @@ noremap   <Up>     <NOP>
 noremap   <Down>   <NOP>
 noremap   <Left>   <NOP>
 noremap   <Right>  <NOP>
-
-let g:StencilTemplatepath = $HOME . "/.vim/templates/"
-
-" close goyo buffer completely if it's the only one
-
-function! Goyo_before()
-  let b:quitting = 0
-  let b:quitting_bang = 0
-  autocmd QuitPre <buffer> let b:quitting = 1
-  cabbrev <buffer> q! let b:quitting_bang = 1 <bar> q!
-  !/usr/local/bin/tmux set status off
-endfunction
-
-function! Goyo_after()
-  " Quit Vim if this is the only remaining buffer
-  if b:quitting && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) == 1
-    if b:quitting_bang
-      qa!
-    else
-      qa
-    endif
-  endif
-  !/usr/local/bin/tmux set status on
-endfunction
-
-let g:goyo_callbacks = [function('Goyo_before'), function('Goyo_after')]
-
-let g:vimwiki_list = [{ 'path': '~/Documents/notes/', 'diary_rel_path': 'Plan/2018/diary/', 'syntax': 'markdown', 'ext': '.md' } ]
-let g:vimwiki_global_ext=0
-let g:vimwiki_table_mappings = 0
 
 " source overrides configs
 if filereadable($HOME."/.dotoverrides/vimrc")
