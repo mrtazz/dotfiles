@@ -78,6 +78,13 @@ map <leader>b :buffer
 map <leader>m :make<CR>
 map <leader>M :set filetype=markdown<CR>
 
+" rspec setup
+let g:rspec_command = "!./bin/rspec {spec}"
+map <Leader>r :call RunNearestSpec()<CR>
+
+" ctrlp ignore vendor directories
+let g:ctrlp_custom_ignore = 'vendor'
+
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
 " open ctags definition in horizontal split
@@ -133,4 +140,3 @@ noremap   <Right>  <NOP>
 if filereadable($HOME."/.dotoverrides/vimrc")
   exec ":source ". $HOME . "/.dotoverrides/vimrc"
 endif
-
