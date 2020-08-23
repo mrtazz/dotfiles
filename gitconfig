@@ -62,3 +62,5 @@
   cookiefile = /Users/mrtazz/.gitcookies
 [init]
 	defaultBranch = main
+[pull]
+	rebase = false
