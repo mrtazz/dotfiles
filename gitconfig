@@ -60,3 +60,5 @@
   path = ~/.dotoverrides/gitconfig
 [http]
   cookiefile = /Users/mrtazz/.gitcookies
+[init]
+	defaultBranch = main
