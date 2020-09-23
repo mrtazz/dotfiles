@@ -36,7 +36,6 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
-*.gem
 *.rbc
 .config
 coverage
@@ -65,6 +64,9 @@ Icon?
 
 # Thumbnails
 ._*
+
+# OSX files
+*.plist
 
 # Files that might appear on external disk
 .Spotlight-V100
