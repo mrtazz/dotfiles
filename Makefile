@@ -7,16 +7,12 @@ DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 
 UPDATECMD = ./vim-bundle update
 
-PLUGINS += "tpope/vim-pathogen"
 PLUGINS += "tpope/vim-fugitive"
 PLUGINS += "ervandew/supertab"
 PLUGINS += "scrooloose/syntastic"
-PLUGINS += "tpope/vim-commentary"
 PLUGINS += "altercation/vim-colors-solarized"
 PLUGINS += "tpope/vim-rhubarb"
-PLUGINS += "ledger/vim-ledger"
 PLUGINS += "ctrlpvim/ctrlp.vim"
-PLUGINS += "thoughtbot/vim-rspec"
 
 # my plugins
 PLUGINS += "mrtazz/vim-tinygo"

@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-bundle_path = "~/.vim/bundle"
+bundle_path = "~/.vim/pack/plugins/start"
 
 def usage
   puts "usage: vim-bundle <command>"

@@ -4,12 +4,6 @@ set nocompatible
 filetype on
 " this needs to be done to guarantee proper plugin loading
 filetype off
-runtime bundle/vim-pathogen/autoload/pathogen.vim
-" disable plugins
-"let g:pathogen_disabled = ["syntastic"]
-" load modules via pathogen
-call pathogen#infect()
-call pathogen#helptags()
 " enable after plugins are loaded
 filetype plugin indent on
 
@@ -81,6 +75,7 @@ map <leader>M :set filetype=markdown<CR>
 " rspec setup
 let g:rspec_command = "!./bin/rspec {spec}"
 map <Leader>r :call RunNearestSpec()<CR>
+map <Leader>f :call RunCurrentSpecFile()<CR>
 
 " ctrlp ignore vendor directories
 let g:ctrlp_custom_ignore = 'vendor'
