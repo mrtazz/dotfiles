@@ -1,0 +1,60 @@
+# set keybindings here
+
+# delete messages with d
+bind index d delete-message
+bind pager d delete-message
+
+# reply to message with r
+bind index r reply
+
+# fetch imap on G
+bind index G imap-fetch-mail
+
+# vi keys for scrolling in pager
+bind pager k previous-line
+bind pager j next-line
+bind index k previous-entry
+bind index j next-entry
+
+# filtering macros
+macro index,pager A "<save-message>=Archive/<enter><sync-mailbox>"
+macro index,pager J "<save-message>=Junk/<enter><sync-mailbox>"
+macro index Si "<change-folder>=INBOX/<enter>"
+macro index SA "<change-folder>=Archive/<enter>"
+
+# thread collapsing
+bind index - collapse-thread
+bind index _ collapse-all
+
+# not much integration
+# 'L' performs a notmuch query, showing only the results
+macro index Ls "<enter-command>unset wait_key<enter><shell-escape>read -p 'notmuch query: ' x; echo \$x >~/.cache/mutt_terms<enter><limit>~i \"\`notmuch search --output=messages \$(cat ~/.cache/mutt_terms) | head -n 600 | perl -le '@a=<>;chomp@a;s/\^id:// for@a;$,=\"|\";print@a'\`\"<enter>" "show only messages matching a notmuch pattern"
+# 'a' shows all messages again (supersedes default <alias> binding)
+macro index La "<limit>all\n" "show all messages (undo limit)"
+
+# sidebar bindings
+# ctrl-n, ctrl-p to select next, prev folder
+# ctrl-o to open selected folder
+bind index,pager \CP sidebar-prev
+bind index,pager \CN sidebar-next
+bind index,pager \CO sidebar-open
+
+# I don’t need these. just for documentation purposes. See below.
+# sidebar-scroll-up
+# sidebar-scroll-down
+
+# b toggles sidebar visibility
+macro index b "<enter-command>toggle sidebar_visible<enter><refresh>"
+macro pager b "<enter-command>toggle sidebar_visible<enter><redraw-screen>"
+
+# Remap bounce-message function to “B”
+bind index B bounce-message
+bind pager B bounce-message
+
+# keybindings for postponing messages
+bind compose p postpone-message
+bind index p recall-message
+
+# tab complete names
+bind editor <Tab> complete-query
+bind editor ^T    complete

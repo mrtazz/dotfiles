@@ -1,0 +1,144 @@
+#
+# basic mutt settings
+#
+
+# reset everything to default
+reset all
+
+# set the homedir
+set my_mutt_dir=$MUTT_HOME
+
+# import your identity
+source $MUTT_IDENTITY
+
+# include all other settings
+source $my_mutt_dir/mutt-colors-solarized-light-16
+source $my_mutt_dir/compose-settings
+source $my_mutt_dir/keybind-settings
+source $my_mutt_dir/mime-settings
+source $my_mutt_dir/regex-settings
+source $my_mutt_dir/subscription-settings
+source $my_mutt_dir/gpg-settings
+set mailcap_path=$HOME/.dotoverrides/mailcap
+
+# keep a cache of headers and bodies for faster loading
+set header_cache=$my_mutt_dir/cache/headers
+set message_cachedir=$my_mutt_dir/cache/bodies
+# Display download progress every 5K
+set net_inc=5
+
+# basic mail settings
+# sort by date sent, thread
+set sort="date-sent"
+set sort="threads"
+set sort_aux="last-date-received"
+# thread sorting only by In-Reply-To header and Subject
+set strict_threads="yes"
+# collapse threads with unread messages
+set collapse_unread
+
+# collapse by default
+folder-hook . "exec collapse-all"
+
+# check at most once every 5 seconds
+set check_new
+set mail_check="60"
+set timeout="100"
+set mail_check_stats
+set mail_check_stats_interval=60
+
+# beep for new mail
+set beep_new
+
+# don't mark read mail as "Old" or move it to $mbox
+unset mark_old
+set move="no"
+
+# display help in top line
+set help
+
+# stop at the end of a message
+set pager_stop
+
+# certificates
+set certificate_file =$my_mutt_dir/certificates
+
+# don't show hidden files in the filebrowser
+set mask="!^\\.[^.]"
+
+# always insert the mutt user agent string
+set user_agent
+
+# use system editor
+set editor=$EDITOR
+
+# use ISO-8859-1 and UTF-8 as fallback
+#set charset="iso-8859-1:utf-8"
+set charset="utf-8"
+
+# make sure not to use quoted printables
+unset allow_8bit
+
+# set basic datetime format
+set date_format="!%a, %b %d, %Y at %I:%M:%S%p %Z"
+
+# folder format in the file browser
+set folder_format="%N %F %2l %-8.8u %-8.8g %8s %d %f"
+
+# line format for the mail index
+set index_format="%4C %Z %2M %{%b %d} %-15.15L %s"
+
+# pages status line
+set pager_format="-%S- %C/%m: %-20.20n   %s"
+
+# message format
+set message_format="%s"
+
+# format of status line
+set status_format="-%r-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?]---(%s/%S)-%>-(%P)---"
+
+# format of alias menu data
+set alias_format="%4n %t %-10a   %r"
+
+# format of compose and attachment menus
+set attach_format="%u%D%I %t%4n %T%.40d%> [%.7m/%.10M, %.6e%?C?, %C?, %s] "
+
+# set marker for pager newline
+set markers=no
+
+# don't show the tilde at the end of the pager
+unset tilde
+
+# save attachment for FCC
+set fcc_attach
+
+# edit in vim
+set editor="vim"
+
+# view inline if possible
+set implicit_autoview
+auto_view text/html
+# autoview
+set implicit_autoview="yes"
+alternative_order text/plain *
+auto_view text/html
+
+# don't need confirmation for appending
+set confirmappend=no
+
+# don't ask for delete
+set delete=yes
+
+# sidebar options
+set sidebar_width=25
+set sidebar_visible=yes
+set sidebar_delim_chars='/.'
+set sidebar_sort_method=unsorted
+set sidebar_format='%B%* %N/%S'
+
+set narrow_tree=yes
+
+# cypher settings
+set ssl_ciphers = "ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128:AES256-SHA:AES128-SHA"
+# source override
+source $HOME/.dotoverrides/muttrc

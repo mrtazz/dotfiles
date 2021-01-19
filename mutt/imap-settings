@@ -1,0 +1,18 @@
+# basic imap settings
+set folder=$my_imap_url
+set spoolfile=$my_imap_url
+set record=$my_imap_url"Sent"
+set postponed=$my_imap_url"Drafts"
+
+# activate TLS if available on the server
+set ssl_starttls=yes
+# always use SSL when connecting to a server
+set ssl_force_tls=yes
+# don't force expire check
+set ssl_verify_dates="no"
+# Don't wait to enter mailbox manually
+unset imap_passive
+# Automatically poll subscribed mailboxes for new mail
+set imap_check_subscribed
+# no pipelining
+set imap_pipeline_depth=0

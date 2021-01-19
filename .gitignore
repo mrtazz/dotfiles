@@ -1,0 +1,5 @@
+cache/headers/*
+cache/bodies/*
+!*.gitignore
+identity
+certificates

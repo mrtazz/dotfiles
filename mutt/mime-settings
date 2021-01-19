@@ -1,0 +1,8 @@
+# mime settings
+
+# don't decode before forwarding
+set forward_decode="no"
+
+# use MIME when forwarding
+set mime_forward="yes""
+set mime_forward_rest="yes""
