@@ -33,7 +33,3 @@ install: $(DOTFILES) $(NESTED_DOTFILES)
 uninstall:
 	@echo "Cleaning up dotfiles"
 	@for f in $(DOTFILES); do if [ -h $$f ]; then rm -i $$f; fi ; done
-
-update:
-	$(GIT) pull && $(GIT) submodule update
-
