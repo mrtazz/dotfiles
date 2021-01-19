@@ -1,0 +1,56 @@
+# source all extra config files
+ZSHDIR="${HOME}/.zsh"
+source ${ZSHDIR}/history.zsh
+source ${ZSHDIR}/completion.zsh
+source ${ZSHDIR}/look.zsh
+source ${ZSHDIR}/iterm.zsh
+source ${ZSHDIR}/aliases_functions.zsh
+source ${ZSHDIR}/gpg.zsh
+if [ "$(uname)" = "Darwin" ]; then
+  source ${ZSHDIR}/osx.zsh
+fi
+
+# load plugins that I took from oh-my-zsh
+plugins=(heroku brew knife)
+for plugin ($plugins); do
+  fpath=(${ZSHDIR}/$plugin $fpath)
+done
+
+# autocorrect
+setopt correct_all
+
+# Load and run compinit
+autoload -U compinit
+compinit -i
+
+# some basic exports
+export PATH=~/bin:/usr/local/bin:/usr/local/sbin:/usr/local/texlive/2013/bin/universal-darwin:$PATH
+export EDITOR="vim"
+export LC_ALL=en_US.UTF-8
+
+[ -n "$TMUX" ] && export TERM=screen-256color
+
+# enable helpful shell shortcuts
+bindkey '^R' history-incremental-search-backward
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+
+# this makes it so ssh host completion works with mosh
+compdef mosh=ssh
+
+# always exclude tags in grep and make matches stand out with a red background
+# and white text
+export GREP_OPTIONS="--exclude=tags --color=auto"
+export GREP_COLOR="1;32"
+
+unset TMUX
+
+# mutt files are now always in the same place
+export MUTT_HOME=$HOME/.dotfiles/mutt
+
+# go setup
+export GOPATH=$HOME
+export GO15VENDOREXPERIMENT=1
+
+# source 3rd party setups at the end
+source ${ZSHDIR}/3rd-party.zsh
