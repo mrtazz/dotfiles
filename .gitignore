@@ -1,5 +1,5 @@
-cache/headers/*
-cache/bodies/*
+mutt/cache/headers/*
+mutt/cache/bodies/*
 !*.gitignore
 identity
 certificates
