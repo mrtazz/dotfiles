@@ -5,31 +5,51 @@ FILES := vimrc
 SOURCES := $(filter-out $(METAS),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 
-UPDATECMD = ./vim-bundle update
+PLUGINSDIR := pack/plugins/start
 
-PLUGINS += "tpope/vim-fugitive"
-PLUGINS += "ervandew/supertab"
-PLUGINS += "scrooloose/syntastic"
-PLUGINS += "altercation/vim-colors-solarized"
-PLUGINS += "tpope/vim-rhubarb"
-PLUGINS += "ctrlpvim/ctrlp.vim"
+# general plugins
+plugin_vim-fugitive         := https://github.com/tpope/vim-fugitive/tarball/master
+plugin_supertab             := https://github.com/ervandew/supertab/tarball/master
+plugin_syntastic            := https://github.com/scrooloose/syntastic/tarball/master
+plugin_vim-colors-solarized := https://github.com/altercation/vim-colors-solarized/tarball/master
+plugin_vim-rhubarb          := https://github.com/tpope/vim-rhubarb/tarball/master
+plugin_ctrlp.vim            := https://github.com/ctrlpvim/ctrlp.vim/tarball/master
 
 # my plugins
-PLUGINS += "mrtazz/vim-tinygo"
+plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master
 
-# targets
-.PHONY : uninstall
+# GitHub related plugins
+plugin_vim-coffee-script    := https://github.com/kchmck/vim-coffee-script/tarball/master
+
+# this filters out all variables with a plugin_ prefix and regards them as
+# plugin definitions
+ALL_DEFINED_PLUGINS := $(filter plugin_%, $(.VARIABLES))
+# from the defined variables list we only extract the name
+ALL_PLUGINS := $(subst plugin_,,$(ALL_DEFINED_PLUGINS))
+
+# this will install all plugins via the wildcard matching target below
+.PHONY: install-plugins
+install-plugins: $(patsubst %, $(PLUGINSDIR)/%, $(ALL_PLUGINS))
 
 .PHONY: clean-plugins
 clean-plugins:
 	rm -rf ./pack/plugins/start/*
 
-update-plugins: clean-plugins
-	@$(foreach dir,$(PLUGINS),${UPDATECMD} $(dir);)
+.PHONY: update-plugins
+update-plugins: clean-plugins install-plugins
+
+$(PLUGINSDIR):
+	install -d $@
+
+$(PLUGINSDIR)/%: $(PLUGINSDIR)
+	@echo "Installing $@ from $(plugin_$*)"
+	@install -d $@
+	@curl -Lfs $(plugin_$*) | tar xz -C $@ --strip-components=1
 
 $(DOTFILES): $(addprefix ${HOME}/., %) : ${PWD}/%
 	ln -s $< $@
 
+.PHONY: install
 install: $(DOTFILES)
 
 uninstall:
