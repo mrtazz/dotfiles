@@ -20,7 +20,11 @@ PLUGINS += "mrtazz/vim-tinygo"
 # targets
 .PHONY : uninstall
 
-update-plugins:
+.PHONY: clean-plugins
+clean-plugins:
+	rm -rf ./pack/plugins/start/*
+
+update-plugins: clean-plugins
 	@$(foreach dir,$(PLUGINS),${UPDATECMD} $(dir);)
 
 $(DOTFILES): $(addprefix ${HOME}/., %) : ${PWD}/%
