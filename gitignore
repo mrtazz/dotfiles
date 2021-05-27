@@ -16,7 +16,6 @@
 *.egg
 *.egg-info
 dist
-build
 eggs
 parts
 var
@@ -41,7 +40,6 @@ pip-log.txt
 coverage
 InstalledFiles
 lib/bundler/man
-pkg
 rdoc
 spec/reports
 test/tmp
