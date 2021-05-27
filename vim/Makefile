@@ -14,6 +14,7 @@ plugin_syntastic            := https://github.com/scrooloose/syntastic/tarball/m
 plugin_vim-colors-solarized := https://github.com/altercation/vim-colors-solarized/tarball/master
 plugin_vim-rhubarb          := https://github.com/tpope/vim-rhubarb/tarball/master
 plugin_ctrlp.vim            := https://github.com/ctrlpvim/ctrlp.vim/tarball/master
+plugin_fzf                  := https://github.com/junegunn/fzf.vim/tarball/master
 
 # my plugins
 plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master
