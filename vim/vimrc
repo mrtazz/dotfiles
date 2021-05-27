@@ -37,6 +37,9 @@ let g:solarized_termcolors=256
 let g:solarized_contrast="high"
 let g:solarized_visibility="high"
 
+" set guifont for the few times I use a GUI vim
+set guifont=Monaco:h12
+
 syntax on
 colorscheme solarized
 
