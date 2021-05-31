@@ -11,7 +11,7 @@ DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin
 
 # tasks
-.PHONY : uninstall update
+.PHONY : uninstall install
 
 $(DOTFILES): $(addprefix ${HOME}/., %) : ${PWD}/%
 	ln -s $< $@
