@@ -666,11 +666,11 @@ endfunction
 
 function! s:Remote(dir) abort
   let head = FugitiveHead(0, a:dir)
-  let remote = len(head) ? FugitiveConfigGet('branch.' . head . '.remote', dir) : ''
+  let remote = len(head) ? FugitiveConfigGet('branch.' . head . '.remote', a:dir) : ''
   let i = 10
   while remote ==# '.' && i > 0
-    let head = matchstr(FugitiveConfigGet('branch.' . head . '.merge', dir), 'refs/heads/\zs.*')
-    let remote = len(head) ? FugitiveConfigGet('branch.' . head . '.remote', dir) : ''
+    let head = matchstr(FugitiveConfigGet('branch.' . head . '.merge', a:dir), 'refs/heads/\zs.*')
+    let remote = len(head) ? FugitiveConfigGet('branch.' . head . '.remote', a:dir) : ''
     let i -= 1
   endwhile
   return remote =~# '^\.\=$' ? 'origin' : remote
@@ -6409,7 +6409,7 @@ function! s:SquashArgument(...) abort
   if &filetype == 'fugitive'
     let commit = matchstr(getline('.'), '^\%(\%(\x\x\x\)\@!\l\+\s\+\)\=\zs[0-9a-f]\{4,\}\ze \|^' . s:ref_header . ': \zs\S\+')
   elseif has_key(s:temp_files, s:cpath(expand('%:p')))
-    let commit = matchstr(getline('.'), '\<\x\{4,\}\>')
+    let commit = matchstr(getline('.'), '\S\@<!\x\{4,\}\>')
   else
     let commit = s:Owner(@%)
   endif
