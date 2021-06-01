@@ -1,0 +1,5 @@
+brew "git"
+brew "ripgrep"
+brew "bat"
+brew "fzf"
+brew "tmux"

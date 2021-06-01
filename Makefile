@@ -28,7 +28,11 @@ ${HOME}/.zshrc:
 ${HOME}/.zlogin:
 	ln -s $(PWD)/zsh/zlogin $@
 
-install: $(DOTFILES) $(NESTED_DOTFILES)
+install: $(DOTFILES) $(NESTED_DOTFILES) brew-bundle
+
+.PHONY: brew-bundle
+brew-bundle:
+	[ "$$(uname -s)" = "Darwin" ] && brew bundle install --no-lock --file "homebrew/Brewfile"
 
 uninstall:
 	@echo "Cleaning up dotfiles"
