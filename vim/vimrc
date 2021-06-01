@@ -80,8 +80,8 @@ let g:rspec_command = "!./bin/rspec {spec}"
 map <Leader>r :call RunNearestSpec()<CR>
 map <Leader>f :call RunCurrentSpecFile()<CR>
 
-" ctrlp ignore vendor directories
-let g:ctrlp_custom_ignore = 'vendor'
+" replace ctrlp with FZF
+nmap <C-P> :FZF<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
