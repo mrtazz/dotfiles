@@ -43,6 +43,10 @@ compdef mosh=ssh
 export GREP_OPTIONS="--exclude=tags --color=auto"
 export GREP_COLOR="1;32"
 
+# config file setups for rg and bat
+export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
+export BAT_CONFIG_PATH="$HOME/.batrc"
+
 unset TMUX
 
 # mutt files are now always in the same place

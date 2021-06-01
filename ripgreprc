@@ -1,0 +1,3 @@
+--smart-case
+# ignore vendor directories by default
+--glob=!vendor/*
