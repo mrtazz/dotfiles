@@ -83,6 +83,9 @@ map <Leader>f :call RunCurrentSpecFile()<CR>
 " replace ctrlp with FZF
 nmap <C-P> :FZF<CR>
 
+" rg search from vim with fzf preview
+nmap <C-S> :Rg<CR>
+
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
 " open ctags definition in horizontal split
