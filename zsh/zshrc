@@ -24,7 +24,7 @@ autoload -U compinit
 compinit -i
 
 # some basic exports
-export PATH=~/bin:/usr/local/bin:/usr/local/sbin:/usr/local/texlive/2013/bin/universal-darwin:$PATH
+export PATH=~/bin:/usr/local/bin:/usr/local/sbin:/home/linuxbrew/.linuxbrew/bin/:$PATH
 export EDITOR="vim"
 export LC_ALL=en_US.UTF-8
 
