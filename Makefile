@@ -12,14 +12,14 @@ NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin
 
 OS := $(shell uname -s)
 
-.PHONY: homebrew
 ifeq ($(OS),Darwin)
-homebrew: /usr/local/bin/brew
+HOMEBREW_LOCATION := /usr/local/bin/
 else ifeq ($(OS),Linux)
-homebrew:	/home/linuxbrew/.linuxbrew/bin/brew
-else
-homebrew:
+HOMEBREW_LOCATION := /home/linuxbrew/.linuxbrew/bin/
 endif
+
+.PHONY: homebrew
+homebrew: $(HOMEBREW_LOCATION)/brew
 
 # tasks
 .PHONY : uninstall install
@@ -43,11 +43,11 @@ install: $(DOTFILES) $(NESTED_DOTFILES) brew-bundle
 
 .PHONY: brew-bundle
 brew-bundle: homebrew
-	brew bundle install --no-lock --file "homebrew/Brewfile"
+	$(HOMEBREW_LOCATION)/brew bundle install --no-lock --file "homebrew/Brewfile"
 
-/usr/local/bin/brew:
-/home/linuxbrew/.linuxbrew/bin/brew:
-	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+$(HOMEBREW_LOCATION)/brew:
+	curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o /tmp/install_homebrew.sh
+	/bin/bash < /tmp/install_homebrew.sh
 
 uninstall:
 	@echo "Cleaning up dotfiles"
