@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # Always want to use ZSH as my default shell (e.g. for SSH)
-if ! grep -q "root.*/bin/zsh" /etc/passwd
+if ! grep -q "codespace.*/bin/zsh" /etc/passwd
 then
-  chsh -s /bin/zsh root
+  chsh -s /bin/zsh codespace
 fi
 
