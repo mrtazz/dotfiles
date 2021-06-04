@@ -33,7 +33,7 @@ ${HOME}/.vimrc:
 ${HOME}/.muttrc:
 	ln -fs $(PWD)/mutt/muttrc $@
 
-${HOME}/.zshrc:
+${HOME}/.zshrc: $(PWD)/zsh/zshrc
 	ln -fs $(PWD)/zsh/zshrc $@
 
 ${HOME}/.zlogin:
