@@ -39,7 +39,11 @@ ${HOME}/.zshrc: $(PWD)/zsh/zshrc
 ${HOME}/.zlogin:
 	ln -fs $(PWD)/zsh/zlogin $@
 
+ifeq ($(CODESPACES),true)
+install: $(DOTFILES) $(NESTED_DOTFILES) brew-bundle codespaces
+else
 install: $(DOTFILES) $(NESTED_DOTFILES) brew-bundle
+endif
 
 .PHONY: brew-bundle
 brew-bundle: homebrew
@@ -52,3 +56,7 @@ $(HOMEBREW_LOCATION)/brew:
 uninstall:
 	@echo "Cleaning up dotfiles"
 	@for f in $(DOTFILES); do if [ -h $$f ]; then rm -i $$f; fi ; done
+
+.PHONY: codespaces
+codespaces:
+	./script/setup-codespaces
