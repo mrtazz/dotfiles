@@ -10,6 +10,8 @@ SOURCES := $(filter-out $(METAS),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin
 
+AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
+
 OS := $(shell uname -s)
 
 ifeq ($(OS),Darwin)
@@ -20,6 +22,9 @@ endif
 
 .PHONY: homebrew
 homebrew: $(HOMEBREW_LOCATION)/brew
+
+$(AUTHORIZED_KEYS): $(DOTFILES)
+	curl -Ls https://github.com/mrtazz.keys > $@
 
 # tasks
 .PHONY : uninstall install
@@ -40,9 +45,9 @@ ${HOME}/.zlogin:
 	ln -fs $(PWD)/zsh/zlogin $@
 
 ifeq ($(CODESPACES),true)
-install: $(DOTFILES) $(NESTED_DOTFILES) brew-bundle codespaces
+install: $(DOTFILES) $(NESTED_DOTFILES) $(AUTHORIZED_KEYS) brew-bundle codespaces
 else
-install: $(DOTFILES) $(NESTED_DOTFILES) brew-bundle
+install: $(DOTFILES) $(NESTED_DOTFILES) $(AUTHORIZED_KEYS) brew-bundle
 endif
 
 .PHONY: brew-bundle
