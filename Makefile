@@ -46,6 +46,8 @@ ${HOME}/.zlogin:
 
 ifeq ($(CODESPACES),true)
 install: $(DOTFILES) $(NESTED_DOTFILES) $(AUTHORIZED_KEYS) brew-bundle codespaces
+else ifeq ($(OS), FreeBSD)
+install: $(DOTFILES) $(NESTED_DOTFILES) $(AUTHORIZED_KEYS)
 else
 install: $(DOTFILES) $(NESTED_DOTFILES) $(AUTHORIZED_KEYS) brew-bundle
 endif
