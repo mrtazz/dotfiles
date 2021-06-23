@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 # Always want to use ZSH as my default shell (e.g. for SSH)
 if ! grep -q "codespace.*/bin/zsh" /etc/passwd
@@ -6,3 +8,12 @@ then
   sudo chsh -s /bin/zsh codespace
 fi
 
+echo "Installing codespace related dotoverrides configs..."
+# I don't have gpg set up for codespaces
+echo -e "[commit]\n  gpgsign = false" > dotoverrides/gitconfig
+
+# set up org specific overrides
+if [[ "$CODESPACE_NAME" =~ .*"github".* ]]; then
+  echo "Installing GitHub codespace related dotoverrides configs..."
+  echo -e "[user]\n  email = mrtazz@github.com" >> dotoverrides/gitconfig
+fi
