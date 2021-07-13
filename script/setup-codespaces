@@ -17,3 +17,6 @@ if [[ "$CODESPACE_NAME" =~ .*"github".* ]]; then
   echo "Installing GitHub codespace related dotoverrides configs..."
   echo -e "[user]\n  email = mrtazz@github.com" >> dotoverrides/gitconfig
 fi
+
+# install linuxbrew suggested packages
+sudo apt-get install build-essential
