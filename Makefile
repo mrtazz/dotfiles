@@ -4,9 +4,9 @@
 
 GIT := $(shell which git)
 # files you want to install
-METAS := README.md Makefile ackrc
+EXCLUDE := README.md Makefile ackrc vscode
 FILES := $(shell ls)
-SOURCES := $(filter-out $(METAS),$(FILES))
+SOURCES := $(filter-out $(EXCLUDE),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin
 
@@ -44,8 +44,15 @@ ${HOME}/.zshrc: $(PWD)/zsh/zshrc
 ${HOME}/.zlogin:
 	ln -fs $(PWD)/zsh/zlogin $@
 
+${HOME}/.config/Code/User/settings.json:
+       install -d $(dir $@)
+       ln -s $(PWD)/vscode/settings.json $@
+
+.PHONY: vscode
+vscode: ${HOME}/.config/Code/User/settings.json
+
 ifeq ($(CODESPACES),true)
-install: $(DOTFILES) $(NESTED_DOTFILES) $(AUTHORIZED_KEYS) brew-bundle codespaces
+install: $(DOTFILES) $(NESTED_DOTFILES) $(AUTHORIZED_KEYS) brew-bundle codespaces vscode
 else ifeq ($(OS), FreeBSD)
 install: $(DOTFILES) $(NESTED_DOTFILES) $(AUTHORIZED_KEYS)
 else
