@@ -45,8 +45,8 @@ ${HOME}/.zlogin:
 	ln -fs $(PWD)/zsh/zlogin $@
 
 ${HOME}/.config/Code/User/settings.json:
-       install -d $(dir $@)
-       ln -s $(PWD)/vscode/settings.json $@
+	install -d $(dir $@)
+	ln -fs $(PWD)/vscode/settings.json $@
 
 .PHONY: vscode
 vscode: ${HOME}/.config/Code/User/settings.json
