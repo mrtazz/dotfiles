@@ -19,3 +19,4 @@ alias tid='tmux_in_directory'
 alias knife="nocorrect knife"
 alias ack='ag'
 alias fcd="cd \$(FZF_DEFAULT_COMMAND='fd --type directory' fzf --height 40%)"
+alias grep='grep -R -i --exclude=tags --color=auto'
