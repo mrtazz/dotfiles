@@ -38,10 +38,7 @@ bindkey '^E' end-of-line
 # this makes it so ssh host completion works with mosh
 compdef mosh=ssh
 
-# always exclude tags in grep and make matches stand out with a red background
-# and white text
-export GREP_OPTIONS="--exclude=tags --color=auto"
-export GREP_COLOR="1;32"
+export GREP_COLORS="mt=1;32"
 
 # config file setups for rg and bat
 export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
