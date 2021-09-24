@@ -1,3 +1,13 @@
+# vim: set ft=ruby:
+# things I usually use, installed via (home|linux)brew
+def macos?
+  RUBY_PLATFORM =~ /darwin/
+end
+
+def linux?
+  RUBY_PLATFORM =~ /linux/
+end
+
 brew "git"
 brew "ripgrep"
 brew "bat"
@@ -6,3 +16,15 @@ brew "tmux"
 brew "ctags"
 brew "gotags"
 brew "fd"
+
+if macos?
+  cask "1password"
+  cask "1password-cli"
+  cask "alfred"
+  cask "iterm2"
+  cask "phoenix"
+  brew "vim"
+  brew "go"
+  brew "tmux"
+  brew "mutt"
+end
