@@ -178,6 +178,9 @@ function! fzf#vim#with_preview(...)
   if len(placeholder)
     let preview += ['--preview', preview_cmd.' '.placeholder]
   end
+  if &ambiwidth ==# 'double'
+    let preview += ['--no-unicode']
+  end
 
   if len(args)
     call extend(preview, ['--bind', join(map(args, 'v:val.":toggle-preview"'), ',')])
@@ -769,7 +772,7 @@ function! s:ag_handler(lines, has_column)
     if a:has_column
       call cursor(0, first.col)
     endif
-    normal! zz
+    normal! zvzz
   catch
   endtry
 
