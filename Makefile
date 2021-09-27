@@ -9,11 +9,14 @@ FILES := $(shell ls)
 SOURCES := $(filter-out $(EXCLUDE),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin
-
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
+BREWFILE := homebrew/Brewfile
+
+# allow hostname based brewfiles
+HOSTNAME := $(shell hostname -s)
+BREWFILE_LOCAL := homebrew/Brewfile.$(HOSTNAME)
 
 OS := $(shell uname -s)
-
 ifeq ($(OS),Darwin)
 HOMEBREW_LOCATION := /usr/local/bin/
 else ifeq ($(OS),Linux)
@@ -61,7 +64,8 @@ endif
 
 .PHONY: brew-bundle
 brew-bundle: homebrew
-	$(HOMEBREW_LOCATION)/brew bundle install --no-lock --file "homebrew/Brewfile"
+	$(HOMEBREW_LOCATION)/brew bundle install --no-lock --file $(BREWFILE)
+	if [ -f $(BREWFILE_LOCAL) ]; then $(HOMEBREW_LOCATION)/brew bundle install --no-lock --file $(BREWFILE_LOCAL); fi
 
 $(HOMEBREW_LOCATION)/brew:
 	curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o /tmp/install_homebrew.sh

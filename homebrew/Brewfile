@@ -26,5 +26,4 @@ if macos?
   brew "vim"
   brew "go"
   brew "mutt"
-  brew "offlineimap"
 end
