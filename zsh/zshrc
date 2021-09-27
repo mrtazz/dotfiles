@@ -6,6 +6,7 @@ source ${ZSHDIR}/look.zsh
 source ${ZSHDIR}/iterm.zsh
 source ${ZSHDIR}/aliases_functions.zsh
 source ${ZSHDIR}/gpg.zsh
+source ${ZSHDIR}/tmux.zsh
 if [ "$(uname)" = "Darwin" ]; then
   source ${ZSHDIR}/osx.zsh
 fi
