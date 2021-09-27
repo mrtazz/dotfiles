@@ -25,6 +25,6 @@ if macos?
   cask "phoenix"
   brew "vim"
   brew "go"
-  brew "tmux"
   brew "mutt"
+  brew "offlineimap"
 end
