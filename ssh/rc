@@ -1,0 +1,6 @@
+# keep codespaces alive
+
+if [ -n "${CODESPACES}" ]; then
+echo "Running codespaces keep-alive command..."
+while true; do touch /workspaces/.codespaces/shared/active-clients-monitor.json; sleep 1; done &
+fi

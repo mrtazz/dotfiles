@@ -4,13 +4,22 @@
 
 GIT := $(shell which git)
 # files you want to install
-EXCLUDE := README.md Makefile ackrc vscode
+EXCLUDE := README.md Makefile ackrc vscode ssh
 FILES := $(shell ls)
 SOURCES := $(filter-out $(EXCLUDE),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
+
+# ssh needs special treatment because the folder can't be symlinked as the
+# link always has the wrong permissions
+${HOME}/.ssh:
+	install -d -m 700 $@
+
+SSH_FILES := $(patsubst %, ${HOME}/.ssh/%, $(shell ls ssh))
+$(SSH_FILES): $(addprefix ${HOME}/., %) | ${PWD}/%
+	ln -fs $< $@
 
 # allow hostname based brewfiles
 HOSTNAME := $(shell hostname -s)
@@ -26,7 +35,7 @@ endif
 .PHONY: homebrew
 homebrew: $(HOMEBREW_LOCATION)/brew
 
-$(AUTHORIZED_KEYS): $(DOTFILES)
+$(AUTHORIZED_KEYS): $(DOTFILES) | ${HOME}/.ssh
 	curl -Ls https://github.com/mrtazz.keys > $@
 
 # tasks
@@ -55,7 +64,7 @@ ${HOME}/.config/Code/User/settings.json:
 vscode: ${HOME}/.config/Code/User/settings.json
 
 ifeq ($(CODESPACES),true)
-install: $(DOTFILES) $(NESTED_DOTFILES) $(AUTHORIZED_KEYS) brew-bundle codespaces vscode
+install: $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS) brew-bundle codespaces vscode
 else ifeq ($(OS), FreeBSD)
 install: $(DOTFILES) $(NESTED_DOTFILES) $(AUTHORIZED_KEYS)
 else
