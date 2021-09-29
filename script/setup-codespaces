@@ -9,8 +9,8 @@ then
 fi
 
 echo "Installing codespace related dotoverrides configs..."
-# I don't have gpg set up for codespaces
-echo -e "[commit]\n  gpgsign = false" > dotoverrides/gitconfig
+# we need to use the gpg wrapper for codespaces
+echo -e "[gpg]\n  program = /.codespaces/bin/gh-gpgsign" > dotoverrides/gitconfig
 
 # set up org specific overrides
 if [[ "$CODESPACE_NAME" =~ .*"github".* ]]; then
