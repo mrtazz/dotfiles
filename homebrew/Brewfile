@@ -23,7 +23,10 @@ if macos?
   cask "alfred"
   cask "iterm2"
   cask "phoenix"
+  # vim, go, and gh are already installed on codespaces
   brew "vim"
   brew "go"
+  brew "gh"
+
   brew "mutt"
 end
