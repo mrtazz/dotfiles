@@ -8,7 +8,6 @@ def linux?
   RUBY_PLATFORM =~ /linux/
 end
 
-brew "git"
 brew "ripgrep"
 brew "bat"
 brew "fzf"
@@ -23,8 +22,9 @@ if macos?
   cask "alfred"
   cask "iterm2"
   cask "phoenix"
-  # vim, go, and gh are already installed on codespaces
+  # vim, git, go, and gh are already installed on codespaces
   brew "vim"
+  brew "git"
   brew "go"
   brew "gh"
 
