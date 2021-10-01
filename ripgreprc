@@ -1,3 +1,6 @@
 --smart-case
+# don't ignore default things like .gitignore
+--no-ignore-vcs
 # ignore vendor directories by default
 --glob=!vendor/*
+--glob=!tags
