@@ -1,0 +1,6 @@
+# Ignore all because go installs it's executables here as well
+*
+
+# Unignore all with extensions because most likely they are scripts and not
+# binaries
+!*.*

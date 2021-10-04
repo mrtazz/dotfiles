@@ -4,13 +4,20 @@
 
 GIT := $(shell which git)
 # files you want to install
-EXCLUDE := README.md Makefile ackrc vscode ssh install.sh homebrew
+EXCLUDE := README.md Makefile vscode ssh install.sh homebrew bin
 FILES := $(shell ls)
 SOURCES := $(filter-out $(EXCLUDE),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
+BIN := ${HOME}/bin
+
+DEFAULT_TARGETS := $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS) $(BIN)
+
+# bin/ is linked explicitly because we want it to not be ~/.bin
+${HOME}/bin:
+	ln -s ${PWD}/bin $@
 
 # ssh needs special treatment because the folder can't be symlinked as the
 # link always has the wrong permissions
@@ -64,11 +71,11 @@ ${HOME}/.config/Code/User/settings.json:
 vscode: ${HOME}/.config/Code/User/settings.json
 
 ifeq ($(CODESPACES),true)
-install: $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS) brew-bundle codespaces vscode
+install: $(DEFAULT_TARGETS) brew-bundle codespaces vscode
 else ifeq ($(OS), FreeBSD)
-install: $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS)
+install: $(DEFAULT_TARGETS)
 else
-install: $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS) brew-bundle
+install: $(DEFAULT_TARGETS) brew-bundle
 endif
 
 .PHONY: brew-bundle
