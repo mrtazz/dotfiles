@@ -4,7 +4,7 @@
 
 GIT := $(shell which git)
 # files you want to install
-EXCLUDE := README.md Makefile vscode ssh install.sh homebrew bin
+EXCLUDE := README.md Makefile vscode ssh install.sh homebrew bin spec
 FILES := $(shell ls)
 SOURCES := $(filter-out $(EXCLUDE),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
@@ -94,3 +94,11 @@ uninstall:
 .PHONY: codespaces
 codespaces:
 	./script/setup-codespaces
+
+.PHONY: bundle-install
+bundle-install:
+	bundle install --gemfile=spec/Gemfile
+
+.PHONY: spec
+spec:
+	bundle exec --gemfile=spec/Gemfile rspec --format=documentation spec/
