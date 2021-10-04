@@ -1,7 +1,7 @@
 # tmux related things
 
 # functions
-# this lets me cd into a directory and open tmux via the `mx` script in there
+# this lets me cd into a directory and open tmux there
 function tmux_in_directory() {
   local dir="${1}"
   (cd "${dir}" && tmux new -s ${PWD##*/})
