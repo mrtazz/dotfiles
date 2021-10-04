@@ -1,4 +1,4 @@
-name: CI
+name: spec
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
 jobs:
 
   build:
-    name: spec
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
