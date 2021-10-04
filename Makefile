@@ -13,7 +13,6 @@ AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
 BIN := ${HOME}/bin
 
-DEFAULT_TARGETS := $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS) $(BIN)
 
 # bin/ is linked explicitly because we want it to not be ~/.bin
 ${HOME}/bin:
@@ -27,6 +26,8 @@ ${HOME}/.ssh:
 SSH_FILES := $(patsubst %, ${HOME}/.ssh/%, $(shell ls ssh))
 ${HOME}/.ssh/%: ${PWD}/ssh/% | ${HOME}/.ssh
 	ln -fs $< $@
+
+DEFAULT_TARGETS := $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS) $(BIN)
 
 # allow hostname based brewfiles
 HOSTNAME := $(shell hostname -s)
