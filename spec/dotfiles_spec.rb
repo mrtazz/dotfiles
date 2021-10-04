@@ -7,7 +7,6 @@ describe "symlinks" do
     "#{ENV['HOME']}/.gitconfig",
     "#{ENV['HOME']}/.gitignore",
     "#{ENV['HOME']}/.mutt",
-    "#{ENV['HOME']}/.mutt",
     "#{ENV['HOME']}/.phoenix.js",
     "#{ENV['HOME']}/.ripgreprc",
     "#{ENV['HOME']}/.sqliterc",
@@ -17,7 +16,6 @@ describe "symlinks" do
     "#{ENV['HOME']}/.vim",
     "#{ENV['HOME']}/.vimrc",
     "#{ENV['HOME']}/.zlogin",
-    "#{ENV['HOME']}/.zsh",
     "#{ENV['HOME']}/.zsh",
     "#{ENV['HOME']}/.zshrc",
     "#{ENV['HOME']}/bin"
