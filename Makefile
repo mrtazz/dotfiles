@@ -4,7 +4,7 @@
 
 GIT := $(shell which git)
 # files you want to install
-EXCLUDE := README.md Makefile vscode ssh install.sh homebrew bin
+EXCLUDE := README.md Makefile vscode ssh install.sh homebrew bin spec
 FILES := $(shell ls)
 SOURCES := $(filter-out $(EXCLUDE),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
@@ -13,7 +13,6 @@ AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
 BIN := ${HOME}/bin
 
-DEFAULT_TARGETS := $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS) $(BIN)
 
 # bin/ is linked explicitly because we want it to not be ~/.bin
 ${HOME}/bin:
@@ -27,6 +26,8 @@ ${HOME}/.ssh:
 SSH_FILES := $(patsubst %, ${HOME}/.ssh/%, $(shell ls ssh))
 ${HOME}/.ssh/%: ${PWD}/ssh/% | ${HOME}/.ssh
 	ln -fs $< $@
+
+DEFAULT_TARGETS := $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS) $(BIN)
 
 # allow hostname based brewfiles
 HOSTNAME := $(shell hostname -s)
@@ -70,9 +71,11 @@ ${HOME}/.config/Code/User/settings.json:
 .PHONY: vscode
 vscode: ${HOME}/.config/Code/User/settings.json
 
-ifeq ($(CODESPACES),true)
+ifeq ($(CODESPACES), true)
 install: $(DEFAULT_TARGETS) brew-bundle codespaces vscode
 else ifeq ($(OS), FreeBSD)
+install: $(DEFAULT_TARGETS)
+else ifeq ($(CI), true)
 install: $(DEFAULT_TARGETS)
 else
 install: $(DEFAULT_TARGETS) brew-bundle
@@ -94,3 +97,11 @@ uninstall:
 .PHONY: codespaces
 codespaces:
 	./script/setup-codespaces
+
+.PHONY: bundle-install
+bundle-install:
+	bundle install --gemfile=spec/Gemfile
+
+.PHONY: spec
+spec:
+	bundle exec --gemfile=spec/Gemfile rspec --format=documentation spec/
