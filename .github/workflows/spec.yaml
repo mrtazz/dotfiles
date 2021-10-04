@@ -12,6 +12,7 @@ jobs:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
@@ -19,7 +20,12 @@ jobs:
 
     - name: install depdendencies
       run: |
+        gem install bundler
         make bundle-install
+
+    - name: install the dotfiles
+      run: |
+        make install
 
     - name: run spec
       run: |
