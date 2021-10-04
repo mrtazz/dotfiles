@@ -70,9 +70,11 @@ ${HOME}/.config/Code/User/settings.json:
 .PHONY: vscode
 vscode: ${HOME}/.config/Code/User/settings.json
 
-ifeq ($(CODESPACES),true)
+ifeq ($(CODESPACES), true)
 install: $(DEFAULT_TARGETS) brew-bundle codespaces vscode
 else ifeq ($(OS), FreeBSD)
+install: $(DEFAULT_TARGETS)
+else ifeq ($(CI), true)
 install: $(DEFAULT_TARGETS)
 else
 install: $(DEFAULT_TARGETS) brew-bundle
