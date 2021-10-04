@@ -1,4 +1,2 @@
 # vim: set ft=ruby:
 # things I usually use on my GH work laptop
-
-brew "gh"
