@@ -17,10 +17,10 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
     - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
 
     - name: install depdendencies
       run: |
-        gem install bundler
         make bundle-install
 
     - name: install the dotfiles
