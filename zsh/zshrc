@@ -54,5 +54,8 @@ export MUTT_HOME=$HOME/.dotfiles/mutt
 export GOPATH=$HOME
 export GO15VENDOREXPERIMENT=1
 
+# source codespaces related things if we are in one
+[ -n "$CODESPACES" ] && source ${ZSHDIR}/codespaces.zsh
+
 # source 3rd party setups at the end
 source ${ZSHDIR}/3rd-party.zsh
