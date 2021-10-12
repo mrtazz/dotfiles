@@ -2,3 +2,4 @@
 # things I usually use on my personal laptop
 
 brew "offlineimap"
+brew "tarsnap"
