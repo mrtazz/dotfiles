@@ -73,3 +73,6 @@ Icon?
 # ignore ctags
 tags
 .tmux
+
+# ignore zsh history as it changes per instance
+zsh/history
