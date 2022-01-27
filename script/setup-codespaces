@@ -2,10 +2,13 @@
 
 set -e
 
+echo "Running codespace specific script..."
+
+echo "Changing shell to zsh for ${USER}..."
 # Always want to use ZSH as my default shell (e.g. for SSH)
-if ! grep -q "codespace.*/bin/zsh" /etc/passwd
+if ! grep -q "${USER}.*/bin/zsh" /etc/passwd
 then
-  sudo chsh -s /bin/zsh codespace
+  sudo chsh -s /bin/zsh ${USER}
 fi
 
 echo "Installing codespace related dotoverrides configs..."
