@@ -4,6 +4,11 @@ set -e
 
 echo "Running codespace specific script..."
 
+# default to codespace user
+if [ -z "${USER}" ]; do
+  USER=codespace
+fi
+
 echo "Changing shell to zsh for ${USER}..."
 # Always want to use ZSH as my default shell (e.g. for SSH)
 if ! grep -q "${USER}.*/bin/zsh" /etc/passwd
