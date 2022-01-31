@@ -5,7 +5,7 @@ set -e
 echo "Running codespace specific script..."
 
 # default to codespace user
-if [ -z "${USER}" ]; do
+if [ -z "${USER}" ]; then
   USER=codespace
 fi
 
