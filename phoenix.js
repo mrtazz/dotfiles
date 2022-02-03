@@ -74,6 +74,23 @@ var righthalf = function () {
   }
 }
 
+var right_two_thirds = function () {
+
+  var screen = Screen.main().flippedVisibleFrame();
+  var window = Window.focused();
+
+  if (window) {
+    window.setTopLeft({
+      x: screen.x + screen.width * 0.33,
+      y: screen.y
+    });
+    window.setSize({
+      width: screen.width * 0.667,
+      height: screen.height
+    });
+  }
+}
+
 var tophalf = function () {
 
   var screen = Screen.main().flippedVisibleFrame();
@@ -153,6 +170,7 @@ Key.on('c', mash, center);
 Key.on('l', mash, lefthalf);
 Key.on('r', mash, righthalf);
 Key.on('f', mash, fullscreen);
+Key.on('t', mash, right_two_thirds);
 Key.on('q', mash, function() { quarterScreen('lefttop'); });
 Key.on('w', mash, function() { quarterScreen('righttop'); });
 Key.on('a', mash, function() { quarterScreen('leftbottom'); });
