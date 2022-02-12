@@ -86,7 +86,7 @@ stuff.
 
 ### Using Homebrew
 
-You can use [Homebrew](http://brew.sh/) (on macOS or Linux)
+You can use [Homebrew](https://brew.sh/) (on macOS or Linux)
 to install fzf.
 
 ```sh
@@ -130,6 +130,8 @@ git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
 > may not be enabled by default.**
 >
 > Refer to the package documentation for more information. (e.g. `apt-cache show fzf`)
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/fzf.svg)](https://repology.org/project/fzf/versions)
 
 ### Windows
 
@@ -589,6 +591,9 @@ FZF_DEFAULT_COMMAND="$RG_PREFIX '$INITIAL_QUERY'" \
 If ripgrep doesn't find any matches, it will exit with a non-zero exit status,
 and fzf will warn you about it. To suppress the warning message, we added
 `|| true` to the command, so that it always exits with 0.
+
+See ["Using fzf as interative Ripgrep launcher"](https://github.com/junegunn/fzf/blob/master/ADVANCED.md#using-fzf-as-interative-ripgrep-launcher)
+for a fuller example with preview window options.
 
 ### Preview window
 

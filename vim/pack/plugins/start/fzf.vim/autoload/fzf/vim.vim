@@ -30,6 +30,7 @@ set cpo&vim
 
 let s:min_version = '0.23.0'
 let s:is_win = has('win32') || has('win64')
+let s:is_wsl_bash = s:is_win && (exepath('bash') =~? 'Windows[/\\]system32[/\\]bash.exe$')
 let s:layout_keys = ['window', 'up', 'down', 'left', 'right']
 let s:bin_dir = expand('<sfile>:p:h:h:h').'/bin/'
 let s:bin = {
@@ -40,25 +41,16 @@ if s:is_win
   if has('nvim')
     let s:bin.preview = split(system('for %A in ("'.s:bin.preview.'") do @echo %~sA'), "\n")[0]
   else
-    let s:bin.preview = fnamemodify(s:bin.preview, ':8')
+    let preview_path = s:is_wsl_bash
+      \ ? substitute(s:bin.preview, '^\([A-Z]\):', '/mnt/\L\1', '')
+      \ : fnamemodify(s:bin.preview, ':8')
+    let s:bin.preview = substitute(preview_path, '\', '/', 'g')
   endif
 endif
 
 let s:wide = 120
 let s:warned = 0
 let s:checked = 0
-
-function! s:version_requirement(val, min)
-  let val = split(a:val, '\.')
-  let min = split(a:min, '\.')
-  for idx in range(0, len(min) - 1)
-    let v = get(val, idx, 0)
-    if     v < min[idx] | return 0
-    elseif v > min[idx] | return 1
-    endif
-  endfor
-  return 1
-endfunction
 
 function! s:check_requirements()
   if s:checked
@@ -71,18 +63,7 @@ function! s:check_requirements()
   if !exists('*fzf#exec')
     throw "fzf#exec function not found. You need to upgrade Vim plugin from the main fzf repository ('junegunn/fzf')"
   endif
-  let exec = fzf#exec()
-  let output = split(system(exec . ' --version'), "\n")
-  if v:shell_error || empty(output)
-    throw 'Failed to run "fzf --version": ' . string(output)
-  endif
-  let fzf_version = matchstr(output[-1], '[0-9.]\+')
-
-  if s:version_requirement(fzf_version, s:min_version)
-    let s:checked = 1
-    return
-  end
-  throw printf('You need to upgrade fzf. Found: %s (%s). Required: %s or above.', fzf_version, exec, s:min_version)
+  let s:checked = !empty(fzf#exec(s:min_version))
 endfunction
 
 function! s:extend_opts(dict, eopts, prepend)
@@ -162,15 +143,14 @@ function! fzf#vim#with_preview(...)
     let preview += ['--preview-window', window]
   endif
   if s:is_win
-    let is_wsl_bash = exepath('bash') =~? 'Windows[/\\]system32[/\\]bash.exe$'
     if empty($MSWINHOME)
       let $MSWINHOME = $HOME
     endif
-    if is_wsl_bash && $WSLENV !~# '[:]\?MSWINHOME\(\/[^:]*\)\?\(:\|$\)'
+    if s:is_wsl_bash && $WSLENV !~# '[:]\?MSWINHOME\(\/[^:]*\)\?\(:\|$\)'
       let $WSLENV = 'MSWINHOME/u:'.$WSLENV
     endif
-    let preview_cmd = 'bash '.(is_wsl_bash
-    \ ? substitute(substitute(s:bin.preview, '^\([A-Z]\):', '/mnt/\L\1', ''), '\', '/', 'g')
+    let preview_cmd = 'bash '.(s:is_wsl_bash
+    \ ? s:bin.preview
     \ : escape(s:bin.preview, '\'))
   else
     let preview_cmd = fzf#shellescape(s:bin.preview)
@@ -325,6 +305,7 @@ endfunction
 
 function! s:open(cmd, target)
   if stridx('edit', a:cmd) == 0 && fnamemodify(a:target, ':p') ==# expand('%:p')
+    normal! m'
     return
   endif
   execute a:cmd s:escape(a:target)
@@ -643,11 +624,12 @@ function! fzf#vim#gitfiles(args, ...)
   " Here be dragons!
   " We're trying to access the common sink function that fzf#wrap injects to
   " the options dictionary.
+  let bar = s:is_win ? '^|' : '|'
   let preview = printf(
     \ 'bash -c "if [[ {1} =~ M ]]; then %s; else %s {-1}; fi"',
     \ executable('delta')
-      \ ? 'git diff -- {-1} | delta --width $FZF_PREVIEW_COLUMNS --file-style=omit | sed 1d'
-      \ : 'git diff --color=always -- {-1} | sed 1,4d',
+      \ ? 'git diff -- {-1} '.bar.' delta --width $FZF_PREVIEW_COLUMNS --file-style=omit '.bar.' sed 1d'
+      \ : 'git diff --color=always -- {-1} '.bar.' sed 1,4d',
     \ s:bin.preview)
   let wrapped = fzf#wrap({
   \ 'source':  'git -c color.status=always status --short --untracked-files=all',
@@ -1007,8 +989,7 @@ function! s:command_sink(lines)
   if empty(a:lines[0])
     call feedkeys(':'.cmd.(a:lines[1][0] == '!' ? '' : ' '), 'n')
   else
-    call histadd(':', cmd)
-    execute cmd
+    call feedkeys(':'.cmd."\<cr>", 'n')
   endif
 endfunction
 
@@ -1109,12 +1090,13 @@ function! fzf#vim#helptags(...)
     silent! call delete(s:helptags_script)
   endif
   let s:helptags_script = tempname()
-  call writefile(['/('.(s:is_win ? '^[A-Z]:[\/\\].*?[^:]' : '.*?').'):(.*?)\t(.*?)\t/; printf(qq('.s:green('%-40s', 'Label').'\t%s\t%s\n), $2, $3, $1)'], s:helptags_script)
+
+  call writefile(['/('.(s:is_win ? '^[A-Z]:[\/\\].*?[^:]' : '.*?').'):(.*?)\t(.*?)\t(.*)/; printf(qq('.s:green('%-40s', 'Label').'\t%s\t%s\t%s\n), $2, $3, $1, $4)'], s:helptags_script)
   return s:fzf('helptags', {
-  \ 'source':  'grep -H ".*" '.join(map(tags, 'fzf#shellescape(v:val)')).
+  \ 'source':  'grep --with-filename ".*" '.join(map(tags, 'fzf#shellescape(v:val)')).
     \ ' | perl -n '.fzf#shellescape(s:helptags_script).' | sort',
   \ 'sink':    s:function('s:helptag_sink'),
-  \ 'options': ['--ansi', '+m', '--tiebreak=begin', '--with-nth', '..-2']}, a:000)
+  \ 'options': ['--ansi', '+m', '--tiebreak=begin', '--with-nth', '..3']}, a:000)
 endfunction
 
 " ------------------------------------------------------------------
@@ -1247,9 +1229,9 @@ function! s:commits(range, buffer_local, args)
   endif
 
   if !s:is_win && &columns > s:wide
-    let suffix = executable('delta') ? '| delta --width $FZF_PREVIEW_COLUMNS' : '--color=always'
+    let suffix = executable('delta') ? '| delta --width $FZF_PREVIEW_COLUMNS' : ''
     call extend(options.options,
-    \ ['--preview', 'echo {} | grep -o "[a-f0-9]\{7,\}" | head -1 | xargs git show --format=format: ' . suffix])
+    \ ['--preview', 'echo {} | grep -o "[a-f0-9]\{7,\}" | head -1 | xargs git show --format=format: --color=always ' . suffix])
   endif
 
   return s:fzf(a:buffer_local ? 'bcommits' : 'commits', options, a:args)
