@@ -9,6 +9,8 @@ if [ -z "${USER}" ]; then
   USER=codespace
 fi
 
+USER_HOME=/home/${USER}
+
 echo "Changing shell to zsh for ${USER}..."
 # Always want to use ZSH as my default shell (e.g. for SSH)
 if ! grep -q "${USER}.*/bin/zsh" /etc/passwd
@@ -24,6 +26,9 @@ echo -e "[gpg]\n  program = /.codespaces/bin/gh-gpgsign" > dotoverrides/gitconfi
 if [[ "$CODESPACE_NAME" =~ .*"github".* ]]; then
   echo "Installing GitHub codespace related dotoverrides configs..."
   echo -e "[user]\n  email = mrtazz@github.com" >> dotoverrides/gitconfig
+  
+  echo "Installing go proxy auth"
+  echo "machine goproxy.githubapp.com login nobody password ${GOPROXY_TOKEN_GITHUB}" > ${USER_HOME}/.netrc
 fi
 
 # install linuxbrew suggested packages
