@@ -127,6 +127,19 @@ autocmd InsertLeave *.tex setlocal nospell
 autocmd FileType markdown setlocal spell
 autocmd FileType mail setlocal spell
 
+" try and set up gopls
+if executable('gopls')
+  au User lsp_setup call lsp#register_server({
+        \ 'name': 'gopls',
+        \ 'cmd': {server_info->['gopls']},
+        \ 'whitelist': ['go'],
+        \ })
+  autocmd BufWritePre *.go LspDocumentFormatSync
+  map <leader>pi :LspPeekImplementation<CR>
+  map <leader>pd :LspPeekDefinition<CR>
+  map <leader>pt :LspPeekTypeDefinition<CR>
+endif
+
 " let's see if we can work without arrow keys
 inoremap  <Up>     <NOP>
 inoremap  <Down>   <NOP>
