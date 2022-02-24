@@ -15,7 +15,7 @@ plugin_vim-colors-solarized := https://github.com/altercation/vim-colors-solariz
 plugin_vim-rhubarb          := https://github.com/tpope/vim-rhubarb/tarball/master
 plugin_fzf                  := https://github.com/junegunn/fzf/tarball/master
 plugin_fzf.vim              := https://github.com/junegunn/fzf.vim/tarball/master
-plugin_tla                  := https://github.com/florentc/vim-tla/tarball/master
+plugin_vim-tla              := https://github.com/florentc/vim-tla/tarball/master
 plugin_vim-lsp              := https://github.com/prabirshrestha/vim-lsp/tarball/master
 plugin_vim-lsp-settings     := https://github.com/mattn/vim-lsp-settings/tarball/master
 
