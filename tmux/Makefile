@@ -5,6 +5,7 @@ PLUGINSDIR := plugins
 # general plugins
 plugin_tmux-resurrect := https://github.com/tmux-plugins/tmux-resurrect/tarball/master
 plugin_tmux-continuum := https://github.com/tmux-plugins/tmux-continuum/tarball/master
+plugin_tmux-solarized := https://github.com/seebi/tmux-colors-solarized/tarball/master
 
 # this filters out all variables with a plugin_ prefix and regards them as
 # plugin definitions
