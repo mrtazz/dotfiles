@@ -12,7 +12,7 @@ brew "ripgrep"
 brew "bat"
 brew "fzf"
 brew "tmux"
-brew "ctags"
+brew "universal-ctags"
 brew "gotags"
 brew "fd"
 
