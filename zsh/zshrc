@@ -29,8 +29,6 @@ export PATH=~/bin:/usr/local/bin:/usr/local/sbin:/home/linuxbrew/.linuxbrew/bin/
 export EDITOR="vim"
 export LC_ALL=en_US.UTF-8
 
-[ -n "$TMUX" ] && export TERM=screen-256color
-
 # enable helpful shell shortcuts
 bindkey '^R' history-incremental-search-backward
 bindkey '^A' beginning-of-line
@@ -45,7 +43,6 @@ export GREP_COLORS="mt=1;32"
 export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
 export BAT_CONFIG_PATH="$HOME/.batrc"
 
-unset TMUX
 
 # mutt files are now always in the same place
 export MUTT_HOME=$HOME/.dotfiles/mutt

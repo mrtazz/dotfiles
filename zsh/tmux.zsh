@@ -11,3 +11,7 @@ function tmux_in_directory() {
 alias tma='tmux attach -d -t'
 alias tid='tmux_in_directory'
 alias tmn='tmux new -s $(basename ${PWD})'
+
+# set colors properly
+[ -n "$TMUX" ] && export TERM=screen-256color
+unset TMUX
