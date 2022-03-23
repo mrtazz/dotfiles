@@ -31,6 +31,3 @@ $(PLUGINSDIR)/%: $(PLUGINSDIR)
 	@echo "Installing $@ from $(plugin_$*)"
 	@install -d $@
 	@curl -Lfs $(plugin_$*) | tar xz -C $@ --strip-components=1
-
-$(DOTFILES): $(addprefix ${HOME}/., %) : ${PWD}/%
-	ln -s $< $@
