@@ -78,7 +78,7 @@ install: $(DEFAULT_TARGETS) brew-bundle codespaces vscode
 else ifeq ($(OS), FreeBSD)
 install: $(DEFAULT_TARGETS)
 else ifeq ($(CI), true)
-install: $(DEFAULT_TARGETS)
+install: $(DEFAULT_TARGETS) brew-bundle
 else
 install: $(DEFAULT_TARGETS) brew-bundle
 endif
