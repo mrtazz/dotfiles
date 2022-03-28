@@ -40,7 +40,7 @@ if macos?
   # vim, git, go, and gh are already installed on codespaces
   brew "vim"
   brew "git"
-  brew "go", link: link?
+  brew "go", link: false
   brew "gh"
 
   brew "mutt"
