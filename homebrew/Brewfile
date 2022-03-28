@@ -8,6 +8,13 @@ def linux?
   RUBY_PLATFORM =~ /linux/
 end
 
+# whether or not to link brew installs. This is mostly so I can have an
+# integration test on CI that doesn't clash with what's already on the macOS
+# runner
+def link?
+  ENV["CI"] != "true"
+end
+
 brew "ripgrep"
 brew "bat"
 brew "fzf"
@@ -25,7 +32,7 @@ if macos?
   # vim, git, go, and gh are already installed on codespaces
   brew "vim"
   brew "git"
-  brew "go"
+  brew "go", link: link?
   brew "gh"
 
   brew "mutt"
