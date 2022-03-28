@@ -15,6 +15,14 @@ def link?
   ENV["CI"] != "true"
 end
 
+
+puts "***"
+puts "ENV['CI'] is '#{ENV['CI']}'"
+puts "All brew installs will be linked: #{link?}"
+puts "***"
+
+
+# brew definitions
 brew "ripgrep"
 brew "bat"
 brew "fzf"
