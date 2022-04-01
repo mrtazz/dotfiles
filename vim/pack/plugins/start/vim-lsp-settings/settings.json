@@ -817,14 +817,6 @@
       "requires": []
     }
   ],
-  "markdown": [
-    {
-      "command": "remark-language-server",
-      "requires": [
-        "npm"
-      ]
-    }
-  ],
   "nim": [
     {
       "command": "nimlsp",
@@ -1320,9 +1312,9 @@
   ],
   "terraform": [
     {
-      "command": "terraform-lsp",
-      "url": "https://github.com/juliosueiras/terraform-lsp",
-      "description": "Language Server Protocol for Terraform",
+      "command": "terraform-ls",
+      "url": "https://github.com/hashicorp/terraform-ls",
+      "description": "Terraform Language Server",
       "requires": [],
       "vim_plugin": {
         "extensions": [
@@ -1333,9 +1325,9 @@
       }
     },
     {
-      "command": "terraform-ls",
-      "url": "https://github.com/hashicorp/terraform-ls",
-      "description": "Terraform Language Server",
+      "command": "terraform-lsp",
+      "url": "https://github.com/juliosueiras/terraform-lsp",
+      "description": "Language Server Protocol for Terraform",
       "requires": [],
       "vim_plugin": {
         "extensions": [

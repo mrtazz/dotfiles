@@ -12,12 +12,12 @@ plugin_vim-fugitive         := https://github.com/tpope/vim-fugitive/tarball/mas
 plugin_supertab             := https://github.com/ervandew/supertab/tarball/master
 plugin_syntastic            := https://github.com/scrooloose/syntastic/tarball/master
 plugin_vim-colors-solarized := https://github.com/altercation/vim-colors-solarized/tarball/master
-plugin_vim-rhubarb          := https://github.com/tpope/vim-rhubarb/tarball/master
 plugin_fzf                  := https://github.com/junegunn/fzf/tarball/master
 plugin_fzf.vim              := https://github.com/junegunn/fzf.vim/tarball/master
 plugin_vim-tla              := https://github.com/florentc/vim-tla/tarball/master
 plugin_vim-lsp              := https://github.com/prabirshrestha/vim-lsp/tarball/master
 plugin_vim-lsp-settings     := https://github.com/mattn/vim-lsp-settings/tarball/master
+plugin_vim-marked           := https://github.com/itspriddle/vim-marked/tarball/master
 
 # my plugins
 plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master

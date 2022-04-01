@@ -217,6 +217,7 @@ endfunction
 " * "scheme": "https"
 " * "authority": "user@example.com:1234"
 " * "path": "/repo.git" (for SSH URLs this may be a relative path)
+" * "pathname": "/repo.git" (always coerced to absolute path)
 " * "host": "example.com:1234"
 " * "hostname": "example.com"
 " * "port": "1234"
@@ -599,6 +600,7 @@ exe 'command! -bar -bang -nargs=* -complete=customlist,fugitive#EditComplete Gwr
 exe 'command! -bar -bang -nargs=* -complete=customlist,fugitive#EditComplete Gwq    exe fugitive#WqCommand(   <line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
 
 exe 'command! -bar -bang -nargs=0 GRemove exe fugitive#RemoveCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
+exe 'command! -bar -bang -nargs=0 GUnlink exe fugitive#UnlinkCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
 exe 'command! -bar -bang -nargs=0 GDelete exe fugitive#DeleteCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
 exe 'command! -bar -bang -nargs=1 -complete=customlist,fugitive#CompleteObject GMove   exe fugitive#MoveCommand(  <line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
 exe 'command! -bar -bang -nargs=1 -complete=customlist,fugitive#RenameComplete GRename exe fugitive#RenameCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
@@ -723,10 +725,12 @@ function! s:Map(mode, lhs, rhs, flags) abort
       let head = substitute(head, '<[^<>]*>$\|.$', '', '')
     endwhile
   endif
-  if flags !~# '<unique>' || empty(mapcheck(head.tail, a:mode))
+  if empty(mapcheck(head.tail, a:mode))
     exe a:mode.'map' s:nowait flags head.tail a:rhs
   endif
 endfunction
 
 call s:Map('c', '<C-R><C-G>', 'fnameescape(fugitive#Object(@%))', '<expr>')
 call s:Map('n', 'y<C-G>', ':<C-U>call setreg(v:register, fugitive#Object(@%))<CR>', '<silent>')
+nmap <script><silent> <Plug>fugitive:y<C-G> :<C-U>call setreg(v:register, fugitive#Object(@%))<CR>
+nmap <script> <Plug>fugitive: <Nop>
