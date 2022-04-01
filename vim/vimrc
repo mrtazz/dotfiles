@@ -75,11 +75,6 @@ map <leader>b :buffer
 map <leader>m :make<CR>
 map <leader>M :set filetype=markdown<CR>
 
-" rspec setup
-let g:rspec_command = "!./bin/rspec {spec}"
-map <Leader>r :call RunNearestSpec()<CR>
-map <Leader>f :call RunCurrentSpecFile()<CR>
-
 " replace ctrlp with FZF
 nmap <C-P> :FZF<CR>
 
@@ -117,6 +112,8 @@ autocmd BufNewFile,BufReadPost *.md set filetype=markdown
 if filereadable($HOME."/.vim/vim-spell.add")
   set spellfile=$HOME/.vim/vim-spell.add
 endif
+
+let g:checkbox_states = [' ', 'x', '-', '>']
 
 " Autocomplete with dictionary words when spell check is on
 set complete+=kspell

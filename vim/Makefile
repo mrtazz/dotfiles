@@ -18,6 +18,7 @@ plugin_vim-tla              := https://github.com/florentc/vim-tla/tarball/maste
 plugin_vim-lsp              := https://github.com/prabirshrestha/vim-lsp/tarball/master
 plugin_vim-lsp-settings     := https://github.com/mattn/vim-lsp-settings/tarball/master
 plugin_vim-marked           := https://github.com/itspriddle/vim-marked/tarball/master
+plugin_vim-checkbox         := https://github.com/jkramer/vim-checkbox/tarball/master
 
 # my plugins
 plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master
