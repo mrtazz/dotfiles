@@ -452,14 +452,17 @@ function! s:ensure_start(buf, server_name, cb) abort
         endif
 
         call lsp#log('Starting server', a:server_name, l:cmd)
-
-        let l:lsp_id = lsp#client#start({
-            \ 'cmd': l:cmd,
-            \ 'on_stderr': function('s:on_stderr', [a:server_name]),
-            \ 'on_exit': function('s:on_exit', [a:server_name]),
-            \ 'on_notification': function('s:on_notification', [a:server_name]),
-            \ 'on_request': function('s:on_request', [a:server_name]),
-            \ })
+        let l:opts = {
+        \ 'cmd': l:cmd,
+        \ 'on_stderr': function('s:on_stderr', [a:server_name]),
+        \ 'on_exit': function('s:on_exit', [a:server_name]),
+        \ 'on_notification': function('s:on_notification', [a:server_name]),
+        \ 'on_request': function('s:on_request', [a:server_name]),
+        \ }
+        if has_key(l:server_info, 'env')
+          let l:opts.env = l:server_info.env
+        endif
+        let l:lsp_id = lsp#client#start(l:opts)
     endif
 
     if l:lsp_id > 0
@@ -875,6 +878,11 @@ function! s:on_request(server_name, id, request) abort
     elseif a:request['method'] ==# 'workspace/configuration'
         let l:response_items = map(a:request['params']['items'], { key, val -> lsp#utils#workspace_config#get_value(a:server_name, val) })
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response_items })
+    elseif a:request['method'] ==# 'workspace/workspaceFolders'
+        let l:server_info = s:servers[a:server_name]['server_info']
+        if has_key(l:server_info, 'workspaceFolders')
+            call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:server_info['workspaceFolders']})
+        endif
     elseif a:request['method'] ==# 'window/workDoneProgress/create'
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
     else

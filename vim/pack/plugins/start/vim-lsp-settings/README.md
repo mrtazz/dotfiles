@@ -165,8 +165,8 @@ You can change the directory to install servers by set `g:lsp_settings_servers_d
 | TypeScript        | eslint-language-server              |    Yes    |      Yes      |
 | Vim               | vim-language-server                 |    Yes    |      Yes      |
 | Vala              | vala-language-server                |    No     |      No       |
-| Vue               | vue-language-server                 |    Yes    |      Yes      |
 | Vue               | volar-server                        |    Yes    |      Yes      |
+| Vue               | vue-language-server                 |    Yes    |      Yes      |
 | V                 | vls                                 |    Yes    |      Yes      |
 | XML               | lemminx                             |    Yes    |      Yes      |
 | YAML              | yaml-language-server                |    Yes    |      Yes      |
@@ -342,13 +342,13 @@ When the servers are specified in a list, these will all be started.
 
 If you want to configure Language Server to use `flake8` rather than `pycodestyle`,
 the following can be added to your `~/.vimrc` file.
-Note that `pyls-all` was the automatically registered server name. Check with `:LspStatus`.
+Note that `pylsp-all` was the automatically registered server name. Check with `:LspStatus`.
 
 ```vim
 let g:lsp_settings = {
-\   'pyls-all': {
+\   'pylsp-all': {
 \     'workspace_config': {
-\       'pyls': {
+\       'pylsp': {
 \         'configurationSources': ['flake8']
 \       }
 \     }

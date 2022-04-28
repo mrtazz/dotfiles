@@ -25,14 +25,14 @@ function! FugitiveGitDir(...) abort
     let dir = get(b:, 'git_dir', '')
     if empty(dir) && (empty(bufname('')) || &buftype =~# '^\%(nofile\|acwrite\|quickfix\|terminal\|prompt\)$')
       return FugitiveExtractGitDir(getcwd())
-    elseif (!exists('b:git_dir') || b:git_dir =~# s:bad_git_dir) && empty(&buftype)
-      let b:git_dir = FugitiveExtractGitDir(expand('%:p'))
+    elseif (!exists('b:git_dir') || b:git_dir =~# s:bad_git_dir) && &buftype =~# '^\%(nowrite\)\=$'
+      let b:git_dir = FugitiveExtractGitDir(bufnr(''))
       return b:git_dir
     endif
     return dir =~# s:bad_git_dir ? '' : dir
   elseif type(a:1) == type(0) && a:1 isnot# 0
-    if a:1 == bufnr('') && (!exists('b:git_dir') || b:git_dir =~# s:bad_git_dir) && empty(&buftype)
-      let b:git_dir = FugitiveExtractGitDir(expand('%:p'))
+    if a:1 == bufnr('') && (!exists('b:git_dir') || b:git_dir =~# s:bad_git_dir) && &buftype =~# '^\%(nowrite\)\=$'
+      let b:git_dir = FugitiveExtractGitDir(a:1)
     endif
     let dir = getbufvar(a:1, 'git_dir')
     return dir =~# s:bad_git_dir ? '' : dir
@@ -392,20 +392,20 @@ function! s:CeilingDirectories() abort
       if empty(dir)
         let resolve = 0
       elseif resolve
-        call add(s:ceiling_directories, resolve(dir))
+        call add(s:ceiling_directories, s:Slash(resolve(dir)))
       else
-        call add(s:ceiling_directories, dir)
+        call add(s:ceiling_directories, s:Slash(dir))
       endif
     endfor
   endif
-  return s:ceiling_directories + get(g:, 'ceiling_directories', [])
+  return s:ceiling_directories + get(g:, 'ceiling_directories', [s:Slash(fnamemodify(expand('~'), ':h'))])
 endfunction
 
 function! FugitiveExtractGitDir(path) abort
   if type(a:path) ==# type({})
     return get(a:path, 'git_dir', '')
   elseif type(a:path) == type(0)
-    let path = s:Slash(a:path >= 0 ? bufname(a:path) : bufname(''))
+    let path = s:Slash(a:path > 0 ? bufname(a:path) : bufname(''))
   else
     let path = s:Slash(a:path)
   endif
@@ -428,8 +428,9 @@ function! FugitiveExtractGitDir(path) abort
   let previous = ""
   let env_git_dir = len($GIT_DIR) ? s:Slash(simplify(fnamemodify(FugitiveVimPath($GIT_DIR), ':p:s?[\/]$??'))) : ''
   call s:Tree(env_git_dir)
+  let ceiling_directories = s:CeilingDirectories()
   while root !=# previous && root !~# '^$\|^//[^/]*$'
-    if index(s:CeilingDirectories(), root) >= 0
+    if index(ceiling_directories, root) >= 0
       break
     endif
     if root ==# $GIT_WORK_TREE && FugitiveIsGitDir(env_git_dir)
@@ -604,27 +605,40 @@ exe 'command! -bar -bang -nargs=0 GUnlink exe fugitive#UnlinkCommand(<line1>, <c
 exe 'command! -bar -bang -nargs=0 GDelete exe fugitive#DeleteCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
 exe 'command! -bar -bang -nargs=1 -complete=customlist,fugitive#CompleteObject GMove   exe fugitive#MoveCommand(  <line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
 exe 'command! -bar -bang -nargs=1 -complete=customlist,fugitive#RenameComplete GRename exe fugitive#RenameCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
-if exists(':Gremove') != 2 && get(g:, 'fugitive_legacy_commands', 1)
+if exists(':Gremove') != 2 && get(g:, 'fugitive_legacy_commands', 0)
   exe 'command! -bar -bang -nargs=0 Gremove exe fugitive#RemoveCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
         \ '|echohl WarningMSG|echomsg ":Gremove is deprecated in favor of :GRemove"|echohl NONE'
+elseif exists(':Gremove') != 2 && !exists('g:fugitive_legacy_commands')
+  exe 'command! -bar -bang -nargs=0 Gremove echoerr ":Gremove has been removed in favor of :GRemove"'
 endif
-if exists(':Gdelete') != 2 && get(g:, 'fugitive_legacy_commands', 1)
+if exists(':Gdelete') != 2 && get(g:, 'fugitive_legacy_commands', 0)
   exe 'command! -bar -bang -nargs=0 Gdelete exe fugitive#DeleteCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
         \ '|echohl WarningMSG|echomsg ":Gdelete is deprecated in favor of :GDelete"|echohl NONE'
+elseif exists(':Gdelete') != 2 && !exists('g:fugitive_legacy_commands')
+  exe 'command! -bar -bang -nargs=0 Gdelete echoerr ":Gremove has been removed in favor of :GRemove"'
 endif
-if exists(':Gmove') != 2 && get(g:, 'fugitive_legacy_commands', 1)
+if exists(':Gmove') != 2 && get(g:, 'fugitive_legacy_commands', 0)
   exe 'command! -bar -bang -nargs=1 -complete=customlist,fugitive#CompleteObject Gmove   exe fugitive#MoveCommand(  <line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
         \ '|echohl WarningMSG|echomsg ":Gmove is deprecated in favor of :GMove"|echohl NONE'
+elseif exists(':Gmove') != 2 && !exists('g:fugitive_legacy_commands')
+  exe 'command! -bar -bang -nargs=? -complete=customlist,fugitive#CompleteObject Gmove'
+        \ 'echoerr ":Gmove has been removed in favor of :GMove"'
 endif
-if exists(':Grename') != 2 && get(g:, 'fugitive_legacy_commands', 1)
+if exists(':Grename') != 2 && get(g:, 'fugitive_legacy_commands', 0)
   exe 'command! -bar -bang -nargs=1 -complete=customlist,fugitive#RenameComplete Grename exe fugitive#RenameCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
         \ '|echohl WarningMSG|echomsg ":Grename is deprecated in favor of :GRename"|echohl NONE'
+elseif exists(':Grename') != 2 && !exists('g:fugitive_legacy_commands')
+  exe 'command! -bar -bang -nargs=? -complete=customlist,fugitive#RenameComplete Grename'
+        \ 'echoerr ":Grename has been removed in favor of :GRename"'
 endif
 
 exe 'command! -bar -bang -range=-1 -nargs=* -complete=customlist,fugitive#CompleteObject GBrowse exe fugitive#BrowseCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
-if exists(':Gbrowse') != 2 && get(g:, 'fugitive_legacy_commands', 1)
+if exists(':Gbrowse') != 2 && get(g:, 'fugitive_legacy_commands', 0)
   exe 'command! -bar -bang -range=-1 -nargs=* -complete=customlist,fugitive#CompleteObject Gbrowse exe fugitive#BrowseCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
         \ '|if <bang>1|redraw!|endif|echohl WarningMSG|echomsg ":Gbrowse is deprecated in favor of :GBrowse"|echohl NONE'
+elseif exists(':Gbrowse') != 2 && !exists('g:fugitive_legacy_commands')
+  exe 'command! -bar -bang -range=-1 -nargs=* -complete=customlist,fugitive#CompleteObject Gbrowse'
+        \ 'echoerr ":Gbrowse has been removed in favor of :GBrowse"'
 endif
 
 if v:version < 703

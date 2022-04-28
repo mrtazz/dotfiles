@@ -341,7 +341,7 @@ function! s:JobExecute(argv, jopts, stdin, callback, ...) abort
       call chansend(dict.job, a:stdin)
       call chanclose(dict.job, 'stdin')
     endif
-  elseif exists('*job_start')
+  elseif exists('*ch_close_in')
     let temp = tempname()
     call extend(a:jopts, {
           \ 'out_io': 'file',
@@ -392,7 +392,7 @@ endfunction
 
 " Section: Git
 
-let s:run_jobs = (exists('*job_start') || exists('*jobstart')) && exists('*bufwinid')
+let s:run_jobs = (exists('*ch_close_in') || exists('*jobstart')) && exists('*bufwinid')
 
 function! s:GitCmd() abort
   if !exists('g:fugitive_git_executable')
@@ -790,7 +790,7 @@ function! s:SystemList(cmd) abort
       call remove(lines, -1)
     endif
     return [lines, exit[0]]
-  elseif exists('*job_start')
+  elseif exists('*ch_close_in')
     let lines = []
     let jopts = {
           \ 'out_cb': { j, str -> add(lines, str) },
@@ -904,7 +904,7 @@ function! s:StdoutToFile(out, cmd, ...) abort
       call writefile(jopts.stdout, a:out, 'b')
     endif
     return [join(jopts.stderr, "\n"), exit[0]]
-  elseif exists('*job_start')
+  elseif exists('*ch_close_in')
     try
       let err = tempname()
       call extend(jopts, {
@@ -2528,7 +2528,7 @@ function! s:ReplaceCmd(cmd) abort
 endfunction
 
 function! s:QueryLog(refspec, limit) abort
-  let lines = s:LinesError(['log', '-n', '' . a:limit, '--pretty=format:%h%x09%s', a:refspec, '--'])[0]
+  let lines = s:LinesError(['log', '-n', '' . a:limit, '--pretty=format:%h%x09%s'] + a:refspec + ['--'])[0]
   call map(lines, 'split(v:val, "\t", 1)')
   call map(lines, '{"type": "Log", "commit": v:val[0], "subject": join(v:val[1 : -1], "\t")}')
   return lines
@@ -2578,9 +2578,9 @@ function! s:AddSection(label, lines, ...) abort
   call append(line('$'), ['', a:label . (len(note) ? ': ' . note : ' (' . len(a:lines) . ')')] + s:Format(a:lines))
 endfunction
 
-function! s:AddLogSection(label, a, b) abort
+function! s:AddLogSection(label, refspec) abort
   let limit = 256
-  let log = s:QueryLog(a:a . '..' . a:b, limit)
+  let log = s:QueryLog(a:refspec, limit)
   if empty(log)
     return
   elseif len(log) == limit
@@ -2845,17 +2845,20 @@ function! fugitive#BufReadStatus(...) abort
     call s:AddSection('Staged', staged)
     let staged_end = len(staged) ? line('$') : 0
 
-    if len(pull) && get(props, 'branch.ab') !~# ' -0$'
-      call s:AddLogSection('Unpulled from ' . pull, head, pull)
-    endif
-    if len(push) && push !=# pull
-      call s:AddLogSection('Unpulled from ' . push, head, push)
+    if len(push) && !(push ==# pull && get(props, 'branch.ab') =~# '^+0 ')
+      call s:AddLogSection('Unpushed to ' . push, [push . '..' . head])
     endif
     if len(pull) && push !=# pull
-      call s:AddLogSection('Unpushed to ' . pull, pull, head)
+      call s:AddLogSection('Unpushed to ' . pull, [pull . '..' . head])
     endif
-    if len(push) && !(push ==# pull && get(props, 'branch.ab') =~# '^+0 ')
-      call s:AddLogSection('Unpushed to ' . push, push, head)
+    if empty(pull) && empty(push) && empty(rebasing)
+      call s:AddLogSection('Unpushed to *', [head, '--not', '--remotes'])
+    endif
+    if len(push) && push !=# pull
+      call s:AddLogSection('Unpulled from ' . push, [head . '..' . push])
+    endif
+    if len(pull) && get(props, 'branch.ab') !~# ' -0$'
+      call s:AddLogSection('Unpulled from ' . pull, [head . '..' . pull])
     endif
 
     setlocal nomodified readonly noswapfile
@@ -3809,7 +3812,7 @@ function! fugitive#Command(line1, line2, range, bang, mods, arg) abort
     if has_key(tmp, 'echo')
       echo ""
     endif
-    if exists('*job_start')
+    if exists('*ch_close_in')
       call extend(jobopts, {
             \ 'mode': 'raw',
             \ 'out_cb': function('s:RunReceive', [state, tmp, 'out']),
@@ -5036,6 +5039,9 @@ function! s:DoStageUnpushedHeading(heading) abort
     let remote = '.'
   endif
   let branch = matchstr(a:heading, 'to \%([^/]\+/\)\=\zs\S\+')
+  if branch ==# '*'
+    return
+  endif
   call feedkeys(':Git push ' . remote . ' ' . '@:' . 'refs/heads/' . branch)
 endfunction
 
@@ -5049,6 +5055,9 @@ function! s:DoStageUnpushed(record) abort
     let remote = '.'
   endif
   let branch = matchstr(a:record.heading, 'to \%([^/]\+/\)\=\zs\S\+')
+  if branch ==# '*'
+    return
+  endif
   call feedkeys(':Git push ' . remote . ' ' . a:record.commit . ':' . 'refs/heads/' . branch)
 endfunction
 
@@ -6924,19 +6933,14 @@ function! s:BlameSubcommand(line1, count, range, bang, mods, options) abort
               call add(restore, 'call setwinvar(bufwinnr('.winbufnr(winnr).'),"&foldenable",1)')
             endif
           endif
-          if exists('+cursorbind') && !&l:cursorbind && getwinvar(winnr, '&cursorbind')
-            call setwinvar(winnr, '&cursorbind', 0)
-          endif
-          if s:BlameBufnr(winbufnr(winnr)) > 0
+          let win_blame_bufnr = s:BlameBufnr(winbufnr(winnr))
+          if getwinvar(winnr, '&scrollbind') ? win_blame_bufnr == bufnr : win_blame_bufnr > 0
             execute winbufnr(winnr).'bdelete'
           endif
         endfor
         let restore_winnr = 'bufwinnr(' . bufnr . ')'
         if !&l:scrollbind
           call add(restore, 'call setwinvar(' . restore_winnr . ',"&scrollbind",0)')
-        endif
-        if exists('+cursorbind') && !&l:cursorbind
-          call add(restore, 'call setwinvar(' . restore_winnr . ',"&cursorbind",0)')
         endif
         if &l:wrap
           call add(restore, 'call setwinvar(' . restore_winnr . ',"&wrap",1)')
@@ -6945,9 +6949,6 @@ function! s:BlameSubcommand(line1, count, range, bang, mods, options) abort
           call add(restore, 'call setwinvar(' . restore_winnr . ',"&foldenable",1)')
         endif
         setlocal scrollbind nowrap nofoldenable
-        if exists('+cursorbind')
-          setlocal cursorbind
-        endif
         let top = line('w0') + &scrolloff
         let current = line('.')
         exe 'silent keepalt' (a:bang ? s:Mods(mods) . 'split' : s:Mods(mods, 'leftabove') . 'vsplit') s:fnameescape(temp)
@@ -6955,9 +6956,6 @@ function! s:BlameSubcommand(line1, count, range, bang, mods, options) abort
         execute top
         normal! zt
         execute current
-        if exists('+cursorbind')
-          setlocal cursorbind
-        endif
         setlocal nonumber scrollbind nowrap foldcolumn=0 nofoldenable winfixwidth
         if exists('+relativenumber')
           setlocal norelativenumber
@@ -7198,10 +7196,27 @@ function! fugitive#BlameFileType() abort
   call s:BlameMaps(1)
 endfunction
 
+function! s:BlameCursorSync(bufnr, line) abort
+  if a:line == line('.')
+    return
+  endif
+  if get(s:TempState(), 'origin_bufnr') == a:bufnr || get(s:TempState(a:bufnr), 'origin_bufnr') == bufnr('')
+    if &startofline
+      execute a:line
+    else
+      let pos = getpos('.')
+      let pos[1] = a:line
+      call setpos('.', pos)
+    endif
+  endif
+endfunction
+
 augroup fugitive_blame
   autocmd!
   autocmd ColorScheme,GUIEnter * call s:BlameRehighlight()
   autocmd BufWinLeave * execute getwinvar(+bufwinnr(+expand('<abuf>')), 'fugitive_leave')
+  autocmd WinLeave * let s:cursor_for_blame = [bufnr(''), line('.')]
+  autocmd WinEnter * if exists('s:cursor_for_blame') | call call('s:BlameCursorSync', s:cursor_for_blame) | endif
 augroup END
 
 " Section: :GBrowse

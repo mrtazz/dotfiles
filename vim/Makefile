@@ -19,6 +19,8 @@ plugin_vim-lsp              := https://github.com/prabirshrestha/vim-lsp/tarball
 plugin_vim-lsp-settings     := https://github.com/mattn/vim-lsp-settings/tarball/master
 plugin_vim-marked           := https://github.com/itspriddle/vim-marked/tarball/master
 plugin_vim-checkbox         := https://github.com/jkramer/vim-checkbox/tarball/master
+plugin_vim-plan             := https://github.com/mrtazz/vim-plan/tarball/v2
+plugin_vim-nerdtree         := https://github.com/preservim/nerdtree/tarball/master
 
 # my plugins
 plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master
