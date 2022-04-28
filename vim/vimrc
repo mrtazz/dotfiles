@@ -70,16 +70,22 @@ set wildignorecase
 " command shortcuts
 let mapleader=","
 
-map <leader>w <C-w>
 map <leader>b :buffer
-map <leader>m :make<CR>
-map <leader>M :set filetype=markdown<CR>
 
 " replace ctrlp with FZF
 nmap <C-P> :FZF<CR>
 
 " rg search from vim with fzf preview
 map <Leader>s :Rg<CR>
+
+" vim-plan keybindings
+map <leader>d :PlanDaily<CR>
+map <leader>n :PlanNote<CR>
+map <leader>pd :PlanMarkDone<CR>
+map <leader>pm :PlanMigrateToToday<CR>
+
+" nerdtree bindings
+map <leader>t :NERDTreeToggle<CR>
 
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
@@ -116,24 +122,7 @@ endif
 let g:checkbox_states = [' ', 'x', '-', '>']
 
 
-if has('conceal')
-  if &termencoding ==# "utf-8" || &encoding ==# "utf-8"
-    let s:checkbox_unchecked = "⭕️"
-    let s:checkbox_checked = "✅"
-    let s:checkbox_canceled = "❌"
-    let s:checkbox_migrated = "🔜"
-  else
-    let s:checkbox_unchecked = 'o'
-    let s:checkbox_checked = 'x'
-  endif
-  syntax match markdownCheckbox "^\s*\([-\*] \[[ x\->]\]\|--\|++\) " contains=markdownCheckboxChecked,markdownCheckboxUnchecked,markdownCheckboxCanceled,markdownCheckboxMigrated
-  execute 'syntax match markdownCheckboxUnchecked "\([-\*] \[ \]\|--\)" contained conceal cchar='.s:checkbox_unchecked
-  execute 'syntax match markdownCheckboxChecked "\([-\*] \[x\]\|++\)" contained conceal cchar='.s:checkbox_checked
-  execute 'syntax match markdownCheckboxCanceled "\([-\*] \[\-\]\|++\)" contained conceal cchar='.s:checkbox_canceled
-  execute 'syntax match markdownCheckboxMigrated "\([-\*] \[>\]\|++\)" contained conceal cchar='.s:checkbox_migrated
-endif
 
-set conceallevel=2
 
 " Autocomplete with dictionary words when spell check is on
 set complete+=kspell
