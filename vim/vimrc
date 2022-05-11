@@ -144,6 +144,13 @@ if executable('gopls')
   map <leader>pi :LspPeekImplementation<CR>
   map <leader>pd :LspPeekDefinition<CR>
   map <leader>pt :LspPeekTypeDefinition<CR>
+  " replace ctags definition with LSP if possible
+  map <C-]> :LspDefinition<CR>
+  " Splits horizontally and opens a window to the above.
+  map <C-\> :leftabove LspDefinition<CR>
+  " Splits vertically and opens a window to the right.
+  map <leader>] :rightbelow vertical LspDefinition<CR>
+  let g:lsp_diagnostics_echo_cursor = 1
 endif
 
 " let's see if we can work without arrow keys
