@@ -17,6 +17,8 @@ plugin_fzf.vim              := https://github.com/junegunn/fzf.vim/tarball/maste
 plugin_vim-tla              := https://github.com/florentc/vim-tla/tarball/master
 plugin_vim-lsp              := https://github.com/prabirshrestha/vim-lsp/tarball/master
 plugin_vim-lsp-settings     := https://github.com/mattn/vim-lsp-settings/tarball/master
+
+# these are all for note taking (mostly on macOS)
 plugin_vim-marked           := https://github.com/itspriddle/vim-marked/tarball/master
 plugin_vim-checkbox         := https://github.com/jkramer/vim-checkbox/tarball/master
 plugin_vim-plan             := https://github.com/mrtazz/vim-plan/tarball/main
@@ -24,9 +26,6 @@ plugin_vim-nerdtree         := https://github.com/preservim/nerdtree/tarball/mas
 
 # my plugins
 plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master
-
-# GitHub related plugins
-plugin_vim-coffee-script    := https://github.com/kchmck/vim-coffee-script/tarball/master
 
 # this filters out all variables with a plugin_ prefix and regards them as
 # plugin definitions
