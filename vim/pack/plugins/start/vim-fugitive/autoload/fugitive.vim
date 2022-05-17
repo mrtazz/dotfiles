@@ -609,8 +609,6 @@ function! fugitive#PrepareDirEnvGitFlagsArgs(...) abort
     if type(cmd[i]) == type({})
       if has_key(cmd[i], 'git_dir')
         let dir = cmd[i].git_dir
-      elseif has_key(cmd[i], 'dir')
-        let dir = cmd[i].dir
       endif
       if has_key(cmd[i], 'git')
         let git = cmd[i].git
@@ -960,6 +958,10 @@ function! fugitive#Head(...) abort
   else
     return ''
   endif
+endfunction
+
+function! fugitive#head(...) abort
+  throw 'Third party code is using fugitive#head() which has been removed. Change it to FugitiveHead()'
 endfunction
 
 function! fugitive#RevParse(rev, ...) abort
@@ -1680,8 +1682,8 @@ function! fugitive#Path(url, ...) abort
   if empty(a:url)
     return ''
   endif
-  let dir = a:0 > 1 ? s:Dir(a:2) : s:Dir()
-  let tree = s:Tree(dir)
+  let dir = FugitiveVimPath(call('s:GitDir', a:000[1:-1]))
+  let tree = call('fugitive#Find', [':/'] + a:000[1:-1])
   if !a:0
     return fugitive#Real(a:url)
   elseif a:1 =~# '\.$'
@@ -2042,48 +2044,49 @@ endfunction
 let s:trees = {}
 let s:indexes = {}
 function! s:TreeInfo(dir, commit) abort
+  let key = s:GitDir(a:dir)
   if a:commit =~# '^:\=[0-3]$'
-    let index = get(s:indexes, a:dir, [])
+    let index = get(s:indexes, key, [])
     let newftime = getftime(fugitive#Find('.git/index', a:dir))
     if get(index, 0, -1) < newftime
       let [lines, exec_error] = s:LinesError([a:dir, 'ls-files', '--stage', '--'])
-      let s:indexes[a:dir] = [newftime, {'0': {}, '1': {}, '2': {}, '3': {}}]
+      let s:indexes[key] = [newftime, {'0': {}, '1': {}, '2': {}, '3': {}}]
       if exec_error
         return [{}, -1]
       endif
       for line in lines
         let [info, filename] = split(line, "\t")
         let [mode, sha, stage] = split(info, '\s\+')
-        let s:indexes[a:dir][1][stage][filename] = [newftime, mode, 'blob', sha, -2]
+        let s:indexes[key][1][stage][filename] = [newftime, mode, 'blob', sha, -2]
         while filename =~# '/'
           let filename = substitute(filename, '/[^/]*$', '', '')
-          let s:indexes[a:dir][1][stage][filename] = [newftime, '040000', 'tree', '', 0]
+          let s:indexes[key][1][stage][filename] = [newftime, '040000', 'tree', '', 0]
         endwhile
       endfor
     endif
-    return [get(s:indexes[a:dir][1], a:commit[-1:-1], {}), newftime]
+    return [get(s:indexes[key][1], a:commit[-1:-1], {}), newftime]
   elseif a:commit =~# '^\x\{40,\}$'
-    if !has_key(s:trees, a:dir)
-      let s:trees[a:dir] = {}
+    if !has_key(s:trees, key)
+      let s:trees[key] = {}
     endif
-    if !has_key(s:trees[a:dir], a:commit)
+    if !has_key(s:trees[key], a:commit)
       let ftime = s:ChompDefault('', [a:dir, 'log', '-1', '--pretty=format:%ct', a:commit, '--'])
       if empty(ftime)
-        let s:trees[a:dir][a:commit] = [{}, -1]
-        return s:trees[a:dir][a:commit]
+        let s:trees[key][a:commit] = [{}, -1]
+        return s:trees[key][a:commit]
       endif
-      let s:trees[a:dir][a:commit] = [{}, +ftime]
+      let s:trees[key][a:commit] = [{}, +ftime]
       let [lines, exec_error] = s:LinesError([a:dir, 'ls-tree', '-rtl', '--full-name', a:commit, '--'])
       if exec_error
-        return s:trees[a:dir][a:commit]
+        return s:trees[key][a:commit]
       endif
       for line in lines
         let [info, filename] = split(line, "\t")
         let [mode, type, sha, size] = split(info, '\s\+')
-        let s:trees[a:dir][a:commit][0][filename] = [+ftime, mode, type, sha, +size, filename]
+        let s:trees[key][a:commit][0][filename] = [+ftime, mode, type, sha, +size, filename]
       endfor
     endif
-    return s:trees[a:dir][a:commit]
+    return s:trees[key][a:commit]
   endif
   return [{}, -1]
 endfunction
@@ -2207,10 +2210,11 @@ function! s:BlobTemp(url) abort
   if empty(file)
     return ''
   endif
-  if !has_key(s:blobdirs, dir)
-    let s:blobdirs[dir] = tempname()
+  let key = s:GitDir(dir)
+  if !has_key(s:blobdirs, key)
+    let s:blobdirs[key] = tempname()
   endif
-  let tempfile = s:blobdirs[dir] . '/' . commit . file
+  let tempfile = s:blobdirs[key] . '/' . commit . file
   let tempparent = fnamemodify(tempfile, ':h')
   if !isdirectory(tempparent)
     call mkdir(tempparent, 'p')
@@ -3737,7 +3741,6 @@ function! fugitive#Command(line1, line2, range, bang, mods, arg) abort
         \ 'git': options.git,
         \ 'flags': flags,
         \ 'args': args,
-        \ 'dir': options.git_dir,
         \ 'git_dir': options.git_dir,
         \ 'cwd': s:UserCommandCwd(dir),
         \ 'filetype': 'git',
@@ -4193,11 +4196,11 @@ function! s:ExpireStatus(bufnr) abort
     let s:last_time = reltime()
     return ''
   endif
-  let dir = s:Dir(a:bufnr)
-  if len(dir)
-    let s:last_times[s:cpath(dir)] = reltime()
-    if has_key(s:head_cache, dir)
-      call remove(s:head_cache, dir)
+  let head_file = fugitive#Find('.git/HEAD', a:bufnr)
+  if !empty(head_file)
+    let s:last_times[s:Tree(a:bufnr) . '/'] = reltime()
+    if has_key(s:head_cache, head_file)
+      call remove(s:head_cache, head_file)
     endif
   endif
   return ''
@@ -4213,7 +4216,7 @@ function! s:ReloadWinStatus(...) abort
   endif
   let t = b:fugitive_reltime
   if reltimestr(reltime(s:last_time, t)) =~# '-\|\d\{10\}\.' ||
-        \ reltimestr(reltime(get(s:last_times, s:cpath(s:Dir()), t), t)) =~# '-\|\d\{10\}\.'
+        \ reltimestr(reltime(get(s:last_times, s:Tree() . '/', t), t)) =~# '-\|\d\{10\}\.'
     exe s:ReloadStatusBuffer()
   endif
 endfunction
@@ -5708,7 +5711,6 @@ function! s:GrepSubcommand(line1, line2, range, bang, mods, options) abort
         \ 'git': a:options.git,
         \ 'flags': a:options.flags,
         \ 'args': cmd + args,
-        \ 'dir': s:GitDir(a:options),
         \ 'git_dir': s:GitDir(a:options),
         \ 'cwd': s:UserCommandCwd(a:options),
         \ 'filetype': 'git',
@@ -6677,7 +6679,7 @@ endfunction
 " Section: :Git blame
 
 function! s:Keywordprg() abort
-  let args = ' --git-dir='.escape(s:Dir(),"\\\"' ")
+  let args = ' --git-dir=' . escape(FugitiveGitPath(s:GitDir()), "\\\"' ")
   if has('gui_running') && !has('win32')
     return s:GitShellCmd() . ' --no-pager' . args . ' log -1'
   else
@@ -6879,7 +6881,6 @@ function! s:BlameSubcommand(line1, count, range, bang, mods, options) abort
             \ 'git': a:options.git,
             \ 'flags': a:options.flags,
             \ 'args': [a:options.subcommand] + a:options.subcommand_args,
-            \ 'dir': dir,
             \ 'git_dir': dir,
             \ 'cwd': s:UserCommandCwd(dir),
             \ 'filetype': (raw ? 'git' : 'fugitiveblame'),
@@ -7182,7 +7183,7 @@ endfunction
 function! fugitive#BlameFileType() abort
   setlocal nomodeline
   setlocal foldmethod=manual
-  if len(s:Dir())
+  if len(s:GitDir())
     let &l:keywordprg = s:Keywordprg()
   endif
   let b:undo_ftplugin = 'setl keywordprg= foldmethod<'
@@ -8016,14 +8017,6 @@ endfunction
 
 function! fugitive#statusline(...) abort
   return fugitive#Statusline()
-endfunction
-
-function! fugitive#head(...) abort
-  if empty(s:Dir())
-    return ''
-  endif
-
-  return fugitive#Head(a:0 ? a:1 : 0)
 endfunction
 
 " Section: Folding
