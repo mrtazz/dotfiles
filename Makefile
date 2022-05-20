@@ -87,12 +87,12 @@ endif
 
 .PHONY: brew-bundle
 brew-bundle: homebrew
-	HOMEBREW_INSTALL_FROM_API=$(HOMEBREW_INSTALL_FROM_API) $(HOMEBREW_LOCATION)/brew bundle install --no-lock --file $(BREWFILE)
+	$(HOMEBREW_LOCATION)/brew bundle install --no-lock --file $(BREWFILE)
 	if [ -f $(BREWFILE_LOCAL) ]; then $(HOMEBREW_LOCATION)/brew bundle install --no-lock --file $(BREWFILE_LOCAL); fi
 
 $(HOMEBREW_LOCATION)/brew:
 	curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o /tmp/install_homebrew.sh
-	/bin/bash < /tmp/install_homebrew.sh
+	HOMEBREW_INSTALL_FROM_API=$(HOMEBREW_INSTALL_FROM_API) /bin/bash < /tmp/install_homebrew.sh
 
 uninstall:
 	@echo "Cleaning up dotfiles"
