@@ -74,6 +74,8 @@ ${HOME}/.config/Code/User/settings.json:
 vscode: ${HOME}/.config/Code/User/settings.json
 
 ifeq ($(CODESPACES), true)
+# don't fully clone homebrew on codespaces
+HOMEBREW_INSTALL_FROM_API=true
 install: $(DEFAULT_TARGETS) brew-bundle codespaces vscode
 else ifeq ($(OS), FreeBSD)
 install: $(DEFAULT_TARGETS)
