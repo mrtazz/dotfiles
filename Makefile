@@ -75,7 +75,7 @@ vscode: ${HOME}/.config/Code/User/settings.json
 
 ifeq ($(CODESPACES), true)
 # don't fully clone homebrew on codespaces
-HOMEBREW_INSTALL_FROM_API := true
+export HOMEBREW_INSTALL_FROM_API=true
 install: $(DEFAULT_TARGETS) brew-bundle codespaces vscode
 else ifeq ($(OS), FreeBSD)
 install: $(DEFAULT_TARGETS)
@@ -92,7 +92,7 @@ brew-bundle: homebrew
 
 $(HOMEBREW_LOCATION)/brew:
 	curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o /tmp/install_homebrew.sh
-	HOMEBREW_INSTALL_FROM_API=$(HOMEBREW_INSTALL_FROM_API) /bin/bash < /tmp/install_homebrew.sh
+	/bin/bash < /tmp/install_homebrew.sh
 
 uninstall:
 	@echo "Cleaning up dotfiles"
