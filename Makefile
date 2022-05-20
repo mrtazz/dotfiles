@@ -75,7 +75,7 @@ vscode: ${HOME}/.config/Code/User/settings.json
 
 ifeq ($(CODESPACES), true)
 # don't fully clone homebrew on codespaces
-HOMEBREW_INSTALL_FROM_API=true
+HOMEBREW_INSTALL_FROM_API := true
 install: $(DEFAULT_TARGETS) brew-bundle codespaces vscode
 else ifeq ($(OS), FreeBSD)
 install: $(DEFAULT_TARGETS)
@@ -87,7 +87,7 @@ endif
 
 .PHONY: brew-bundle
 brew-bundle: homebrew
-	$(HOMEBREW_LOCATION)/brew bundle install --no-lock --file $(BREWFILE)
+	HOMEBREW_INSTALL_FROM_API=$(HOMEBREW_INSTALL_FROM_API) $(HOMEBREW_LOCATION)/brew bundle install --no-lock --file $(BREWFILE)
 	if [ -f $(BREWFILE_LOCAL) ]; then $(HOMEBREW_LOCATION)/brew bundle install --no-lock --file $(BREWFILE_LOCAL); fi
 
 $(HOMEBREW_LOCATION)/brew:
