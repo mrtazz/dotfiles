@@ -47,6 +47,17 @@ which will look like this as long as the cursor isn't on the line:
 
 This only works if vim is compiled with `conceal` support and utf-8 encoding.
 
+### TODOs in location window
+The plugin provides a command `:PlanFindTodos` that uses `:lgrep` to find the
+pattern `- [ ] ` in the dailies and notes directories and shows the results in
+a location window for the buffer to select and jump to. I'm using it with
+[rg](https://github.com/BurntSushi/ripgrep) via the following `.vimrc`
+setting, to show me the newest daily notes first:
+
+```
+" set rg as grep program
+set grepprg=rg\ --vimgrep\ --no-heading\ --smart-case\ --sortr=path
+```
 
 ### Autosaving of notes
 Notes are saved periodically when the cursor is idle (in both normal and

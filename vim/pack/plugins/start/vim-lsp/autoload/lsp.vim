@@ -411,7 +411,7 @@ endfunction
 function! s:ensure_start(buf, server_name, cb) abort
     let l:path = lsp#utils#get_buffer_path(a:buf)
 
-    if lsp#utils#is_remote_uri(l:path)
+    if lsp#utils#is_remote_uri(l:path) || !has_key(s:servers, a:server_name)
         let l:msg = s:new_rpc_error('ignoring start server due to remote uri', { 'server_name': a:server_name, 'uri': l:path})
         call lsp#log(l:msg)
         call a:cb(l:msg)
@@ -1164,10 +1164,9 @@ function! s:add_didchange_queue(buf) abort
         endfor
         return
     endif
-    if index(s:didchange_queue, a:buf) != -1
-        return
+    if index(s:didchange_queue, a:buf) == -1
+        call add(s:didchange_queue, a:buf)
     endif
-    call add(s:didchange_queue, a:buf)
     call lsp#log('s:send_didchange_queue() will be triggered')
     call timer_stop(s:didchange_timer)
     let l:lazy = &updatetime > 1000 ? &updatetime : 1000
@@ -1215,6 +1214,10 @@ endfunction
 " 'percentage': 0 - 100 or not exist
 function! lsp#get_progress() abort
     return lsp#internal#work_done_progress#get_progress()
+endfunction
+
+function! lsp#document_hover_preview_winid() abort
+    return lsp#internal#document_hover#under_cursor#getpreviewwinid()
 endfunction
 
 "

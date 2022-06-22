@@ -89,3 +89,7 @@ function! plan#setupBuffer()
   execute 'lcd' g:PlanBaseDir
 endfunction
 
+function! plan#FindTodos()
+  call plan#setupBuffer()
+  execute ':silent lgrep! "\- \[ \]" ' . s:dailiesDirectory . ' ' . s:notesDirectory
+endfunction

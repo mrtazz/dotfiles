@@ -478,7 +478,7 @@
   ],
   "haskell": [
     {
-      "command": "hie",
+      "command": "hie-wrapper",
       "url": "https://github.com/haskell/haskell-ide-engine",
       "description": "The engine for haskell ide-integration. Not an IDE",
       "requires": [
@@ -490,7 +490,7 @@
       ]
     },
     {
-      "command": "haskell-language-server",
+      "command": "haskell-language-server-wrapper",
       "url": "https://github.com/haskell/haskell-language-server",
       "description": "Official haskell ide support via language server (LSP). Successor of ghcide & haskell-ide-engine.",
       "requires": [],
@@ -815,6 +815,15 @@
       "url": "https://github.com/sumneko/lua-language-server",
       "description": "Lua Language Server coded by Lua",
       "requires": []
+    }
+  ],
+  "markdown": [
+    {
+      "command": "marksman",
+      "url": "https://github.com/artempyanykh/marksman",
+      "description": "Markdown LSP server providing completion, cross-references, diagnostics, and more.",
+      "requires": [
+      ]
     }
   ],
   "nim": [
@@ -1153,6 +1162,14 @@
   ],
   "ruby": [
     {
+      "command": "ruby-lsp",
+      "url": "https://github.com/Shopify/ruby-lsp",
+      "description": "An implementation of the LSP specification for Ruby",
+      "requires": [
+        "gem"
+      ]
+    },
+    {
       "command": "typeprof",
       "url": "https://github.com/ruby/typeprof",
       "description": "An experimental type-level Ruby interpreter for testing and understanding Ruby code",
@@ -1269,6 +1286,14 @@
       },
       "requires": [
         "go"
+      ]
+    },
+    {
+      "command": "plpgsql-lsp",
+      "url": "https://github.com/UniqueVision/plpgsql-lsp",
+      "description": "PL/pgSQL Language Server",
+      "requires": [
+        "npm"
       ]
     }
   ],
@@ -1504,7 +1529,7 @@
     },
     {
       "command": "vimscript-language-server",
-      "url": "vimscript-language-server",
+      "url": "https://github.com/google/vimscript-language-server",
       "description": "Vim script Language Server",
       "requires": [
         "cargo"
