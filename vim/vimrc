@@ -78,6 +78,9 @@ nmap <C-P> :FZF<CR>
 " rg search from vim with fzf preview
 map <Leader>s :Rg<CR>
 
+" set rg as grep program
+set grepprg=rg\ --vimgrep\ --no-heading\ --smart-case\ --sortr=path
+
 " vim-plan keybindings
 map <leader>d :PlanDaily<CR>
 map <leader>n :PlanNote<CR>
