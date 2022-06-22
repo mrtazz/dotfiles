@@ -1,8 +1,8 @@
 # source all extra config files
 ZSHDIR="${HOME}/.zsh"
 source ${ZSHDIR}/history.zsh
-source ${ZSHDIR}/completion.zsh
 source ${ZSHDIR}/look.zsh
+source ${ZSHDIR}/completion.zsh
 source ${ZSHDIR}/iterm.zsh
 source ${ZSHDIR}/aliases_functions.zsh
 source ${ZSHDIR}/gpg.zsh
