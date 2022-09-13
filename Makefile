@@ -11,6 +11,7 @@ DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin ${HOME}/.tmux.conf
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
+BREW_OPTIONS :=
 BIN := ${HOME}/bin
 
 # bin/ is linked explicitly because we want it to not be ~/.bin
@@ -87,8 +88,8 @@ endif
 
 .PHONY: brew-bundle
 brew-bundle: homebrew
-	$(HOMEBREW_LOCATION)/brew bundle install --no-lock --file $(BREWFILE)
-	if [ -f $(BREWFILE_LOCAL) ]; then $(HOMEBREW_LOCATION)/brew bundle install --no-lock --file $(BREWFILE_LOCAL); fi
+	$(HOMEBREW_LOCATION)/brew bundle install $(BREW_OPTIONS) --file $(BREWFILE)
+	if [ -f $(BREWFILE_LOCAL) ]; then $(HOMEBREW_LOCATION)/brew bundle install $(BREW_OPTIONS) --file $(BREWFILE_LOCAL); fi
 
 $(HOMEBREW_LOCATION)/brew:
 	curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o /tmp/install_homebrew.sh
