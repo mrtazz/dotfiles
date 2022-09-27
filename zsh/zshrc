@@ -25,7 +25,7 @@ autoload -U compinit
 compinit -i
 
 # some basic exports
-export PATH=~/bin:/usr/local/bin:/usr/local/sbin:/home/linuxbrew/.linuxbrew/bin/:$PATH
+export PATH=~/bin:/usr/local/bin:/usr/local/sbin:/home/linuxbrew/.linuxbrew/bin/:/opt/homebrew/bin:$PATH
 export EDITOR="vim"
 export LC_ALL=en_US.UTF-8
 
