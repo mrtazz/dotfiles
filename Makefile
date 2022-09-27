@@ -11,7 +11,7 @@ DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin ${HOME}/.tmux.conf
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
-BREW_OPTIONS :=
+BREW_OPTIONS := --no-lock
 BIN := ${HOME}/bin
 
 # bin/ is linked explicitly because we want it to not be ~/.bin
@@ -33,9 +33,14 @@ DEFAULT_TARGETS := $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS
 HOSTNAME := $(shell hostname -s)
 BREWFILE_LOCAL := homebrew/Brewfile.$(HOSTNAME)
 
-OS := $(shell uname -s)
+OS   := $(shell uname -s)
+ARCH := $(shell uname -m)
 ifeq ($(OS),Darwin)
+ifeq ($(ARCH), arm64)
+HOMEBREW_LOCATION := /opt/homebrew/bin
+else
 HOMEBREW_LOCATION := /usr/local/bin
+endif
 else ifeq ($(OS),Linux)
 HOMEBREW_LOCATION := /home/linuxbrew/.linuxbrew/bin
 endif
