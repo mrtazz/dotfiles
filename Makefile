@@ -8,7 +8,7 @@ EXCLUDE := README.md Makefile vscode ssh install.sh homebrew bin spec
 FILES := $(shell ls)
 SOURCES := $(filter-out $(EXCLUDE),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
-NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin ${HOME}/.tmux.conf
+NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.muttrc ${HOME}/.zshrc ${HOME}/.zlogin ${HOME}/.zprofile ${HOME}/.tmux.conf
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
 BREW_OPTIONS := --no-lock
@@ -68,6 +68,9 @@ ${HOME}/.zshrc: $(PWD)/zsh/zshrc
 
 ${HOME}/.zlogin:
 	ln -fs $(PWD)/zsh/zlogin $@
+
+${HOME}/.zprofile:
+	ln -fs $(PWD)/zsh/zprofile $@
 
 ${HOME}/.tmux.conf:
 	ln -fs $(PWD)/tmux/tmux.conf $@

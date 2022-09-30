@@ -7,6 +7,7 @@ source ${ZSHDIR}/iterm.zsh
 source ${ZSHDIR}/aliases_functions.zsh
 source ${ZSHDIR}/gpg.zsh
 source ${ZSHDIR}/tmux.zsh
+source ${ZSHDIR}/path.zsh
 if [ "$(uname)" = "Darwin" ]; then
   source ${ZSHDIR}/osx.zsh
 fi
@@ -25,7 +26,6 @@ autoload -U compinit
 compinit -i
 
 # some basic exports
-export PATH=~/bin:/usr/local/bin:/usr/local/sbin:/home/linuxbrew/.linuxbrew/bin/:/opt/homebrew/bin:$PATH
 export EDITOR="vim"
 export LC_ALL=en_US.UTF-8
 
