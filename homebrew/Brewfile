@@ -30,6 +30,7 @@ if macos?
   cask "alfred"
   cask "iterm2"
   cask "phoenix"
+  cask "qlmarkdown"
   # vim, git, go, and gh are already installed on codespaces
   brew "vim"
   brew "git"

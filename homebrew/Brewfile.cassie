@@ -3,3 +3,7 @@
 
 brew "offlineimap"
 brew "tarsnap"
+brew "mutt"
+brew "elinks"
+brew "pinentry-mac"
+brew "tree"
