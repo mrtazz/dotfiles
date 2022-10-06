@@ -83,8 +83,8 @@ set grepprg=rg\ --vimgrep\ --no-heading\ --smart-case\ --sortr=path
 
 " vim-plan keybindings
 map <leader>d :PlanDaily<CR>
-map <leader>f :PlanFindTodos<CR>
-map <leader>n :PlanNote<CR>
+map <leader>pf :PlanFindTodos<CR>
+map <leader>pn :PlanNote<CR>
 map <leader>pd :PlanMarkDone<CR>
 map <leader>pm :PlanMigrateToToday<CR>
 
