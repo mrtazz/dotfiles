@@ -1,0 +1,47 @@
+package main
+
+import (
+    "fmt"
+    "os"
+
+    "github.com/alecthomas/kong"
+    log "github.com/sirupsen/logrus"
+)
+
+const version = "0.1.0"
+
+var (
+    flags struct {
+        Debug bool `help:"Enable debug mode."`
+        Run   struct {
+            ConfigFile string `required:"" help:"config file to use"`
+        } `cmd:"" help:"run the agent"`
+        Version struct {
+        } `cmd:"" help:"print version and exit."`
+    }
+)
+
+
+func main() {
+
+    ctx := kong.Parse(&flags)
+    switch ctx.Command() {
+    case "run":
+    case "version":
+        fmt.Printf(version)
+        return
+    default:
+        log.Fatal("Unknown command: " + ctx.Command())
+    }
+}
+
+func run() {
+
+    cfg, err := config.FromFile(flags.Run.ConfigFile)
+    if err != nil {
+        log.WithFields(log.Fields{
+            "error":       err.Error(),
+            "config-file": flags.Run.ConfigFile,
+        }).Error("failed to parse config")
+        os.Exit(1)
+    }
