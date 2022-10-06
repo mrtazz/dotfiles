@@ -26,6 +26,7 @@ plugin_vim-nerdtree         := https://github.com/preservim/nerdtree/tarball/mas
 
 # my plugins
 plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master
+plugin_vim-snipple          := https://github.com/mrtazz/vim-snipple/tarball/main
 
 # this filters out all variables with a plugin_ prefix and regards them as
 # plugin definitions
