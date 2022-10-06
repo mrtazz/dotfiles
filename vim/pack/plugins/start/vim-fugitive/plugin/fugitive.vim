@@ -39,7 +39,7 @@ function! FugitiveGitDir(...) abort
   elseif type(a:1) == type('')
     return substitute(s:Slash(a:1), '/$', '', '')
   elseif type(a:1) == type({})
-    return get(a:1, 'git_dir', '')
+    return get(a:1, 'fugitive_dir', get(a:1, 'git_dir', ''))
   else
     return ''
   endif
@@ -91,12 +91,11 @@ function! FugitiveParse(...) abort
   if path !~# '^fugitive://'
     return ['', '']
   endif
-  let vals = matchlist(path, s:dir_commit_file)
-  if len(vals)
-    return [(vals[2] =~# '^.\=$' ? ':' : '') . vals[2] . substitute(vals[3], '^/', ':', ''), vals[1]]
+  let [rev, dir] = fugitive#Parse(path)
+  if !empty(dir)
+    return [rev, dir]
   endif
-  let v:errmsg = 'fugitive: invalid Fugitive URL ' . path
-  throw v:errmsg
+  throw 'fugitive: invalid Fugitive URL ' . path
 endfunction
 
 " FugitiveGitVersion() queries the version of Git in use.  Pass up to 3
@@ -423,14 +422,14 @@ endfunction
 
 function! FugitiveExtractGitDir(path) abort
   if type(a:path) ==# type({})
-    return get(a:path, 'git_dir', '')
+    return get(a:path, 'fugitive_dir', get(a:path, 'git_dir', ''))
   elseif type(a:path) == type(0)
     let path = s:Slash(a:path > 0 ? bufname(a:path) : bufname(''))
   else
     let path = s:Slash(a:path)
   endif
   if path =~# '^fugitive://'
-    return get(matchlist(path, s:dir_commit_file), 1, '')
+    return fugitive#Parse(path)[1]
   elseif empty(path)
     return ''
   endif
@@ -486,8 +485,6 @@ endfunction
 
 if exists('+shellslash')
 
-  let s:dir_commit_file = '\c^fugitive://\%(/\a\@=\)\=\(.\{-\}\)//\%(\(\x\{40,\}\|[0-3]\)\(/.*\)\=\)\=$'
-
   function! s:Slash(path) abort
     return tr(a:path, '\', '/')
   endfunction
@@ -501,8 +498,6 @@ if exists('+shellslash')
   endfunction
 
 else
-
-  let s:dir_commit_file = '\c^fugitive://\(.\{-\}\)//\%(\(\x\{40,\}\|[0-3]\)\(/.*\)\=\)\=$'
 
   function! s:Slash(path) abort
     return a:path
@@ -527,7 +522,7 @@ endif
 function! s:ProjectionistDetect() abort
   let file = s:Slash(get(g:, 'projectionist_file', ''))
   let dir = FugitiveExtractGitDir(file)
-  let base = get(matchlist(file, s:dir_commit_file), 1, '')
+  let base = matchstr(file, '^fugitive://.\{-\}//\x\+')
   if empty(base)
     let base = s:Tree(dir)
   endif
@@ -582,7 +577,7 @@ exe 'command! -bar -bang -nargs=*                          -complete=customlist,
 exe 'command! -bar -bang -nargs=* -range=-1' s:addr_other '-complete=customlist,fugitive#EditComplete   Gsplit   exe fugitive#Open((<count> > 0 ? <count> : "").(<count> ? "split" : "edit"), <bang>0, "<mods>", <q-args>)'
 exe 'command! -bar -bang -nargs=* -range=-1' s:addr_other '-complete=customlist,fugitive#EditComplete   Gvsplit  exe fugitive#Open((<count> > 0 ? <count> : "").(<count> ? "vsplit" : "edit!"), <bang>0, "<mods>", <q-args>)'
 exe 'command! -bar -bang -nargs=* -range=-1' s:addr_tabs  '-complete=customlist,fugitive#EditComplete   Gtabedit exe fugitive#Open((<count> >= 0 ? <count> : "")."tabedit", <bang>0, "<mods>", <q-args>)'
-exe 'command! -bar -bang -nargs=*                          -complete=customlist,fugitive#EditComplete   Gdrop    exe fugitive#Open("drop", <bang>0, "<mods>", <q-args>)'
+exe 'command! -bar -bang -nargs=*                          -complete=customlist,fugitive#EditComplete   Gdrop    exe fugitive#DropCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
 
 if exists(':Gr') != 2
   exe 'command! -bar -bang -nargs=* -range=-1                -complete=customlist,fugitive#ReadComplete   Gr     exe fugitive#ReadCommand(<line1>, <count>, +"<range>", <bang>0, "<mods>", <q-args>)'
@@ -694,6 +689,9 @@ augroup fugitive
         \ if FugitiveIsGitDir(expand('<amatch>:p:h')) |
         \   let b:git_dir = s:Slash(expand('<amatch>:p:h')) |
         \   exe fugitive#BufReadStatus(v:cmdbang) |
+        \   echohl WarningMSG |
+        \   echo "fugitive: Direct editing of .git/" . expand('%:t') . " is deprecated" |
+        \   echohl NONE |
         \ elseif filereadable(expand('<amatch>')) |
         \   silent doautocmd BufReadPre |
         \   keepalt noautocmd read <amatch> |

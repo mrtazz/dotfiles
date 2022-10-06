@@ -819,11 +819,18 @@
   ],
   "markdown": [
     {
+      "command": "vscode-markdown-languageserver",
+      "url": "https://github.com/microsoft/vscode/tree/main/extensions/markdown-language-features/server",
+      "description": "Markdown Language Server",
+      "requires": [
+        "npm"
+      ]
+    },
+    {
       "command": "marksman",
       "url": "https://github.com/artempyanykh/marksman",
       "description": "Markdown LSP server providing completion, cross-references, diagnostics, and more.",
-      "requires": [
-      ]
+      "requires": []
     }
   ],
   "nim": [
@@ -840,6 +847,16 @@
         ],
         "name": "zah/nim.vim"
       }
+    }
+  ],
+  "nix": [
+    {
+      "command": "rnix-lsp",
+      "url": "https://github.com/nix-community/rnix-lsp",
+      "description": "Language server implementation for Nix",
+      "requires": [
+        "nix"
+      ]
     }
   ],
   "objc": [
@@ -871,6 +888,22 @@
           "ml"
         ],
         "name": "ocaml/vim-ocaml"
+      }
+    }
+  ],
+  "odin": [
+    {
+      "command": "ols",
+      "url": "https://github.com/DanielGavin/ols",
+      "description": "Language server for Odin",
+      "requires": [
+        "odin"
+      ],
+      "vim_plugin": {
+        "extensions": [
+          "odin"
+        ],
+        "name": "https://github.com/Tetralux/odin.vim"
       }
     }
   ],
@@ -982,6 +1015,16 @@
       ]
     }
   ],
+  "proto": [
+    {
+      "command": "bufls",
+      "url": "https://github.com/bufbuild/buf-language-server",
+      "description": "Prototype for a Protobuf language server compatible with Buf.",
+      "requires": [
+        "go"
+      ]
+    }
+  ],
   "ps1": [
     {
       "command": "powershell-languageserver",
@@ -1008,6 +1051,16 @@
         "git",
         "ruby",
         "bundler"
+      ]
+    }
+  ],
+  "purescript": [
+    {
+      "command": "purescript-language-server",
+      "url": "https://github.com/nwolverson/purescript-language-server",
+      "description": "Language server implementation for PureScript",
+      "requires": [
+        "npm"
       ]
     }
   ],

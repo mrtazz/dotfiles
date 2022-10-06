@@ -22,6 +22,7 @@ endfunction
 
 " cf. https://github.com/johnsoncodehk/volar/blob/master/packages/shared/src/types.ts
 let g:vim_lsp_settings_volar_options = {
+\   'textDocumentSync': 2,
 \   'typescript': {
 \     'serverPath': '',
 \     'localizedPath': v:null,
@@ -37,10 +38,7 @@ let g:vim_lsp_settings_volar_options = {
 \     'renameFileRefactoring': v:true,
 \     'signatureHelp': v:true,
 \     'completion': {
-\       'defaultTagNameCase': 'both',
-\       'defaultAttrNameCase': 'kebabCase',
-\       'getDocumentNameCasesRequest': v:false,
-\       'getDocumentSelectionRequest': v:false,
+\       'getDocumentSelectionRequest': v:true,
 \     },
 \     'documentHighlight': v:true,
 \     'documentLink': v:true,
@@ -48,7 +46,7 @@ let g:vim_lsp_settings_volar_options = {
 \     'codeLens': { 'showReferencesNotification': v:true },
 \     'semanticTokens': v:true,
 \     'codeAction': v:true,
-\     'inlayHints': v:false,
+\     'inlayHints': v:true,
 \     'diagnostics': v:true,
 \     'schemaRequestService': { 'getDocumentContentRequest': v:true },
 \   },
@@ -57,12 +55,13 @@ let g:vim_lsp_settings_volar_options = {
 \     'foldingRange': v:true,
 \     'linkedEditingRange': v:true,
 \     'documentSymbol': v:true,
-\     'documentColor': v:false,
+\     'documentColor': v:true,
 \     'documentFormatting': v:true,
 \   }
 \ }
 
 let g:vim_lsp_settings_volar_main_options = {
+\   'textDocumentSync': 2,
 \   'typescript': {
 \     'serverPath': '',
 \     'localizedPath': v:null,
@@ -80,16 +79,14 @@ let g:vim_lsp_settings_volar_main_options = {
 \     'codeAction': v:true,
 \     'workspaceSymbol': v:true,
 \     'completion': {
-\       'defaultTagNameCase': 'both',
-\       'defaultAttrNameCase': 'kebabCase',
-\       'getDocumentNameCasesRequest': v:false,
-\       'getDocumentSelectionRequest': v:false,
+\       'getDocumentSelectionRequest': v:true,
 \     },
 \     'schemaRequestService': { 'getDocumentContentRequest': v:true },
 \   }
 \}
 
 let g:vim_lsp_settings_volar_second_options = {
+\   'textDocumentSync': 2,
 \   'typescript': {
 \     'serverPath': '',
 \     'localizedPath': v:null,
@@ -99,13 +96,14 @@ let g:vim_lsp_settings_volar_second_options = {
 \     'documentLink': v:true,
 \     'codeLens': { 'showReferencesNotification': v:true },
 \     'semanticTokens': v:true,
-\     'inlayHints': v:false,
+\     'inlayHints': v:true,
 \     'diagnostics': v:true,
 \     'schemaRequestService': { 'getDocumentContentRequest': v:true },
 \   }
 \}
 
 let g:vim_lsp_settings_volar_document_options = {
+\   'textDocumentSync': 2,
 \   'typescript': {
 \     'serverPath': '',
 \     'localizedPath': v:null,
@@ -115,7 +113,7 @@ let g:vim_lsp_settings_volar_document_options = {
 \     'foldingRange': v:true,
 \     'linkedEditingRange': v:true,
 \     'documentSymbol': v:true,
-\     'documentColor': v:false,
+\     'documentColor': v:true,
 \     'documentFormatting': v:true
 \   }
 \ }

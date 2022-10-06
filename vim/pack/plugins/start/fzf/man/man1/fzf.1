@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ..
-.TH fzf 1 "Apr 2022" "fzf 0.30.0" "fzf - a command-line fuzzy finder"
+.TH fzf 1 "Sep 2022" "fzf 0.34.0" "fzf - a command-line fuzzy finder"
 
 .SH NAME
 fzf - a command-line fuzzy finder
@@ -50,6 +50,18 @@ Case-sensitive match
 .TP
 .B "--literal"
 Do not normalize latin script letters for matching.
+.TP
+.BI "--scheme=" SCHEME
+Choose scoring scheme tailored for different types of input.
+
+.br
+.BR default "  Generic scoring scheme designed to work well with any type of input"
+.br
+.BR path "     Scoring scheme for paths (additional bonus point only after path separator)
+.br
+.BR history "  Scoring scheme for command history (no additional bonus points).
+         Sets \fB--tiebreak=index\fR as well.
+.br
 .TP
 .BI "--algo=" TYPE
 Fuzzy matching algorithm (default: v2)
@@ -94,6 +106,8 @@ Comma-separated list of sort criteria to apply when the scores are tied.
 
 .br
 .BR length "  Prefers line with shorter length"
+.br
+.BR chunk "   Prefers line with shorter matched chunk (delimited by whitespaces)"
 .br
 .BR begin "   Prefers line with matched substring closer to the beginning"
 .br
@@ -163,9 +177,11 @@ actions are affected:
 Label characters for \fBjump\fR and \fBjump-accept\fR
 .SS Layout
 .TP
-.BI "--height=" "HEIGHT[%]"
+.BI "--height=" "[~]HEIGHT[%]"
 Display fzf window below the cursor with the given height instead of using
-the full screen.
+the full screen. When prefixed with \fB~\fR, fzf will automatically determine
+the height in the range according to the input size. Note that adaptive height
+is not compatible with top/bottom margin and padding given in percent size.
 .TP
 .BI "--min-height=" "HEIGHT"
 Minimum height when \fB--height\fR is given in percent (default: 10).
@@ -187,21 +203,21 @@ Choose the layout (default: default)
 A synonym for \fB--layout=reverse\fB
 
 .TP
-.BI "--border" [=STYLE]
+.BI "--border" [=BORDER_OPT]
 Draw border around the finder
 
 .br
-.BR rounded "     Border with rounded corners (default)"
+.BR rounded "       Border with rounded corners (default)"
 .br
-.BR sharp "       Border with sharp corners"
+.BR sharp "         Border with sharp corners"
 .br
-.BR horizontal "  Horizontal lines above and below the finder"
+.BR horizontal "    Horizontal lines above and below the finder"
 .br
-.BR vertical "    Vertical lines on each side of the finder"
+.BR vertical "      Vertical lines on each side of the finder"
 .br
-.BR top
+.BR top " (up)"
 .br
-.BR bottom
+.BR bottom " (down)"
 .br
 .BR left
 .br
@@ -265,7 +281,7 @@ e.g.
 
 .TP
 .BI "--info=" "STYLE"
-Determines the display style of finder info.
+Determines the display style of finder info (match counters).
 
 .br
 .BR default "       Display on the next line to the prompt"
@@ -376,6 +392,7 @@ color mappings.
     \fBreverse\fR
     \fBdim\fR
     \fBitalic\fR
+    \fBstrikethrough\fR
 
 .B EXAMPLES:
 
@@ -450,7 +467,7 @@ e.g.
      \fB# Press CTRL-A to select 100K items and see the sum of all the numbers.
      # This won't work properly without 'f' flag due to ARG_MAX limit.
      seq 100000 | fzf --multi --bind ctrl-a:select-all \\
-                      --preview "awk '{sum+=\$1} END {print sum}' {+f}"\fR
+                      --preview "awk '{sum+=\\$1} END {print sum}' {+f}"\fR
 
 Note that you can escape a placeholder pattern by prepending a backslash.
 
@@ -470,7 +487,7 @@ e.g.
       done'\fR
 .RE
 .TP
-.BI "--preview-window=" "[POSITION][,SIZE[%]][,border-BORDER_OPT][,[no]wrap][,[no]follow][,[no]cycle][,[no]hidden][,+SCROLL[OFFSETS][/DENOM]][,~HEADER_LINES][,default]"
+.BI "--preview-window=" "[POSITION][,SIZE[%]][,border-BORDER_OPT][,[no]wrap][,[no]follow][,[no]cycle][,[no]hidden][,+SCROLL[OFFSETS][/DENOM]][,~HEADER_LINES][,default][,<SIZE_THRESHOLD(ALTERNATIVE_LAYOUT)]"
 
 .RS
 .B POSITION: (default: right)
@@ -488,9 +505,9 @@ default until \fBtoggle-preview\fR action is triggered.
 execute the command in the background.
 
 * Long lines are truncated by default. Line wrap can be enabled with
-\fB:wrap\fR flag.
+\fBwrap\fR flag.
 
-* Preview window will automatically scroll to the bottom when \fB:follow\fR
+* Preview window will automatically scroll to the bottom when \fBfollow\fR
 flag is set, similarly to how \fBtail -f\fR works.
 
 .RS
@@ -502,7 +519,7 @@ e.g.
       done'\fR
 .RE
 
-* Cyclic scrolling is enabled with \fB:cycle\fR flag.
+* Cyclic scrolling is enabled with \fBcycle\fR flag.
 
 * To change the style of the border of the preview window, specify one of
 the options for \fB--border\fR with \fBborder-\fR prefix.
@@ -552,6 +569,15 @@ e.g.
      fzf --preview 'bat --style=full --color=always {}' --preview-window '~3'\fR
 .RE
 
+* You can specify an alternative set of options that are used only when the size
+  of the preview window is below a certain threshold. Note that only one
+  alternative layout is allowed.
+
+.RS
+e.g.
+      \fBfzf --preview 'cat {}' --preview-window 'right,border-left,<30(up,30%,border-bottom)'\fR
+.RE
+
 .SS Scripting
 .TP
 .BI "-q, --query=" "STR"
@@ -591,12 +617,6 @@ Read input delimited by ASCII NUL characters instead of newline characters
 .TP
 .B "--print0"
 Print output delimited by ASCII NUL characters instead of newline characters
-.TP
-.B "--no-clear"
-Do not clear finder interface on exit. If fzf was started in full screen mode,
-it will not switch back to the original screen, so you'll have to manually run
-\fBtput rmcup\fR to return. This option can be used to avoid flickering of the
-screen when your application needs to start fzf multiple times in order.
 .TP
 .B "--sync"
 Synchronous search for multi-staged filtering. If specified, fzf will launch

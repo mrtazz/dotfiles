@@ -35,6 +35,7 @@ BINARYARM7     := fzf-$(GOOS)_arm7
 BINARYARM8     := fzf-$(GOOS)_arm8
 BINARYPPC64LE  := fzf-$(GOOS)_ppc64le
 BINARYRISCV64  := fzf-$(GOOS)_riscv64
+BINARYLOONG64  := fzf-$(GOOS)_loong64
 
 # https://en.wikipedia.org/wiki/Uname
 UNAME_M := $(shell uname -m)
@@ -62,6 +63,8 @@ else ifeq ($(UNAME_M),ppc64le)
 	BINARY := $(BINARYPPC64LE)
 else ifeq ($(UNAME_M),riscv64)
 	BINARY := $(BINARYRISCV64)
+else ifeq ($(UNAME_M),loongarch64)
+	BINARY := $(BINARYLOONG64)
 else
 $(error Build on $(UNAME_M) is not supported, yet.)
 endif
@@ -148,7 +151,11 @@ target/$(BINARYPPC64LE): $(SOURCES)
 target/$(BINARYRISCV64): $(SOURCES)
 	GOARCH=riscv64 $(GO) build $(BUILD_FLAGS) -o $@
 
+target/$(BINARYLOONG64): $(SOURCES)
+	GOARCH=loong64 $(GO) build $(BUILD_FLAGS) -o $@
+
 bin/fzf: target/$(BINARY) | bin
+	-rm -f bin/fzf
 	cp -f target/$(BINARY) bin/fzf
 
 docker:

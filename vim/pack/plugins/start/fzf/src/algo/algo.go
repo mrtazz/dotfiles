@@ -80,6 +80,7 @@ Scoring criteria
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -88,6 +89,10 @@ import (
 )
 
 var DEBUG bool
+
+var delimiterChars = "/,:;|"
+
+const whiteChars = " \t\n\v\f\r\x85\xA0"
 
 func indexAt(index int, max int, forward bool) int {
 	if forward {
@@ -140,15 +145,50 @@ const (
 	bonusFirstCharMultiplier = 2
 )
 
+var (
+	// Extra bonus for word boundary after whitespace character or beginning of the string
+	bonusBoundaryWhite int16 = bonusBoundary + 2
+
+	// Extra bonus for word boundary after slash, colon, semi-colon, and comma
+	bonusBoundaryDelimiter int16 = bonusBoundary + 1
+
+	initialCharClass charClass = charWhite
+)
+
 type charClass int
 
 const (
-	charNonWord charClass = iota
+	charWhite charClass = iota
+	charNonWord
+	charDelimiter
 	charLower
 	charUpper
 	charLetter
 	charNumber
 )
+
+func Init(scheme string) bool {
+	switch scheme {
+	case "default":
+		bonusBoundaryWhite = bonusBoundary + 2
+		bonusBoundaryDelimiter = bonusBoundary + 1
+	case "path":
+		bonusBoundaryWhite = bonusBoundary
+		bonusBoundaryDelimiter = bonusBoundary + 1
+		if os.PathSeparator == '/' {
+			delimiterChars = "/"
+		} else {
+			delimiterChars = string([]rune{os.PathSeparator, '/'})
+		}
+		initialCharClass = charDelimiter
+	case "history":
+		bonusBoundaryWhite = bonusBoundary
+		bonusBoundaryDelimiter = bonusBoundary
+	default:
+		return false
+	}
+	return true
+}
 
 func posArray(withPos bool, len int) *[]int {
 	if withPos {
@@ -181,6 +221,10 @@ func charClassOfAscii(char rune) charClass {
 		return charUpper
 	} else if char >= '0' && char <= '9' {
 		return charNumber
+	} else if strings.IndexRune(whiteChars, char) >= 0 {
+		return charWhite
+	} else if strings.IndexRune(delimiterChars, char) >= 0 {
+		return charDelimiter
 	}
 	return charNonWord
 }
@@ -194,6 +238,10 @@ func charClassOfNonAscii(char rune) charClass {
 		return charNumber
 	} else if unicode.IsLetter(char) {
 		return charLetter
+	} else if unicode.IsSpace(char) {
+		return charWhite
+	} else if strings.IndexRune(delimiterChars, char) >= 0 {
+		return charDelimiter
 	}
 	return charNonWord
 }
@@ -206,22 +254,33 @@ func charClassOf(char rune) charClass {
 }
 
 func bonusFor(prevClass charClass, class charClass) int16 {
-	if prevClass == charNonWord && class != charNonWord {
-		// Word boundary
-		return bonusBoundary
-	} else if prevClass == charLower && class == charUpper ||
+	if class > charNonWord {
+		if prevClass == charWhite {
+			// Word boundary after whitespace
+			return bonusBoundaryWhite
+		} else if prevClass == charDelimiter {
+			// Word boundary after a delimiter character
+			return bonusBoundaryDelimiter
+		} else if prevClass == charNonWord {
+			// Word boundary
+			return bonusBoundary
+		}
+	}
+	if prevClass == charLower && class == charUpper ||
 		prevClass != charNumber && class == charNumber {
 		// camelCase letter123
 		return bonusCamel123
 	} else if class == charNonWord {
 		return bonusNonWord
+	} else if class == charWhite {
+		return bonusBoundaryWhite
 	}
 	return 0
 }
 
 func bonusAt(input *util.Chars, idx int) int16 {
 	if idx == 0 {
-		return bonusBoundary
+		return bonusBoundaryWhite
 	}
 	return bonusFor(charClassOf(input.Get(idx-1)), charClassOf(input.Get(idx)))
 }
@@ -377,7 +436,7 @@ func FuzzyMatchV2(caseSensitive bool, normalize bool, forward bool, input *util.
 	// Phase 2. Calculate bonus for each point
 	maxScore, maxScorePos := int16(0), 0
 	pidx, lastIdx := 0, 0
-	pchar0, pchar, prevH0, prevClass, inGap := pattern[0], pattern[0], int16(0), charNonWord, false
+	pchar0, pchar, prevH0, prevClass, inGap := pattern[0], pattern[0], int16(0), initialCharClass, false
 	Tsub := T[idx:]
 	H0sub, C0sub, Bsub := H0[idx:][:len(Tsub)], C0[idx:][:len(Tsub)], B[idx:][:len(Tsub)]
 	for off, char := range Tsub {
@@ -417,7 +476,7 @@ func FuzzyMatchV2(caseSensitive bool, normalize bool, forward bool, input *util.
 			C0sub[off] = 1
 			if M == 1 && (forward && score > maxScore || !forward && score >= maxScore) {
 				maxScore, maxScorePos = score, idx+off
-				if forward && bonus == bonusBoundary {
+				if forward && bonus >= bonusBoundary {
 					break
 				}
 			}
@@ -486,11 +545,14 @@ func FuzzyMatchV2(caseSensitive bool, normalize bool, forward bool, input *util.
 				s1 = Hdiag[off] + scoreMatch
 				b := Bsub[off]
 				consecutive = Cdiag[off] + 1
-				// Break consecutive chunk
-				if b == bonusBoundary {
-					consecutive = 1
-				} else if consecutive > 1 {
-					b = util.Max16(b, util.Max16(bonusConsecutive, B[col-int(consecutive)+1]))
+				if consecutive > 1 {
+					fb := B[col-int(consecutive)+1]
+					// Break consecutive chunk
+					if b >= bonusBoundary && b > fb {
+						consecutive = 1
+					} else {
+						b = util.Max16(b, util.Max16(bonusConsecutive, fb))
+					}
 				}
 				if s1+b < s2 {
 					s1 += Bsub[off]
@@ -555,7 +617,7 @@ func FuzzyMatchV2(caseSensitive bool, normalize bool, forward bool, input *util.
 func calculateScore(caseSensitive bool, normalize bool, text *util.Chars, pattern []rune, sidx int, eidx int, withPos bool) (int, *[]int) {
 	pidx, score, inGap, consecutive, firstBonus := 0, 0, false, 0, int16(0)
 	pos := posArray(withPos, len(pattern))
-	prevClass := charNonWord
+	prevClass := charWhite
 	if sidx > 0 {
 		prevClass = charClassOf(text.Get(sidx - 1))
 	}
@@ -583,7 +645,7 @@ func calculateScore(caseSensitive bool, normalize bool, text *util.Chars, patter
 				firstBonus = bonus
 			} else {
 				// Break consecutive chunk
-				if bonus == bonusBoundary {
+				if bonus >= bonusBoundary && bonus > firstBonus {
 					firstBonus = bonus
 				}
 				bonus = util.Max16(util.Max16(bonus, firstBonus), bonusConsecutive)
@@ -741,7 +803,7 @@ func ExactMatchNaive(caseSensitive bool, normalize bool, forward bool, text *uti
 				if bonus > bestBonus {
 					bestPos, bestBonus = index, bonus
 				}
-				if bonus == bonusBoundary {
+				if bonus >= bonusBoundary {
 					break
 				}
 				index -= pidx - 1
@@ -877,8 +939,8 @@ func EqualMatch(caseSensitive bool, normalize bool, forward bool, text *util.Cha
 		match = runesStr == string(pattern)
 	}
 	if match {
-		return Result{trimmedLen, trimmedLen + lenPattern, (scoreMatch+bonusBoundary)*lenPattern +
-			(bonusFirstCharMultiplier-1)*bonusBoundary}, nil
+		return Result{trimmedLen, trimmedLen + lenPattern, (scoreMatch+int(bonusBoundaryWhite))*lenPattern +
+			(bonusFirstCharMultiplier-1)*int(bonusBoundaryWhite)}, nil
 	}
 	return Result{-1, -1, 0}, nil
 }

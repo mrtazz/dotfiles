@@ -382,12 +382,11 @@ cd ~/github/fzf**<TAB>
 
 #### Process IDs
 
-Fuzzy completion for PIDs is provided for kill command. In this case,
-there is no trigger sequence; just press the tab key after the kill command.
+Fuzzy completion for PIDs is provided for kill command.
 
 ```sh
 # Can select multiple processes with <TAB> or <Shift-TAB> keys
-kill -9 <TAB>
+kill -9 **<TAB>
 ```
 
 #### Host names
@@ -558,7 +557,7 @@ more details.
 
 ```sh
 FZF_DEFAULT_COMMAND='ps -ef' \
-  fzf --bind 'ctrl-r:reload($FZF_DEFAULT_COMMAND)' \
+  fzf --bind 'ctrl-r:reload(eval "$FZF_DEFAULT_COMMAND")' \
       --header 'Press CTRL-R to reload' --header-lines=1 \
       --height=50% --layout=reverse
 ```
@@ -567,7 +566,7 @@ FZF_DEFAULT_COMMAND='ps -ef' \
 
 ```sh
 FZF_DEFAULT_COMMAND='find . -type f' \
-  fzf --bind 'ctrl-d:reload(find . -type d),ctrl-f:reload($FZF_DEFAULT_COMMAND)' \
+  fzf --bind 'ctrl-d:reload(find . -type d),ctrl-f:reload(eval "$FZF_DEFAULT_COMMAND")' \
       --height=50% --layout=reverse
 ```
 
@@ -628,10 +627,7 @@ fzf --height 40% --layout reverse --info inline --border \
 
 See the man page (`man fzf`) for the full list of options.
 
-For more advanced examples, see [Key bindings for git with fzf][fzf-git]
-([code](https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236)).
-
-[fzf-git]: https://junegunn.kr/2016/07/fzf-git/
+More advanced examples can be found [here](https://github.com/junegunn/fzf/blob/master/ADVANCED.md).
 
 ----
 
@@ -663,10 +659,10 @@ default find command to traverse the file system while respecting
 
 ```sh
 # Feed the output of fd into fzf
-fd --type f | fzf
+fd --type f --strip-cwd-prefix | fzf
 
 # Setting fd as the default source for fzf
-export FZF_DEFAULT_COMMAND='fd --type f'
+export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
 
 # Now fzf (w/o pipe) will use fd instead of find
 fzf
@@ -679,7 +675,7 @@ If you want the command to follow symbolic links and don't want it to exclude
 hidden files, use the following command:
 
 ```sh
-export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
 ```
 
 #### Fish shell
