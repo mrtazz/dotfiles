@@ -17,8 +17,8 @@ command! PlanFindTodos :call plan#FindTodos()
 augroup PluginPlan
   autocmd!
   " source syntax files for all notes files
-  execute 'autocmd BufEnter */'.g:PlanDailiesDir.'/*.md runtime syntax/plan.vim'
-  execute 'autocmd BufEnter */'.g:PlanNotesDir.'/*.md runtime syntax/plan.vim'
+  execute 'autocmd BufEnter,BufRead */'.g:PlanDailiesDir.'/*.md runtime syntax/plan.vim'
+  execute 'autocmd BufEnter,BufRead */'.g:PlanNotesDir.'/*.md runtime syntax/plan.vim'
 
   " make sure idle notes are getting written to disk periodically
   execute 'autocmd CursorHold,CursorHoldI,BufLeave */'.g:PlanDailiesDir.'/*.md update'
