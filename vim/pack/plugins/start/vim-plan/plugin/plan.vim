@@ -13,6 +13,10 @@ command! PlanMarkCanceled :call plan#MarkCanceled()
 command! PlanMigrateToToday :call plan#MigrateToToday()
 command! PlanFindTodos :call plan#FindTodos()
 
+" set up file navigation for notes
+execute 'set path+='.g:PlanDailiesDir.','.g:PlanNotesDir
+set suffixesadd+=.md
+
 
 augroup PluginPlan
   autocmd!
