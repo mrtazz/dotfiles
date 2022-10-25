@@ -1,0 +1,6 @@
+yfile, err := ioutil.ReadFile("items.yaml")
+if err != nil {
+  return err
+}
+data := make(map[interface{}]interface{})
+err = yaml.Unmarshal(yfile, &data)
