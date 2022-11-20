@@ -17,6 +17,7 @@ plugin_fzf.vim              := https://github.com/junegunn/fzf.vim/tarball/maste
 plugin_vim-tla              := https://github.com/florentc/vim-tla/tarball/master
 plugin_vim-lsp              := https://github.com/prabirshrestha/vim-lsp/tarball/master
 plugin_vim-lsp-settings     := https://github.com/mattn/vim-lsp-settings/tarball/master
+plugin_rust.vim             := https://github.com/rust-lang/rust.vim/tarball/master
 
 # these are all for note taking (mostly on macOS)
 plugin_vim-marked           := https://github.com/itspriddle/vim-marked/tarball/master

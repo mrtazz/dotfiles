@@ -30,7 +30,7 @@ strings. Acts as input validation for parsePlaceholder function.
 Describes the syntax, but it is fairly lenient.
 
 The following pseudo regex has been reverse engineered from the
-implementation. It is overly strict, but better describes whats possible.
+implementation. It is overly strict, but better describes what's possible.
 As such it is not useful for validation, but rather to generate test
 cases for example.
 
@@ -107,13 +107,23 @@ type fitpad struct {
 
 var emptyLine = itemLine{}
 
+type labelPrinter func(tui.Window, int)
+
 // Terminal represents terminal input/output
 type Terminal struct {
 	initDelay          time.Duration
 	infoStyle          infoStyle
+	separator          labelPrinter
+	separatorLen       int
 	spinner            []string
 	prompt             func()
 	promptLen          int
+	borderLabel        labelPrinter
+	borderLabelLen     int
+	borderLabelOpts    labelOpts
+	previewLabel       labelPrinter
+	previewLabelLen    int
+	previewLabelOpts   labelOpts
 	pointer            string
 	pointerLen         int
 	pointerEmpty       string
@@ -514,6 +524,7 @@ func NewTerminal(opts *Options, eventBox *util.EventBox) *Terminal {
 	t := Terminal{
 		initDelay:          delay,
 		infoStyle:          opts.InfoStyle,
+		separator:          nil,
 		spinner:            makeSpinner(opts.Unicode),
 		queryLen:           [2]int{0, 0},
 		layout:             opts.Layout,
@@ -544,6 +555,10 @@ func NewTerminal(opts *Options, eventBox *util.EventBox) *Terminal {
 		padding:            opts.Padding,
 		unicode:            opts.Unicode,
 		borderShape:        opts.BorderShape,
+		borderLabel:        nil,
+		borderLabelOpts:    opts.BorderLabel,
+		previewLabel:       nil,
+		previewLabelOpts:   opts.PreviewLabel,
 		cleanExit:          opts.ClearOnExit,
 		paused:             opts.Phony,
 		strong:             strongAttr,
@@ -587,13 +602,24 @@ func NewTerminal(opts *Options, eventBox *util.EventBox) *Terminal {
 	// Pre-calculated empty pointer and marker signs
 	t.pointerEmpty = strings.Repeat(" ", t.pointerLen)
 	t.markerEmpty = strings.Repeat(" ", t.markerLen)
+	t.borderLabel, t.borderLabelLen = t.ansiLabelPrinter(opts.BorderLabel.label, &tui.ColBorderLabel, false)
+	t.previewLabel, t.previewLabelLen = t.ansiLabelPrinter(opts.PreviewLabel.label, &tui.ColBorderLabel, false)
+	if opts.Separator == nil || len(*opts.Separator) > 0 {
+		bar := "─"
+		if opts.Separator != nil {
+			bar = *opts.Separator
+		} else if !t.unicode {
+			bar = "-"
+		}
+		t.separator, t.separatorLen = t.ansiLabelPrinter(bar, &tui.ColSeparator, true)
+	}
 
 	return &t
 }
 
 func borderLines(shape tui.BorderShape) int {
 	switch shape {
-	case tui.BorderHorizontal, tui.BorderRounded, tui.BorderSharp:
+	case tui.BorderHorizontal, tui.BorderRounded, tui.BorderSharp, tui.BorderBold, tui.BorderDouble:
 		return 2
 	case tui.BorderTop, tui.BorderBottom:
 		return 1
@@ -615,6 +641,65 @@ func (t *Terminal) MaxFitAndPad(opts *Options) (int, int) {
 	padHeight := marginInt[0] + marginInt[2] + paddingInt[0] + paddingInt[2]
 	fit := screenHeight - padHeight - t.extraLines()
 	return fit, padHeight
+}
+
+func (t *Terminal) ansiLabelPrinter(str string, color *tui.ColorPair, fill bool) (labelPrinter, int) {
+	// Nothing to do
+	if len(str) == 0 {
+		return nil, 0
+	}
+
+	// Extract ANSI color codes
+	text, colors, _ := extractColor(str, nil, nil)
+	runes := []rune(text)
+
+	// Simpler printer for strings without ANSI colors or tab characters
+	if colors == nil && strings.IndexRune(str, '\t') < 0 {
+		length := runewidth.StringWidth(str)
+		if length == 0 {
+			return nil, 0
+		}
+		printFn := func(window tui.Window, limit int) {
+			if length > limit {
+				trimmedRunes, _ := t.trimRight(runes, limit)
+				window.CPrint(*color, string(trimmedRunes))
+			} else if fill {
+				window.CPrint(*color, util.RepeatToFill(str, length, limit))
+			} else {
+				window.CPrint(*color, str)
+			}
+		}
+		return printFn, len(text)
+	}
+
+	// Printer that correctly handles ANSI color codes and tab characters
+	item := &Item{text: util.RunesToChars(runes), colors: colors}
+	length := t.displayWidth(runes)
+	if length == 0 {
+		return nil, 0
+	}
+	result := Result{item: item}
+	var offsets []colorOffset
+	printFn := func(window tui.Window, limit int) {
+		if offsets == nil {
+			// tui.Col* are not initialized until renderer.Init()
+			offsets = result.colorOffsets(nil, t.theme, *color, *color, false)
+		}
+		for limit > 0 {
+			if length > limit {
+				trimmedRunes, _ := t.trimRight(runes, limit)
+				t.printColoredString(window, trimmedRunes, offsets, *color)
+				break
+			} else if fill {
+				t.printColoredString(window, runes, offsets, *color)
+				limit -= length
+			} else {
+				t.printColoredString(window, runes, offsets, *color)
+				break
+			}
+		}
+	}
+	return printFn, length
 }
 
 func (t *Terminal) parsePrompt(prompt string) (func(), int) {
@@ -813,7 +898,7 @@ func (t *Terminal) adjustMarginAndPadding() (int, int, [4]int, [4]int) {
 			if idx == 3 {
 				extraMargin[idx] += 2
 			}
-		case tui.BorderRounded, tui.BorderSharp:
+		case tui.BorderRounded, tui.BorderSharp, tui.BorderBold, tui.BorderDouble:
 			extraMargin[idx] += 1 + idx%2
 		}
 		marginInt[idx] = sizeSpecToInt(idx, sizeSpec) + extraMargin[idx]
@@ -905,7 +990,7 @@ func (t *Terminal) resizeWindows() {
 		t.border = t.tui.NewWindow(
 			marginInt[0], marginInt[3], width+2, height,
 			false, tui.MakeBorderStyle(tui.BorderRight, t.unicode))
-	case tui.BorderRounded, tui.BorderSharp:
+	case tui.BorderRounded, tui.BorderSharp, tui.BorderBold, tui.BorderDouble:
 		t.border = t.tui.NewWindow(
 			marginInt[0]-1, marginInt[3]-2, width+4, height+2,
 			false, tui.MakeBorderStyle(t.borderShape, t.unicode))
@@ -935,7 +1020,7 @@ func (t *Terminal) resizeWindows() {
 				}
 				t.pborder = t.tui.NewWindow(y, x, w, h, true, previewBorder)
 				switch previewOpts.border {
-				case tui.BorderSharp, tui.BorderRounded:
+				case tui.BorderSharp, tui.BorderRounded, tui.BorderBold, tui.BorderDouble:
 					pwidth -= 4
 					pheight -= 2
 					x += 2
@@ -1015,6 +1100,34 @@ func (t *Terminal) resizeWindows() {
 			width,
 			height, false, noBorder)
 	}
+
+	// Print border label
+	printLabel := func(window tui.Window, render labelPrinter, opts labelOpts, length int, borderShape tui.BorderShape) {
+		if window == nil || render == nil {
+			return
+		}
+
+		switch borderShape {
+		case tui.BorderHorizontal, tui.BorderTop, tui.BorderBottom, tui.BorderRounded, tui.BorderSharp, tui.BorderBold, tui.BorderDouble:
+			var col int
+			if opts.column == 0 {
+				col = util.Max(0, (window.Width()-length)/2)
+			} else if opts.column < 0 {
+				col = util.Max(0, window.Width()+opts.column+1-length)
+			} else {
+				col = util.Min(opts.column-1, window.Width()-length)
+			}
+			row := 0
+			if borderShape == tui.BorderBottom || opts.bottom {
+				row = window.Height() - 1
+			}
+			window.Move(row, col)
+			render(window, window.Width())
+		}
+	}
+	printLabel(t.border, t.borderLabel, t.borderLabelOpts, t.borderLabelLen, t.borderShape)
+	printLabel(t.pborder, t.previewLabel, t.previewLabelOpts, t.previewLabelLen, t.previewOpts.border)
+
 	for i := 0; i < t.window.Height(); i++ {
 		t.window.MoveAndClear(i, 0)
 	}
@@ -1154,8 +1267,15 @@ func (t *Terminal) printInfo() {
 	if t.failed != nil && t.count == 0 {
 		output = fmt.Sprintf("[Command failed: %s]", *t.failed)
 	}
-	output = t.trimMessage(output, t.window.Width()-pos)
+	maxWidth := t.window.Width() - pos
+	output = t.trimMessage(output, maxWidth)
 	t.window.CPrint(tui.ColInfo, output)
+
+	fillLength := maxWidth - len(output) - 2
+	if t.separatorLen > 0 && fillLength > 0 {
+		t.window.CPrint(tui.ColSeparator, " ")
+		t.separator(t.window, fillLength)
+	}
 }
 
 func (t *Terminal) printHeader() {
@@ -1394,6 +1514,11 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 		displayWidth = t.displayWidthWithLimit(text, 0, displayWidth)
 	}
 
+	t.printColoredString(t.window, text, offsets, colBase)
+	return displayWidth
+}
+
+func (t *Terminal) printColoredString(window tui.Window, text []rune, offsets []colorOffset, colBase tui.ColorPair) {
 	var index int32
 	var substr string
 	var prefixWidth int
@@ -1403,11 +1528,11 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 		e := util.Constrain32(offset.offset[1], index, maxOffset)
 
 		substr, prefixWidth = t.processTabs(text[index:b], prefixWidth)
-		t.window.CPrint(colBase, substr)
+		window.CPrint(colBase, substr)
 
 		if b < e {
 			substr, prefixWidth = t.processTabs(text[b:e], prefixWidth)
-			t.window.CPrint(offset.color, substr)
+			window.CPrint(offset.color, substr)
 		}
 
 		index = e
@@ -1417,9 +1542,8 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 	}
 	if index < maxOffset {
 		substr, _ = t.processTabs(text[index:], prefixWidth)
-		t.window.CPrint(colBase, substr)
+		window.CPrint(colBase, substr)
 	}
-	return displayWidth
 }
 
 func (t *Terminal) renderPreviewSpinner() {
@@ -2362,13 +2486,21 @@ func (t *Terminal) Loop() {
 	}()
 
 	looping := true
+	_, startEvent := t.keymap[tui.Start.AsEvent()]
+
 	for looping {
 		var newCommand *string
 		changed := false
 		beof := false
 		queryChanged := false
 
-		event := t.tui.GetChar()
+		var event tui.Event
+		if startEvent {
+			event = tui.Start.AsEvent()
+			startEvent = false
+		} else {
+			event = t.tui.GetChar()
+		}
 
 		t.mutex.Lock()
 		previousInput := t.input
