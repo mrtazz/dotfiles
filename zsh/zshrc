@@ -11,6 +11,9 @@ source ${ZSHDIR}/path.zsh
 if [ "$(uname)" = "Darwin" ]; then
   source ${ZSHDIR}/osx.zsh
 fi
+if [ "$(uname)" = "FreeBSD" ]; then
+  source ${ZSHDIR}/freebsd.zsh
+fi
 
 # load plugins that I took from oh-my-zsh
 plugins=(heroku brew knife)
