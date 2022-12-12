@@ -23,7 +23,7 @@ echo "Installing codespace related dotoverrides configs..."
 echo -e "[gpg]\n  program = /.codespaces/bin/gh-gpgsign" > dotoverrides/gitconfig
 
 # set up org specific overrides
-if [[ "$CODESPACE_NAME" =~ .*"github".* ]]; then
+if [[ "$GITHUB_REPOSITORY" =~ .*"github".* ]]; then
   echo "Installing GitHub codespace related dotoverrides configs..."
   echo -e "[user]\n  email = mrtazz@github.com" >> dotoverrides/gitconfig
 
