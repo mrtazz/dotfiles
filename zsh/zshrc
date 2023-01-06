@@ -5,7 +5,7 @@ source ${ZSHDIR}/look.zsh
 source ${ZSHDIR}/completion.zsh
 source ${ZSHDIR}/iterm.zsh
 source ${ZSHDIR}/aliases_functions.zsh
-source ${ZSHDIR}/gpg.zsh
+[ -z "$CODESPACES" ] && source ${ZSHDIR}/gpg.zsh
 source ${ZSHDIR}/tmux.zsh
 source ${ZSHDIR}/path.zsh
 if [ "$(uname)" = "Darwin" ]; then
