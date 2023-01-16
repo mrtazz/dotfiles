@@ -32,4 +32,4 @@ if [[ "$GITHUB_REPOSITORY" =~ .*"github".* ]]; then
 fi
 
 # install linuxbrew suggested packages
-sudo apt-get install build-essential
+sudo apt-get install build-essential kitty-terminfo
