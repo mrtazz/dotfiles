@@ -28,7 +28,7 @@ if macos?
   cask "1password"
   cask "1password-cli"
   cask "alfred"
-  cask "iterm2"
+  cask "kitty"
   cask "phoenix"
   cask "qlmarkdown"
   # vim, git, go, and gh are already installed on codespaces
