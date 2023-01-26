@@ -1,0 +1,21 @@
+package config
+
+import (
+	"io/ioutil"
+
+	"gopkg.in/yaml.v3"
+)
+
+type Config struct {
+	Name string `yaml:"name"`
+}
+
+func LoadConfigFromFile(filename string) (Config, error) {
+	var c Config
+	yamlFile, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return c, err
+	}
+	err = yaml.Unmarshal(yamlFile, &c)
+	return c, err
+}
