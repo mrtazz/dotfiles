@@ -31,5 +31,5 @@ if [[ "$GITHUB_REPOSITORY" =~ .*"github".* ]]; then
   echo "machine goproxy.githubapp.com login nobody password ${GOPROXY_TOKEN_GITHUB}" > ${USER_HOME}/.netrc
 fi
 
-# install linuxbrew suggested packages
-sudo apt-get install --assume-yes build-essential kitty-terminfo
+# install linuxbrew suggested and other packages
+sudo apt-get update && sudo apt-get install --assume-yes build-essential kitty-terminfo
