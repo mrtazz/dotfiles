@@ -64,3 +64,6 @@
 	defaultBranch = main
 [pull]
 	rebase = false
+
+[gitget]
+  root = ~/src
