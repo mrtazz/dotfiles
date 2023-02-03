@@ -1,0 +1,2 @@
+# ignore host definitions as they contain oauth tokens
+hosts.yml
