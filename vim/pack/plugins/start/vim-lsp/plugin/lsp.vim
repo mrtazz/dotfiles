@@ -4,6 +4,7 @@ endif
 let g:lsp_loaded = 1
 
 let g:lsp_use_lua = get(g:, 'lsp_use_lua', has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775')))
+let g:lsp_use_native_client = get(g:, 'lsp_use_native_client', 0)
 let g:lsp_auto_enable = get(g:, 'lsp_auto_enable', 1)
 let g:lsp_async_completion = get(g:, 'lsp_async_completion', 0)
 let g:lsp_log_file = get(g:, 'lsp_log_file', '')
@@ -20,6 +21,7 @@ let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
 let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
 let g:lsp_diagnostics_float_cursor = get(g:, 'lsp_diagnostics_float_cursor', 0)
 let g:lsp_diagnostics_float_delay = get(g:, 'lsp_diagnostics_float_delay', 500)
+let g:lsp_diagnostics_float_insert_mode_enabled = get(g:, 'lsp_diagnostics_float_insert_mode_enabled', 1)
 let g:lsp_diagnostics_highlights_enabled = get(g:, 'lsp_diagnostics_highlights_enabled', lsp#utils#_has_highlights())
 let g:lsp_diagnostics_highlights_insert_mode_enabled = get(g:, 'lsp_diagnostics_highlights_insert_mode_enabled', 1)
 let g:lsp_diagnostics_highlights_delay = get(g:, 'lsp_diagnostics_highlights_delay', 500)
@@ -32,10 +34,13 @@ let g:lsp_diagnostics_signs_information = get(g:, 'lsp_diagnostics_signs_informa
 let g:lsp_diagnostics_signs_hint = get(g:, 'lsp_diagnostics_signs_hint', {})
 let g:lsp_diagnostics_signs_priority = get(g:, 'lsp_diagnostics_signs_priority', 10)
 let g:lsp_diagnostics_signs_priority_map = get(g:, 'lsp_diagnostics_signs_priority_map', {})
-let g:lsp_diagnostics_virtual_text_enabled = get(g:, 'lsp_diagnostics_virtual_text_enabled', lsp#utils#_has_nvim_virtual_text())
+let g:lsp_diagnostics_virtual_text_enabled = get(g:, 'lsp_diagnostics_virtual_text_enabled', lsp#utils#_has_nvim_virtual_text() || lsp#utils#_has_vim_virtual_text())
 let g:lsp_diagnostics_virtual_text_insert_mode_enabled = get(g:, 'lsp_diagnostics_virtual_text_insert_mode_enabled', 0)
 let g:lsp_diagnostics_virtual_text_delay = get(g:, 'lsp_diagnostics_virtual_text_delay', 500)
 let g:lsp_diagnostics_virtual_text_prefix = get(g:, 'lsp_diagnostics_virtual_text_prefix', '')
+let g:lsp_diagnostics_virtual_text_align = get(g:, 'lsp_diagnostics_virtual_text_align', 'below')
+let g:lsp_diagnostics_virtual_text_wrap = get(g:, 'lsp_diagnostics_virtual_text_wrap', 'wrap')
+let g:lsp_diagnostics_virtual_text_padding_left = get(g:, 'lsp_diagnostics_virtual_text_padding_left', 1)
 
 let g:lsp_document_code_action_signs_enabled = get(g:, 'lsp_document_code_action_signs_enabled', 1)
 let g:lsp_document_code_action_signs_delay = get(g:, 'lsp_document_code_action_signs_delay', 500)
@@ -53,9 +58,11 @@ let g:lsp_document_highlight_delay = get(g:, 'lsp_document_highlight_delay', 350
 let g:lsp_preview_float = get(g:, 'lsp_preview_float', 1)
 let g:lsp_preview_autoclose = get(g:, 'lsp_preview_autoclose', 1)
 let g:lsp_preview_doubletap = get(g:, 'lsp_preview_doubletap', [function('lsp#ui#vim#output#focuspreview')])
+let g:lsp_preview_fixup_conceal = get(g:, 'lsp_preview_fixup_conceal', 0)
 let g:lsp_peek_alignment = get(g:, 'lsp_peek_alignment', 'center')
 let g:lsp_preview_max_width = get(g:, 'lsp_preview_max_width', -1)
 let g:lsp_preview_max_height = get(g:, 'lsp_preview_max_height', -1)
+let g:lsp_float_max_width = get(g:, 'lsp_float_max_width', -1)
 let g:lsp_signature_help_enabled = get(g:, 'lsp_signature_help_enabled', 1)
 let g:lsp_signature_help_delay = get(g:, 'lsp_signature_help_delay', 200)
 let g:lsp_show_workspace_edits = get(g:, 'lsp_show_workspace_edits', 0)
@@ -197,3 +204,34 @@ nnoremap <silent> <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
 nnoremap <silent> <plug>(lsp-next-reference) :<c-u>call lsp#internal#document_highlight#jump(+1)<cr>
 nnoremap <silent> <plug>(lsp-previous-reference) :<c-u>call lsp#internal#document_highlight#jump(-1)<cr>
 nnoremap <silent> <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
+
+if has('gui_running')
+  anoremenu <silent> L&sp.Goto.Definition :LspDefinition<CR>
+  anoremenu <silent> L&sp.Goto.Declaration :LspDeclaration<CR>
+  anoremenu <silent> L&sp.Goto.Implementation :LspImplementation<CR>
+  anoremenu <silent> L&sp.Goto.TypeDef :LspTypeDefinition<CR>
+
+  anoremenu <silent> L&sp.Show\ Signature :LspShowSignature<CR>
+  anoremenu <silent> L&sp.Show\ References :LspReferences<CR>
+  anoremenu <silent> L&sp.Show\ Detail :LspHover<CR>
+
+  anoremenu <silent> L&sp.Symbol\ Search :LspDocumentSymbolSearch<CR>
+  anoremenu <silent> L&sp.Outgoing\ Calls :LspCallHierarchyOutgoing<CR>
+  anoremenu <silent> L&sp.Incoming\ Calls :LspCallHierarchyIncoming<CR>
+  anoremenu <silent> L&sp.Rename :LspRename<CR>
+  anoremenu <silent> L&sp.Code\ Action :LspCodeAction<CR>
+
+  anoremenu <silent> L&sp.Diagnostics.Next :LspNextDiagnostic<CR>
+  anoremenu <silent> L&sp.Diagnostics.Prev :LspPrevDiagnostic<CR>
+
+  if &mousemodel =~? 'popup'
+    anoremenu <silent> PopUp.L&sp.Go\ to\ Definition
+	  \ :LspDefinition<CR>
+    anoremenu <silent> PopUp.L&sp.Go\ to\ Declaration
+	  \ :LspDeclaration<CR>
+    anoremenu <silent> PopUp.L&sp.Find\ All\ References
+	  \ :LspReferences<CR>
+    anoremenu <silent> PopUp.L&sp.Show\ Detail
+          \ :LspHover<CR>
+  endif
+endif

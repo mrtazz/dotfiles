@@ -3,6 +3,11 @@ function! lsp#utils#has_lua() abort
     return s:has_lua
 endfunction
 
+let s:has_native_lsp_client = !has('nvim') && has('patch-8.2.4780')
+function! lsp#utils#has_native_lsp_client() abort
+    return s:has_native_lsp_client
+endfunction
+
 let s:has_virtual_text = exists('*nvim_buf_set_virtual_text') && exists('*nvim_create_namespace')
 function! lsp#utils#_has_nvim_virtual_text() abort
     return s:has_virtual_text
@@ -27,6 +32,11 @@ endfunction
 let s:has_vim9textprops = exists('*prop_add') && has('patch-9.0.0178')
 function! lsp#utils#_has_vim_virtual_text() abort
     return s:has_vim9textprops
+endfunction
+
+let s:has_prop_remove_types = exists('*prop_remove') && has('patch-9.0.0233')
+function! lsp#utils#_has_prop_remove_types() abort
+    return s:has_prop_remove_types
 endfunction
 
 let s:has_higlights = has('nvim') ? lsp#utils#_has_nvim_buf_highlight() : lsp#utils#_has_textprops()
@@ -71,7 +81,7 @@ function! s:encode_uri(path, start_pos_encode, default_prefix) abort
 
     for l:i in range(a:start_pos_encode, len(l:path) - 1)
         " Don't encode '/' here, `path` is expected to be a valid path.
-        if l:path[l:i] =~# '^[a-zA-Z0-9_.~/-]$'
+        if l:path[l:i] =~# '^[a-zA-Z0-9_.~/@-]$'
             let l:result .= l:path[l:i]
         else
             let l:result .= s:urlencode_char(l:path[l:i])
@@ -282,6 +292,13 @@ function! lsp#utils#error(msg) abort
     echom a:msg
     echohl NONE
 endfunction
+
+function! lsp#utils#warning(msg) abort
+    echohl WarningMsg
+    echom a:msg
+    echohl NONE
+endfunction
+
 
 function! lsp#utils#echo_with_truncation(msg) abort
     let l:msg = a:msg

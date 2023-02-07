@@ -142,8 +142,15 @@ function! s:show_floating_window(server_name, request, response) abort
     call setbufline(l:doc_win.get_bufnr(), 1, lsp#utils#_split_by_eol(join(l:contents, "\n\n")))
 
     " Calculate layout.
+    if g:lsp_float_max_width >= 1
+        let l:maxwidth = g:lsp_float_max_width
+    elseif g:lsp_float_max_width == 0
+        let l:maxwidth = &columns
+    else
+        let l:maxwidth = float2nr(&columns * 0.4)
+    endif
     let l:size = l:doc_win.get_size({
-        \   'maxwidth': float2nr(&columns * 0.4),
+        \   'maxwidth': l:maxwidth,
         \   'maxheight': float2nr(&lines * 0.4),
         \ })
     let l:pos = s:compute_position(l:size)
@@ -189,13 +196,17 @@ function! s:get_contents(contents) abort
         if has_key(a:contents, 'value')
             if has_key(a:contents, 'kind')
                 if a:contents['kind'] ==? 'markdown'
-                    let l:detail = s:MarkupContent.normalize(a:contents['value'])
+                    let l:detail = s:MarkupContent.normalize(a:contents['value'], {
+                    \   'compact': !g:lsp_preview_fixup_conceal
+                    \ })
                     return [l:detail]
                 else
                     return [a:contents['value']]
                 endif
             elseif has_key(a:contents, 'language')
-                let l:detail = s:MarkupContent.normalize(a:contents)
+                let l:detail = s:MarkupContent.normalize(a:contents, {
+                \     'compact': !g:lsp_preview_fixup_conceal
+                \ })
                 return [l:detail]
             else
                 return ''
@@ -252,8 +263,8 @@ endfunction
 function! s:compute_position(size) abort
     let l:pos = screenpos(0, line('.'), col('.'))
     if l:pos.row == 0 && l:pos.col == 0
-        " When the specified position is not visible
-        return []
+        " workaround for float position
+        let l:pos = {'curscol': wincol(), 'row': winline()}
     endif
     let l:pos = [l:pos.row + 1, l:pos.curscol + 1]
     if l:pos[0] + a:size.height > &lines

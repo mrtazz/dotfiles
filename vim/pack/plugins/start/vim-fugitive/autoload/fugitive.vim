@@ -3802,7 +3802,7 @@ function! fugitive#Command(line1, line2, range, bang, mods, arg, ...) abort
     let stream = exists('*setbufline')
     let do_edit = substitute(s:Mods(a:mods, 'Edge'), '\<tab\>', '-tab', 'g') . 'pedit!'
   elseif pager
-    let allow_pty = 0
+    let allow_pty = get(args, 0, '') is# 'shortlog'
     if pager is# 2 && a:bang && a:line2 >= 0
       let [do_edit, after_edit] = s:ReadPrepare(a:line1, a:line2, a:range, a:mods)
     elseif pager is# 2 && a:bang
@@ -4214,7 +4214,9 @@ function! s:DoAutocmdChanged(dir) abort
   finally
     unlet! g:fugitive_event g:fugitive_result
     " Force statusline reload with the buffer's Git dir
-    let &l:ro = &l:ro
+    if dir isnot# FugitiveGitDir()
+      let &l:ro = &l:ro
+    endif
   endtry
   return ''
 endfunction
@@ -7156,6 +7158,9 @@ function! fugitive#BlameSyntax() abort
     return
   endif
   let seen = {}
+  for x in split('01234567890abcdef', '\zs')
+    exe 'syn match FugitiveblameHashGroup'.x '"\%(^\^\=[*?]*\)\@<='.x.'\x\{5,\}\>" nextgroup=FugitiveblameAnnotation,FugitiveblameOriginalLineNumber,fugitiveblameOriginalFile skipwhite'
+  endfor
   for lnum in range(1, line('$'))
     let orig_hash = matchstr(getline(lnum), '^\^\=[*?]*\zs\x\{6\}')
     let hash = orig_hash
@@ -7177,8 +7182,8 @@ function! fugitive#BlameSyntax() abort
     else
       let s:hash_colors[hash] = ''
     endif
-    let pattern = substitute(orig_hash, '^\(\x\)\x\(\x\)\x\(\x\)\x$', '\1\\x\2\\x\3\\x', '') . '*\>'
-    exe 'syn match FugitiveblameHash'.hash.'       "\%(^\^\=[*?]*\)\@<='.pattern.'" nextgroup=FugitiveblameAnnotation,FugitiveblameOriginalLineNumber,fugitiveblameOriginalFile skipwhite'
+    let pattern = substitute(orig_hash, '^\(\x\)\x\(\x\)\x\(\x\)\x$', '\1\\x\2\\x\3\\x', '') . '*'
+    exe 'syn match FugitiveblameHash'.hash.'       "\%(^\^\=[*?]*\)\@<='.pattern.'" contained containedin=FugitiveblameHashGroup' . orig_hash[0]
   endfor
   syn match FugitiveblameUncommitted "\%(^\^\=[?*]*\)\@<=\<0\{7,\}\>" nextgroup=FugitiveblameAnnotation,FugitiveblameScoreDebug,FugitiveblameOriginalLineNumber,FugitiveblameOriginalFile skipwhite
   call s:BlameRehighlight()
@@ -7521,7 +7526,11 @@ function! fugitive#BrowseCommand(line1, count, range, bang, mods, arg, ...) abor
       endif
     endfor
 
-    throw "fugitive: no GBrowse handler installed for '".raw."'"
+    if !empty(remote_url)
+      return 'echoerr ' . string("fugitive: no GBrowse handler installed for '".remote_url."'")
+    else
+      return 'echoerr ' . string("fugitive: could not find remote named '".remote."'")
+    endif
   catch /^fugitive:/
     return 'echoerr ' . string(v:exception)
   endtry
@@ -7553,7 +7562,7 @@ function! s:SquashArgument(...) abort
   if &filetype == 'fugitive'
     let commit = matchstr(getline('.'), '^\%(\%(\x\x\x\)\@!\l\+\s\+\)\=\zs[0-9a-f]\{4,\}\ze \|^' . s:ref_header . ': \zs\S\+')
   elseif has_key(s:temp_files, s:cpath(expand('%:p')))
-    let commit = matchstr(getline('.'), '\S\@<!\x\{4,\}\>')
+    let commit = matchstr(getline('.'), '\S\@<!\x\{4,\}\S\@!')
   else
     let commit = s:Owner(@%)
   endif
@@ -7599,7 +7608,7 @@ function! s:HunkPosition(lnum) abort
     let lnum -= 1
     let line_char = getline(lnum)[0]
   endwhile
-  let starts = matchlist(getline(lnum), '^@@\+[ 0-9,-]* -\(\d\+\),\d\+ +\(\d\+\),')
+  let starts = matchlist(getline(lnum), '^@@\+[ 0-9,-]* -\(\d\+\)\%(,\d\+\)\= +\(\d\+\)[ ,]')
   if empty(starts)
     return [0, 0, 0]
   endif
@@ -8115,6 +8124,9 @@ function! fugitive#Foldtext() abort
     endif
   elseif line_foldstart =~# '^@@\+ .* @@'
     return '+-' . v:folddashes . ' ' . line_foldstart
+  elseif &filetype ==# 'fugitive' && line_foldstart =~# '^[A-Z][a-z].* (\d\+)$'
+    let c = +matchstr(line_foldstart, '(\zs\d\+\ze)$')
+    return '+-' . v:folddashes . printf('%3d item', c) . (c == 1 ? ':  ' : 's: ') . matchstr(line_foldstart, '.*\ze (\d\+)$')
   elseif &filetype ==# 'gitcommit' && line_foldstart =~# '^# .*:$'
     let lines = getline(v:foldstart, v:foldend)
     call filter(lines, 'v:val =~# "^#\t"')

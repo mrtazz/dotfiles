@@ -19,8 +19,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        name: [vim-v82-x64, vim-v81-x64]
+        name: [vim-v90-x64, vim-v82-x64, vim-v81-x64]
         include:
+          - name: vim-v90-x64
+            os: ubuntu-latest
+            vim_version: 9.0.0250
+            glibc_version: 2.15
           - name: vim-v82-x64
             os: ubuntu-latest
             vim_version: 8.2.0813
@@ -31,6 +35,11 @@ jobs:
             glibc_version: 2.15
     runs-on: ${{matrix.os}}
     steps:
+      - name: Install dependencies
+        shell: bash
+        run: |
+          # https://github.com/Zettlr/Zettlr/issues/3517
+          sudo apt-get install libfuse2
       - uses: actions/checkout@v2
       - name: Download vim
         shell: bash
@@ -72,5 +81,8 @@ jobs:
           export PATH=./vim-themis/bin:$PATH
           export PATH=./bin:$PATH
           export THEMIS_VIM=vim
-          vim --version
-          themis
+          # https://github.com/project-slippi/Ishiiruka/issues/323
+          # It was needed to detect the actual path of `libgmodule` via `ldconfig -p | grep libg`.
+          LD_PRELOAD=/lib/x86_64-linux-gnu/libgmodule-2.0.so vim --version
+          LD_PRELOAD=/lib/x86_64-linux-gnu/libgmodule-2.0.so themis
+

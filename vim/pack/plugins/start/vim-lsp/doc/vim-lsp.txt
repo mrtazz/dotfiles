@@ -14,6 +14,7 @@ CONTENTS                                                  *vim-lsp-contents*
       Health Check                          |vim-lsp-healthcheck|
     Options                               |vim-lsp-options|
       g:lsp_auto_enable                     |g:lsp_auto_enable|
+      g:lsp_use_native_client               |g:lsp_use_native_client|
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
       g:lsp_preview_float                   |g:lsp_preview_float|
       g:lsp_preview_autoclose               |g:lsp_preview_autoclose|
@@ -29,6 +30,8 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
       g:lsp_diagnostics_float_cursor        |g:lsp_diagnostics_float_cursor|
       g:lsp_diagnostics_float_delay         |g:lsp_diagnostics_float_delay|
+      g:lsp_diagnostics_float_insert_mode_enabled
+                                  |g:lsp_diagnostics_float_insert_mode_enabled|
       g:lsp_diagnostics_highlights_enabled
 			     |g:lsp_diagnostics_highlights_enabled|
       g:lsp_diagnostics_highlights_insert_mode_enabled
@@ -48,8 +51,12 @@ CONTENTS                                                  *vim-lsp-contents*
 			     |g:lsp_diagnostics_virtual_text_insert_mode_enabled|
       g:lsp_diagnostics_virtual_text_delay
 			     |g:lsp_diagnostics_virtual_text_delay|
-      g:lsp_diagnostics_virtual_text_prefix
-			     |g:lsp_diagnostics_virtual_text_prefix|
+      g:lsp_diagnostics_virtual_text_align
+			     |g:lsp_diagnostics_virtual_text_align|
+      g:lsp_diagnostics_virtual_text_padding_left
+			     |g:lsp_diagnostics_virtual_text_padding_left|
+      g:lsp_diagnostics_virtual_text_wrap
+			     |g:lsp_diagnostics_virtual_text_wrap|
       g:lsp_document_code_action_signs_enabled
 			     |g:lsp_document_code_actions_signs_enabled|
       g:lsp_document_code_action_signs_delay
@@ -70,6 +77,8 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
       g:lsp_preview_max_height              |g:lsp_preview_max_height|
+      g:lsp_preview_fixup_conceal           |g:lsp_preview_fixup_conceal|
+      g:lsp_float_max_width                 |g:lsp_float_max_width|
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
@@ -206,6 +215,9 @@ http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win32_dllw4_lib.zip
 64bit:
 http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win64_dllw4_lib.zip
 
+If you are using vim set `let g:lsp_use_native_client = 1` and make sure you
+are running vim 8.2.4780+.
+
 Set |g:lsp_semantic_enabled| to 0.
 
 Set |g:lsp_format_sync_timeout| to a reasonable value such as `1000`.
@@ -295,6 +307,18 @@ g:lsp_auto_enable                                       *g:lsp_auto_enable*
     Example: >
 	let g:lsp_auto_enable = 1
 	let g:lsp_auto_enable = 0
+
+g:lsp_use_native_client                             *g:lsp_use_native_client*
+    Type: |Number|
+    Default: `0`
+
+    Enable native lsp client support for vim 8.2.4780+. No impact for neovim.
+    TCP language servers are not supported and should be set to 0 if one is
+    used.
+
+    Example: >
+	let g:lsp_use_native_client = 1
+	let g:lsp_use_native_client = 0
 
 g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
     Type: |Number|
@@ -509,6 +533,18 @@ g:lsp_diagnostics_float_delay                *g:lsp_diagnostics_float_delay*
 	let g:lsp_diagnostics_float_delay = 200
 	let g:lsp_diagnostics_float_delay = 1000
 
+g:lsp_diagnostics_float_insert_mode_enabled
+                                 *g:lsp_diagnostics_float_insert_mode_enabled*
+    Type: |Boolean|
+    Default: `1`
+
+    Indicates whether to enable float of diagnostic error for the current line
+    to status when in |insertmode|. Requires |g:lsp_diagnostics_enabled| and
+    |g:lsp_diagnostics_float_cursor| set to 1.
+
+    Example: >
+	let g:lsp_diagnostics_float_insert_mode_enabled = 0
+
 g:lsp_format_sync_timeout                           *g:lsp_format_sync_timeout*
     Type: |Number|
     Default: `-1`
@@ -656,7 +692,8 @@ g:lsp_diagnostics_virtual_text_enabled
     Default: `1` for neovim 0.3+
 
     Enables virtual text to be shown next to diagnostic errors. Requires
-    NeoVim with version 0.3 or newer and |g:lsp_diagnostics_enabled| set to `1`.
+    NeoVim with version 0.3 or newer or Vim with |virtual-text| and
+    patch 9.0.0178, and |g:lsp_diagnostics_enabled| set to `1`.
     Virtual text uses the same highlight groups used for signs (eg LspErrorText),
     but can be uniquely defined if you want to have different highlight groups
     for signs and virtual text. To set unique virtual text highlighting, you
@@ -700,6 +737,38 @@ g:lsp_diagnostics_virtual_text_prefix   *g:lsp_diagnostics_virtual_text_prefix*
     Example: >
 	let g:lsp_diagnostics_virtual_text_prefix = "> "
 	let g:lsp_diagnostics_virtual_text_prefix = " ‣ "
+
+g:lsp_diagnostics_virtual_text_align    *g:lsp_diagnostics_virtual_text_align*
+    Type: |String|
+    Default: `"below"`
+
+    Determines the align of the diagnostics virtual text. Requires
+    |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_align = "right"
+
+g:lsp_diagnostics_virtual_text_padding_left
+                                  *g:lsp_diagnostics_virtual_text_padding_left*
+    Type: |Number|
+    Default: `1`
+
+    Determines the left padding of the diagnostics virtual text. Requires
+    |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_padding_left = 2
+
+g:lsp_diagnostics_virtual_text_wrap       *g:lsp_diagnostics_virtual_text_wrap*
+    Type: |String|
+    Default: `"wrap"`
+
+    Determines whether or not to wrap the diagnostics virtual text. Possible
+    values are one of `'wrap'`, `'truncate'`. Requires
+    |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_wrap = "truncate"
 
 g:lsp_document_code_action_signs_enabled
 				      *g:lsp_document_code_action_signs_enabled*
@@ -747,7 +816,7 @@ g:lsp_inlay_hints_enabled
     Type: |Number|
     Default: `0`
 
-    Enables inlay-hints. Requires Vim9 with |virtualtext|.
+    Enables inlay-hints. Requires Vim9 with |virtual-text|.
     patch 9.0.0167 or newer.
 
     Example: >
@@ -824,8 +893,8 @@ g:lsp_max_buffer_size                               *g:lsp_max_buffer_size*
     to a negative value.
 
     Example: >
-	let g:max_buffer_size = 10000000
-	let g:max_buffer_size = -1
+	let g:lsp_max_buffer_size = 10000000
+	let g:lsp_max_buffer_size = -1
 
 g:lsp_document_highlight_enabled      *g:lsp_document_highlight_enabled*
     Type: |Number|
@@ -893,6 +962,25 @@ g:lsp_preview_max_height                         *g:lsp_preview_max_height*
 
     If positive, determines the maximum height of the preview window in
     characters. Use a value of `-1` to disable setting a maximum height.
+
+g:lsp_preview_fixup_conceal                   *g:lsp_preview_fixup_conceal*
+    Type: |Number|
+    Default: `0`
+
+    If negative, all markdown documents are not converted as compact format.
+    That's useful in vim. vim's popup doesn't shrink correctly if the
+    buffer content uses conceals.
+
+g:lsp_float_max_width                           *g:lsp_float_max_width*
+    Type: |Number|
+    Default: `-1`
+
+    If positive, determines the maximum width of the float windows in
+    characters. Lines longer than `g:lsp_float_max_width` will be wrapped to fit
+    in the float window.
+    If set to 0, float windows can stretch to the width of the screen.
+    Otherwise, the maximum width of the floating windows is set to 40% of the
+    screen.
 
 g:lsp_signature_help_enabled                *g:lsp_signature_help_enabled*
     Type: |Number|
@@ -2039,7 +2127,7 @@ To use semantic highlighting, you need Neovim highlights, or Vim with the
 To enable semantic highlighting, |g:lsp_semantic_enabled| should be set to `1`
 (it is `0` by default). You can check if semantic highlighting is enabled
 by running: >
-    echo lsp#ui#vim#semantic#is_enabled()
+    echo lsp#internal#semantic#is_enabled()
 
 vim-lsp provides |highlight| groups for each of the token types supported by
 the current LSP server. This includes highlight groups for each of the
