@@ -61,6 +61,12 @@ set help
 # stop at the end of a message
 set pager_stop
 
+# lines of index to show when viewing a message
+set pager_index_lines=30
+
+# context lines to show when the pager is wrapping
+set pager_context=3
+
 # certificates
 set certificate_file =$my_mutt_dir/certificates
 
