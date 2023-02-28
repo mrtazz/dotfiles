@@ -54,15 +54,15 @@ color index         brightred       default         "~E"                        
 color index         blue            default         "~N"                        # new messages
 color index         blue            default         "~O"                        # old messages
 color index         brightmagenta   default         "~Q"                        # messages that have been replied to
-color index         brightcyan      default         "~R"                        # read messages
+color index         default         default         "~R"                        # read messages
 color index         blue            default         "~U"                        # unread messages
 color index         blue            default         "~U~$"                      # unread, unreferenced messages
 color index         brightblue      default         "~v"                        # messages part of a collapsed thread
 color index         brightblue      default         "~P"                        # messages from me
-color index         cyan            default         "~p!~F"                     # messages to me
+color index         default         default         "~p!~F"                     # messages to me
 color index         cyan            default         "~N~p!~F"                   # new messages to me
 color index         cyan            default         "~U~p!~F"                   # unread messages to me
-color index         brightcyan      default         "~R~p!~F"                   # messages to me
+color index         default           default         "~R~p!~F"                   # messages to me
 color index         red             default         "~F"                        # flagged messages
 color index         red             default         "~F~p"                      # flagged messages to me
 color index         red             default         "~N~F"                      # new flagged messages
