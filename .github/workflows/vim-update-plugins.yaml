@@ -1,0 +1,25 @@
+name: vim-plugin-update
+
+on:
+  workflow_dispatch:
+  schedule:
+    # run once a week on Wednesday
+    - cron: '30 3 * * 3'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: update vim plugins
+        run: cd vim && make update-plugins
+
+      - name: commit and push changes
+        run: |
+          git config user.name Github Actions
+          git config user.email actions@noreply.github.com
+          git add vim/pack
+          git commit --allow-empty -m "update vim plugins"
+          git push
+
