@@ -147,5 +147,10 @@ set narrow_tree=yes
 
 # cypher settings
 set ssl_ciphers = "ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128:AES256-SHA:AES128-SHA"
+
+# set message id format
+# https://people.kernel.org/monsieuricon/fix-your-mutt
+set message_id_format = "<%Y%02m%02d%02H%02M%02S.G%c%p@%f>"
+
 # source override
 source $HOME/.dotoverrides/muttrc
