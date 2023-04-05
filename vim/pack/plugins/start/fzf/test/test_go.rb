@@ -2679,6 +2679,50 @@ class TestGoFZF < TestBase
     OUTPUT
     tmux.until { assert_block(expected, _1) }
   end
+
+  def test_track
+    tmux.send_keys "seq 1000 | #{FZF} --query 555 --track", :Enter
+    tmux.until do |lines|
+      assert_equal 1, lines.match_count
+      assert_includes lines, '> 555'
+    end
+    tmux.send_keys :BSpace
+    index = tmux.until do |lines|
+      assert_equal 28, lines.match_count
+      assert_includes lines, '> 555'
+    end.index('> 555')
+    tmux.send_keys :BSpace
+    tmux.until do |lines|
+      assert_equal 271, lines.match_count
+      assert_equal '> 555', lines[index]
+    end
+    tmux.send_keys :BSpace
+    tmux.until do |lines|
+      assert_equal 1000, lines.match_count
+      assert_equal '> 555', lines[index]
+    end
+  end
+
+  def test_one
+    tmux.send_keys "seq 10 | #{FZF} --bind 'one:preview:echo {} is the only match'", :Enter
+    tmux.send_keys '1'
+    tmux.until do |lines|
+      assert_equal 2, lines.match_count
+      refute(lines.any? { _1.include?('only match') })
+    end
+    tmux.send_keys '0'
+    tmux.until do |lines|
+      assert_equal 1, lines.match_count
+      assert(lines.any? { _1.include?('only match') })
+    end
+  end
+
+  def test_height_range_with_exit_0
+    tmux.send_keys "seq 10 | #{FZF} --height ~10% --exit-0", :Enter
+    tmux.until { |lines| assert_equal 10, lines.item_count }
+    tmux.send_keys :c
+    tmux.until { |lines| assert_equal 0, lines.match_count }
+  end
 end
 
 module TestShell
