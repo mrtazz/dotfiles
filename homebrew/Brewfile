@@ -16,6 +16,7 @@ end
 
 
 # brew definitions
+brew "vim"
 brew "ripgrep"
 brew "bat"
 brew "fzf"
@@ -31,8 +32,7 @@ if macos?
   cask "kitty"
   cask "phoenix"
   cask "qlmarkdown"
-  # vim, git, go, and gh are already installed on codespaces
-  brew "vim"
+  # git, go, and gh are already installed on codespaces
   brew "git"
   brew "go" unless ci?
   brew "gh"
