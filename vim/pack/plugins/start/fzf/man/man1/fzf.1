@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ..
-.TH fzf 1 "Apr 2023" "fzf 0.39.0" "fzf - a command-line fuzzy finder"
+.TH fzf 1 "May 2023" "fzf 0.40.0" "fzf - a command-line fuzzy finder"
 
 .SH NAME
 fzf - a command-line fuzzy finder
@@ -1007,6 +1007,17 @@ by the interactive finder.
 e.g.
      \fB# Automatically select the only match
      seq 10 | fzf --bind one:accept\fR
+.RE
+\fIzero\fR
+.RS
+Triggered when there's no match. \fBzero:abort\fR binding is comparable to
+\fB--exit-0\fR option, but the difference is that \fB--exit-0\fR is only
+effective before the interactive finder starts but \fBzero\fR event is
+triggered by the interactive finder.
+
+e.g.
+     \fB# Reload the candidate list when there's no match
+     echo $RANDOM | fzf --bind 'zero:reload(echo $RANDOM)+clear-query' --height 3\fR
 .RE
 
 \fIbackward-eof\fR

@@ -1,8 +1,17 @@
 CHANGELOG
 =========
 
+0.41.0
+------
+- Bug fixes and improvements
+
 0.40.0
 ------
+- Added `zero` event that is triggered when there's no match
+  ```sh
+  # Reload the candidate list when there's no match
+  echo $RANDOM | fzf --bind 'zero:reload(echo $RANDOM)+clear-query' --height 3
+  ```
 - New actions
     - Added `track` action which makes fzf track the current item when the
       search result is updated. If the user manually moves the cursor, or the

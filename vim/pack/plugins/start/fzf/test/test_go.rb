@@ -2835,17 +2835,23 @@ class TestGoFZF < TestBase
     end
   end
 
-  def test_one
-    tmux.send_keys "seq 10 | #{FZF} --bind 'one:preview:echo {} is the only match'", :Enter
+  def test_one_and_zero
+    tmux.send_keys "seq 10 | #{FZF} --bind 'zero:preview(echo no match),one:preview(echo {} is the only match)'", :Enter
     tmux.send_keys '1'
     tmux.until do |lines|
       assert_equal 2, lines.match_count
       refute(lines.any? { _1.include?('only match') })
+      refute(lines.any? { _1.include?('no match') })
     end
     tmux.send_keys '0'
     tmux.until do |lines|
       assert_equal 1, lines.match_count
       assert(lines.any? { _1.include?('only match') })
+    end
+    tmux.send_keys '0'
+    tmux.until do |lines|
+      assert_equal 0, lines.match_count
+      assert(lines.any? { _1.include?('no match') })
     end
   end
 
@@ -2854,6 +2860,29 @@ class TestGoFZF < TestBase
     tmux.until { |lines| assert_equal 10, lines.item_count }
     tmux.send_keys :c
     tmux.until { |lines| assert_equal 0, lines.match_count }
+  end
+
+  def test_reload_and_change
+    tmux.send_keys "(echo foo; echo bar) | #{FZF} --bind 'load:reload-sync(sleep 60)+change-query(bar)'", :Enter
+    tmux.until { |lines| assert_equal 1, lines.match_count }
+  end
+
+  def test_reload_and_change_cache
+    tmux.send_keys "echo bar | #{FZF} --bind 'zero:change-header(foo)+reload(echo foo)+clear-query'", :Enter
+    expected = <<~OUTPUT
+      > bar
+        1/1
+      >
+    OUTPUT
+    tmux.until { assert_block(expected, _1) }
+    tmux.send_keys :z
+    expected = <<~OUTPUT
+      > foo
+        foo
+        1/1
+      >
+    OUTPUT
+    tmux.until { assert_block(expected, _1) }
   end
 end
 

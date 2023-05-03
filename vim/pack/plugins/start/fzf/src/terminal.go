@@ -408,6 +408,7 @@ type searchRequest struct {
 	sort    bool
 	sync    bool
 	command *string
+	changed bool
 }
 
 type previewRequest struct {
@@ -936,7 +937,7 @@ func (t *Terminal) UpdateList(merger *Merger, reset bool) {
 		t.selected = make(map[int32]selectedItem)
 		t.version++
 	}
-	if t.hasLoadActions && t.triggerLoad {
+	if t.triggerLoad {
 		t.triggerLoad = false
 		t.eventChan <- tui.Load.AsEvent()
 	}
@@ -956,10 +957,18 @@ func (t *Terminal) UpdateList(merger *Merger, reset bool) {
 			t.cy = count - util.Min(count, t.maxItems()) + pos
 		}
 	}
-	if !t.reading && t.merger.Length() == 1 {
-		one := tui.One.AsEvent()
-		if _, prs := t.keymap[one]; prs {
-			t.eventChan <- one
+	if !t.reading {
+		switch t.merger.Length() {
+		case 0:
+			zero := tui.Zero.AsEvent()
+			if _, prs := t.keymap[zero]; prs {
+				t.eventChan <- zero
+			}
+		case 1:
+			one := tui.One.AsEvent()
+			if _, prs := t.keymap[one]; prs {
+				t.eventChan <- one
+			}
 		}
 	}
 	t.mutex.Unlock()
@@ -1863,7 +1872,7 @@ func (t *Terminal) renderPreviewText(height int, lines []string, lineNo int, unc
 		if ansi != nil {
 			ansi.lbg = -1
 		}
-		line = strings.TrimSuffix(line, "\n")
+		line = strings.TrimRight(line, "\r\n")
 		if lineNo >= height || t.pwindow.Y() == height-1 && t.pwindow.X() > 0 {
 			t.previewed.filled = true
 			t.previewer.scrollable = true
@@ -1945,7 +1954,7 @@ func (t *Terminal) renderPreviewScrollbar(yoff int, barLength int, barStart int)
 		t.previewer.bar[i] = bar
 		t.pborder.Move(y, x)
 		if i >= yoff+barStart && i < yoff+barStart+barLength {
-			t.pborder.CPrint(tui.ColScrollbar, t.scrollbar)
+			t.pborder.CPrint(tui.ColPreviewScrollbar, t.scrollbar)
 		} else {
 			t.pborder.Print(" ")
 		}
@@ -2854,7 +2863,7 @@ func (t *Terminal) Loop() {
 			}
 			select {
 			case event = <-t.eventChan:
-				needBarrier = event != tui.Load.AsEvent()
+				needBarrier = !event.Is(tui.Load, tui.One, tui.Zero)
 			case actions = <-t.serverChan:
 				event = tui.Invalid.AsEvent()
 				needBarrier = false
@@ -3614,7 +3623,7 @@ func (t *Terminal) Loop() {
 		t.mutex.Unlock() // Must be unlocked before touching reqBox
 
 		if changed || newCommand != nil {
-			t.eventBox.Set(EvtSearchNew, searchRequest{sort: t.sort, sync: reloadSync, command: newCommand})
+			t.eventBox.Set(EvtSearchNew, searchRequest{sort: t.sort, sync: reloadSync, command: newCommand, changed: changed})
 		}
 		for _, event := range events {
 			t.reqBox.Set(event, nil)
