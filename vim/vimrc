@@ -125,8 +125,9 @@ endif
 
 let g:checkbox_states = [' ', 'x', '-', '>']
 
-
-
+" enable mouse support
+set ttymouse=xterm2
+set mouse=a
 
 " Autocomplete with dictionary words when spell check is on
 set complete+=kspell
