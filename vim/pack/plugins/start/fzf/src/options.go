@@ -125,6 +125,7 @@ const usage = `usage: fzf [options]
     FZF_DEFAULT_COMMAND    Default command to use when input is tty
     FZF_DEFAULT_OPTS       Default options
                            (e.g. '--layout=reverse --inline-info')
+    FZF_API_KEY            X-API-Key header for HTTP server (--listen)
 
 `
 
@@ -1114,6 +1115,8 @@ func parseActionList(masked string, original string, prevActions []*action, putA
 			appendAction(actToggleSearch)
 		case "toggle-track":
 			appendAction(actToggleTrack)
+		case "toggle-header":
+			appendAction(actToggleHeader)
 		case "track":
 			appendAction(actTrack)
 		case "select":
