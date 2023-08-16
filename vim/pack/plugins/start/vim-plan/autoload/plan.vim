@@ -57,6 +57,10 @@ function! plan#replaceTemplateVariables()
   let thedate = strftime("%m\\/%d\\/%Y")
   silent exe "1,$g/%%DATE%%/s/%%DATE%%/" . thedate
 
+  " replace occurrences of DATE_8601 with the actual date
+  let thedate8601 = strftime("%Y\\/%m\\/%d")
+  silent exe "1,$g/%%DATE_8601%%/s/%%DATE_8601%%/" . thedate8601
+
   " replace occurrences of WEEKDAY with the current weekday
   let weekday = strftime("%A")
   silent exe "1,$g/%%WEEKDAY%%/s/%%WEEKDAY%%/" . weekday

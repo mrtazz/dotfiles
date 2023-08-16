@@ -46,6 +46,10 @@ which will look like this as long as the cursor isn't on the line:
 ```
 
 This only works if vim is compiled with `conceal` support and utf-8 encoding.
+This is how it looks like in MacVim:
+
+![screen recording of conceal feature](https://github.com/mrtazz/vim-plan/assets/68183/5062d1c3-f487-4de4-86f2-e83b9ec11030)
+
 
 ### TODOs in location window
 The plugin provides a command `:PlanFindTodos` that uses `:lgrep` to find the
@@ -74,6 +78,7 @@ When reading those templates in vim-plan will replace the following template
 variables inline:
 
 - `%%DATE%%` with the current date of the format mm/dd/yyyy
+- `%%DATE_8601%%` with the current date of the format yyyy/mm/dd
 - `%%WEEKDAY%%` with the name of weekday
 - `%%WEEKNUMBER%%` with the number of the week
 - `%%YEAR%%` with the current year yyyy
@@ -131,6 +136,73 @@ tab complete @usernames in vim:
 --langmap=markdowntags:.md
 --kinddef-markdowntags=t,tag,tags
 --mline-regex-markdowntags=/(^|[[:space:]])@(\w\S*)/\2/t/{mgroup=1}
+```
+
+In my notes repo I have a nightly action that updates tags which makes it really easy
+to have completion of notes with about a day or so delay:
+
+```
+name: update-tags
+
+on:
+  workflow_dispatch:
+  schedule:
+    # run every weekday morning
+    - cron: '30 3 * * 1-5'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: dependencies
+        run:  sudo apt-get install universal-ctags
+
+      - name: generate tags
+        run: make tags
+
+      - name: commit and push changes
+        run: |
+          git config user.name Github Actions
+          git config user.email actions@noreply.github.com
+          git add tags
+          git commit --allow-empty -m "update tags"
+          git push
+```
+
+### Additional tooling
+There is a commandline tool [`plan`](https://github.com/mrtazz/plan) which provides some additional
+support tooling mostly around automation. For example I run this Action every weekday morning to 
+prep my daily note with some information:
+
+```
+name: daily-prep
+
+on:
+  workflow_dispatch:
+  schedule:
+    # run every weekday morning
+    - cron: '30 5 * * 1-5'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: populate daily note
+        run:  make prepare-the-day
+        env:
+          ISSUES_TOKEN_GITHUB: ${{ secrets.ISSUES_TOKEN_GITHUB }}
+
+      - name: commit and push changes
+        run: |
+          git config user.name Github Actions
+          git config user.email actions@noreply.github.com
+          git add dailies
+          git commit -m "create daily note"
+          git push
 ```
 
 ## Configuration
