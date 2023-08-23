@@ -8,6 +8,7 @@ let g:loaded_plan_vim = 1
 let s:dailiesDirectory = g:PlanBaseDir . "/" . g:PlanDailiesDir
 let s:notesDirectory = g:PlanBaseDir . "/" . g:PlanNotesDir
 let s:templatePath = g:PlanBaseDir . "/" . g:PlanTemplateDir
+let s:titleEnabled = g:PlanPromptForTitle
 
 function! plan#OpenDailyNote()
   let today = strftime("%Y%m%d")
@@ -26,13 +27,14 @@ function! plan#OpenDailyNote()
 endfunction
 
 function! plan#OpenNote()
-  let note = strftime("%Y%m%d-%H%M%S")
+  let msg = s:titleEnabled ? input('Enter note file title: ') : ''
+  let maybeTitle = msg ==  '' ? msg : "-" . msg
+  let dateTime = strftime("%Y%m%d-%H%M%S")
   call plan#EnsureDirectoryExists(s:notesDirectory)
-  let plan = s:notesDirectory . "/" . note . ".md"
+  let plan = s:notesDirectory . "/" . dateTime . maybeTitle . ".md"
   execute 'edit' plan
   call plan#setupBuffer()
 endfunction
-
 
 function! plan#MarkDone()
   call setline(line('.'), substitute(getline('.'), '- \[ \]', '- [x]', 'g'))

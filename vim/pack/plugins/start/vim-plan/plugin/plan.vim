@@ -3,7 +3,7 @@ let g:PlanBaseDir = get(g:, 'PlanBaseDir', $HOME . "/.plan")
 let g:PlanTemplateDir = get(g:, 'PlanTemplatePath', "templates")
 let g:PlanDailiesDir = get(g:, 'PlanDailiesDir', "dailies")
 let g:PlanNotesDir = get(g:, 'PlanNotesDir', "notes")
-
+let g:PlanPromptForTitle = get(g:, 'PlanPromptForTitle', 0)
 
 " command definitions
 command! PlanDaily :call plan#OpenDailyNote()
