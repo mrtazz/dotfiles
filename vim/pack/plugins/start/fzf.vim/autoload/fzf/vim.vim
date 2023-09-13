@@ -253,6 +253,10 @@ function! s:strip(str)
   return substitute(a:str, '^\s*\|\s*$', '', 'g')
 endfunction
 
+function! s:rstrip(str)
+  return substitute(a:str, '\s*$', '', 'g')
+endfunction
+
 function! s:chomp(str)
   return substitute(a:str, '\n*$', '', 'g')
 endfunction
@@ -764,14 +768,15 @@ endfunction
 function! fzf#vim#_format_buffer(b)
   let name = bufname(a:b)
   let line = exists('*getbufinfo') ? getbufinfo(a:b)[0]['lnum'] : 0
-  let name = empty(name) ? '[No Name]' : fnamemodify(name, ":p:~:.")
+  let fullname = empty(name) ? '' : fnamemodify(name, ":p:~:.")
+  let dispname = empty(name) ? '[No Name]' : name
   let flag = a:b == bufnr('')  ? s:blue('%', 'Conditional') :
           \ (a:b == bufnr('#') ? s:magenta('#', 'Special') : ' ')
   let modified = getbufvar(a:b, '&modified') ? s:red(' [+]', 'Exception') : ''
   let readonly = getbufvar(a:b, '&modifiable') ? '' : s:green(' [RO]', 'Constant')
   let extra = join(filter([modified, readonly], '!empty(v:val)'), '')
-  let target = line == 0 ? name : name.':'.line
-  return s:strip(printf("%s\t%d\t[%s] %s\t%s\t%s", target, line, s:yellow(a:b, 'Number'), flag, name, extra))
+  let target = empty(name) ? '' : (line == 0 ? fullname : fullname.':'.line)
+  return s:rstrip(printf("%s\t%d\t[%s] %s\t%s\t%s", target, line, s:yellow(a:b, 'Number'), flag, dispname, extra))
 endfunction
 
 function! s:sort_buffers(...)
@@ -909,7 +914,7 @@ function! fzf#vim#grep2(command_prefix, query, ...)
   \ 'source': ':',
   \ 'options': ['--ansi', '--prompt', toupper(name).'> ', '--query', a:query,
   \             '--disabled',
-  \             '--bind', 'start:reload:'.a:command_prefix.' '.shellescape(a:query),
+  \             '--bind', 'start:reload:'.a:command_prefix.' '.fzf#shellescape(a:query),
   \             '--bind', 'change:reload:'.a:command_prefix.' {q} || :',
   \             '--multi', '--bind', 'alt-a:select-all,alt-d:deselect-all',
   \             '--delimiter', ':', '--preview-window', '+{2}-/2']
@@ -1272,9 +1277,9 @@ endfunction
 function! s:format_win(tab, win, buf)
   let modified = getbufvar(a:buf, '&modified')
   let name = bufname(a:buf)
-  let name = empty(name) ? '[No Name]' : name
+  let name = empty(name) ? s:nbs.s:nbs.'[No Name]' : ' '.s:nbs.name
   let active = tabpagewinnr(a:tab) == a:win
-  return (active? s:blue('> ', 'Operator') : '  ') . name . (modified? s:red(' [+]', 'Exception') : '')
+  return (active? s:blue('>', 'Operator') : ' ') . name . s:nbs . (modified? s:red(' [+]', 'Exception') : '')
 endfunction
 
 function! s:windows_sink(line)
@@ -1295,9 +1300,9 @@ function! fzf#vim#windows(...)
     endfor
   endfor
   return s:fzf('windows', {
-  \ 'source':  extend(['Tab Win    Name'], lines),
+  \ 'source':  extend(['Tab Win     Name'], lines),
   \ 'sink':    s:function('s:windows_sink'),
-  \ 'options': '+m --ansi --tiebreak=begin --header-lines=1'}, a:000)
+  \ 'options': '+m --ansi --tiebreak=begin --header-lines=1 -d'.s:nbs}, a:000)
 endfunction
 
 " ------------------------------------------------------------------
