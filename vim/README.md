@@ -1,13 +1,9 @@
 # my vimfiles
-Fresh setup with submodules and tim pope's pathogen
 
 ## Plugin management
-I manage my plugins with [vim-bundle](https://github.com/benmills/vim-bundle)
-instead of submodules. The repository includes a Makefile which includes a task
-to update all plugins with
-```
-make update-plugins
-```
+The makefile contains a simple way to update plugins. They are updated weekly
+via [an
+Action](https://github.com/mrtazz/dotfiles/blob/main/.github/workflows/vim-update-plugins.yaml)
+and you can read more about it [on my
+blog](https://unwiredcouch.com/bits/2021/09/02/vim-package-managment-make.html).
 
-## Dependencies
-- vim compiled with `+python` for simplenote plugin
