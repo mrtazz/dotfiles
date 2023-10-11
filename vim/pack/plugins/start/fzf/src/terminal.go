@@ -51,6 +51,7 @@ var whiteSuffix *regexp.Regexp
 var offsetComponentRegex *regexp.Regexp
 var offsetTrimCharsRegex *regexp.Regexp
 var activeTempFiles []string
+var passThroughRegex *regexp.Regexp
 
 const clearCode string = "\x1b[2J"
 
@@ -60,6 +61,11 @@ func init() {
 	offsetComponentRegex = regexp.MustCompile(`([+-][0-9]+)|(-?/[1-9][0-9]*)`)
 	offsetTrimCharsRegex = regexp.MustCompile(`[^0-9/+-]`)
 	activeTempFiles = []string{}
+
+	// Parts of the preview output that should be passed through to the terminal
+	// * https://github.com/tmux/tmux/wiki/FAQ#what-is-the-passthrough-escape-sequence-and-how-do-i-use-it
+	// * https://sw.kovidgoyal.net/kitty/graphics-protocol
+	passThroughRegex = regexp.MustCompile(`\x1bPtmux;\x1b\x1b.*?[^\x1b]\x1b\\|\x1b_G.*?\x1b\\`)
 }
 
 type jumpMode int
@@ -519,6 +525,16 @@ func defaultKeymap() map[tui.Event][]*action {
 	add(tui.Mouse, actMouse)
 	add(tui.LeftClick, actIgnore)
 	add(tui.RightClick, actToggle)
+	add(tui.SLeftClick, actToggle)
+	add(tui.SRightClick, actToggle)
+
+	add(tui.ScrollUp, actUp)
+	add(tui.ScrollDown, actDown)
+	keymap[tui.SScrollUp.AsEvent()] = toActions(actToggle, actUp)
+	keymap[tui.SScrollDown.AsEvent()] = toActions(actToggle, actDown)
+
+	add(tui.PreviewScrollUp, actPreviewUp)
+	add(tui.PreviewScrollDown, actPreviewDown)
 	return keymap
 }
 
@@ -1958,7 +1974,13 @@ func (t *Terminal) renderPreviewText(height int, lines []string, lineNo int, unc
 		if ansi != nil {
 			ansi.lbg = -1
 		}
-		line = strings.TrimRight(line, "\r\n")
+
+		passThroughs := passThroughRegex.FindAllString(line, -1)
+		if passThroughs != nil {
+			line = passThroughRegex.ReplaceAllString(line, "")
+		}
+		line = strings.TrimLeft(strings.TrimRight(line, "\r\n"), "\r")
+
 		if lineNo >= height || t.pwindow.Y() == height-1 && t.pwindow.X() > 0 {
 			t.previewed.filled = true
 			t.previewer.scrollable = true
@@ -1970,6 +1992,9 @@ func (t *Terminal) renderPreviewText(height int, lines []string, lineNo int, unc
 				x := t.pwindow.X()
 				t.renderPreviewSpinner()
 				t.pwindow.Move(y, x)
+			}
+			for _, passThrough := range passThroughs {
+				t.tui.PassThrough(passThrough)
 			}
 			var fillRet tui.FillReturn
 			prefixWidth := 0
@@ -3468,13 +3493,23 @@ func (t *Terminal) Loop() {
 				// Scrolling
 				if me.S != 0 {
 					if t.window.Enclose(my, mx) && t.merger.Length() > 0 {
-						if t.multi > 0 && me.Mod {
-							toggle()
+						evt := tui.ScrollUp
+						if me.Mod {
+							evt = tui.SScrollUp
 						}
-						t.vmove(me.S, true)
-						req(reqList)
+						if me.S < 0 {
+							evt = tui.ScrollDown
+							if me.Mod {
+								evt = tui.SScrollDown
+							}
+						}
+						return doActions(actionsFor(evt))
 					} else if t.hasPreviewWindow() && t.pwindow.Enclose(my, mx) {
-						scrollPreviewBy(-me.S)
+						evt := tui.PreviewScrollUp
+						if me.S < 0 {
+							evt = tui.PreviewScrollDown
+						}
+						return doActions(actionsFor(evt))
 					}
 					break
 				}
@@ -3565,15 +3600,19 @@ func (t *Terminal) Loop() {
 						// Prompt
 						t.cx = mx + t.xoffset
 					} else if my >= min {
-						// List
-						if t.vset(t.offset+my-min) && t.multi > 0 && me.Mod {
-							toggle()
-						}
+						t.vset(t.offset + my - min)
 						req(reqList)
-						if me.Left {
-							return doActions(actionsFor(tui.LeftClick))
+						evt := tui.RightClick
+						if me.Mod {
+							evt = tui.SRightClick
 						}
-						return doActions(actionsFor(tui.RightClick))
+						if me.Left {
+							evt = tui.LeftClick
+							if me.Mod {
+								evt = tui.SLeftClick
+							}
+						}
+						return doActions(actionsFor(evt))
 					}
 				}
 			case actReload, actReloadSync:

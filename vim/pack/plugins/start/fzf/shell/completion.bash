@@ -9,7 +9,8 @@
 # - $FZF_COMPLETION_TRIGGER (default: '**')
 # - $FZF_COMPLETION_OPTS    (default: empty)
 
-if [[ $- =~ i ]]; then
+[[ $- =~ i ]] || return 0
+
 
 # To use custom commands instead of find, override _fzf_compgen_{path,dir}
 if ! declare -F _fzf_compgen_path > /dev/null; then
@@ -68,59 +69,185 @@ _fzf_opts_completion() {
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
   opts="
+    -h --help
     -x --extended
     -e --exact
+    --extended-exact
+    +x --no-extended
+    +e --no-exact
+    -q --query
+    -f --filter
+    --literal
+    --no-literal
     --algo
-    -i +i
+    --scheme
+    --expect
+    --no-expect
+    --enabled --no-phony
+    --disabled --phony
+    --tiebreak
+    --bind
+    --color
+    --toggle-sort
+    -d --delimiter
     -n --nth
     --with-nth
-    -d --delimiter
+    -s --sort
     +s --no-sort
+    --track
+    --no-track
     --tac
-    --tiebreak
+    --no-tac
+    -i
+    +i
     -m --multi
+    +m --no-multi
+    --ansi
+    --no-ansi
     --no-mouse
-    --bind
-    --cycle
-    --no-hscroll
-    --jump-labels
-    --height
-    --literal
+    +c --no-color
+    +2 --no-256
+    --black
+    --no-black
+    --bold
+    --no-bold
+    --layout
     --reverse
-    --margin
+    --no-reverse
+    --cycle
+    --no-cycle
+    --keep-right
+    --no-keep-right
+    --hscroll
+    --no-hscroll
+    --hscroll-off
+    --scroll-off
+    --filepath-word
+    --no-filepath-word
+    --info
+    --no-info
     --inline-info
+    --no-inline-info
+    --separator
+    --no-separator
+    --scrollbar
+    --no-scrollbar
+    --jump-labels
+    -1 --select-1
+    +1 --no-select-1
+    -0 --exit-0
+    +0 --no-exit-0
+    --read0
+    --no-read0
+    --print0
+    --no-print0
+    --print-query
+    --no-print-query
     --prompt
     --pointer
     --marker
-    --header
-    --header-lines
-    --ansi
-    --tabstop
-    --color
-    --no-bold
+    --sync
+    --no-sync
+    --async
+    --no-history
     --history
     --history-size
+    --no-header
+    --no-header-lines
+    --header
+    --header-lines
+    --header-first
+    --no-header-first
+    --ellipsis
     --preview
+    --no-preview
     --preview-window
-    -q --query
-    -1 --select-1
-    -0 --exit-0
-    -f --filter
-    --print-query
-    --expect
-    --sync"
+    --height
+    --min-height
+    --no-height
+    --no-margin
+    --no-padding
+    --no-border
+    --border
+    --no-border-label
+    --border-label
+    --border-label-pos
+    --no-preview-label
+    --preview-label
+    --preview-label-pos
+    --no-unicode
+    --unicode
+    --margin
+    --padding
+    --tabstop
+    --listen
+    --no-listen
+    --clear
+    --no-clear
+    --version
+    --"
 
   case "${prev}" in
+  --algo)
+    COMPREPLY=( $(compgen -W "v1 v2" -- "$cur") )
+    return 0
+    ;;
+  --scheme)
+    COMPREPLY=( $(compgen -W "default path history" -- "$cur") )
+    return 0
+    ;;
   --tiebreak)
-    COMPREPLY=( $(compgen -W "length begin end index" -- "$cur") )
+    COMPREPLY=( $(compgen -W "length chunk begin end index" -- "$cur") )
     return 0
     ;;
   --color)
-    COMPREPLY=( $(compgen -W "dark light 16 bw" -- "$cur") )
+    COMPREPLY=( $(compgen -W "dark light 16 bw no" -- "$cur") )
     return 0
     ;;
-  --history)
-    COMPREPLY=()
+  --layout)
+    COMPREPLY=( $(compgen -W "default reverse reverse-list" -- "$cur") )
+    return 0
+    ;;
+  --info)
+    COMPREPLY=( $(compgen -W "default right hidden inline inline-right" -- "$cur") )
+    return 0
+    ;;
+  --preview-window)
+    COMPREPLY=( $(compgen -W "
+      default
+      hidden
+      nohidden
+      wrap
+      nowrap
+      cycle
+      nocycle
+      up top
+      down bottom
+      left
+      right
+      rounded border border-rounded
+      sharp border-sharp
+      border-bold
+      border-block
+      border-thinblock
+      border-double
+      noborder border-none
+      border-horizontal
+      border-vertical
+      border-up border-top
+      border-down border-bottom
+      border-left
+      border-right
+      follow
+      nofollow" -- "$cur") )
+    return 0
+    ;;
+  --border)
+    COMPREPLY=( $(compgen -W "rounded sharp bold block thinblock double horizontal vertical top bottom left right none" -- "$cur") )
+    return 0
+    ;;
+  --border-label-pos|--preview-label-pos)
+    COMPREPLY=( $(compgen -W "center bottom top" -- "$cur") )
     return 0
     ;;
   esac
@@ -170,9 +297,9 @@ __fzf_generic_path_completion() {
   COMPREPLY=()
   trigger=${FZF_COMPLETION_TRIGGER-'**'}
   cur="${COMP_WORDS[COMP_CWORD]}"
-  if [[ "$cur" == *"$trigger" ]] && [[ $cur != *'$('* ]] && [[ $cur != *'<('* ]] && [[ $cur != *'`'* ]]; then
+  if [[ "$cur" == *"$trigger" ]] && [[ $cur != *'$('* ]] && [[ $cur != *':='* ]] && [[ $cur != *'`'* ]]; then
     base=${cur:0:${#cur}-${#trigger}}
-    eval "base=$base"
+    eval "base=$base" 2> /dev/null || return
 
     dir=
     [[ $base = *"/"* ]] && dir="$base"
@@ -235,7 +362,7 @@ _fzf_complete() {
   cmd="${COMP_WORDS[0]//[^A-Za-z0-9_=]/_}"
   trigger=${FZF_COMPLETION_TRIGGER-'**'}
   cur="${COMP_WORDS[COMP_CWORD]}"
-  if [[ "$cur" == *"$trigger" ]] && [[ $cur != *'$('* ]] && [[ $cur != *'<('* ]] && [[ $cur != *'`'* ]]; then
+  if [[ "$cur" == *"$trigger" ]] && [[ $cur != *'$('* ]] && [[ $cur != *':='* ]] && [[ $cur != *'`'* ]]; then
     cur=${cur:0:${#cur}-${#trigger}}
 
     selected=$(FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse --bind=ctrl-z:ignore ${FZF_DEFAULT_OPTS-} ${FZF_COMPLETION_OPTS-} $str_arg" __fzf_comprun "${rest[0]}" "${args[@]}" -q "$cur" | $post | tr '\n' ' ')
@@ -401,5 +528,3 @@ _fzf_setup_completion 'var'   export unset printenv
 _fzf_setup_completion 'alias' unalias
 _fzf_setup_completion 'host'  telnet
 _fzf_setup_completion 'proc'  kill
-
-fi
