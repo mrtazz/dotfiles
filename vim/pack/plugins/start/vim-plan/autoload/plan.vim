@@ -98,4 +98,5 @@ endfunction
 function! plan#FindTodos()
   call plan#setupBuffer()
   execute ':silent lgrep! "\- \[ \]" ' . s:dailiesDirectory . ' ' . s:notesDirectory
+  execute ':redraw!'
 endfunction
