@@ -23,9 +23,6 @@ set ignorecase
 set encoding=utf-8
 set cursorline
 
-" set colors
-set t_Co=256
-
 " use open buffers
 set switchbuf=useopen
 " allow buffers to be hidden
@@ -33,12 +30,17 @@ set hidden
 
 " use solarized palette incase it's used
 set background=light
-let g:solarized_termcolors=256
 let g:solarized_contrast="high"
 let g:solarized_visibility="high"
 
+"" GUI related things
 " set guifont for the few times I use a GUI vim
-set guifont=Monaco:h12
+set guifont=BitstreamVeraSansMono\ Nerd\ Font\ Mono:h14
+set guioptions+=k
+
+" mouse options
+set ttymouse=xterm2
+set mouse=a
 
 syntax on
 colorscheme solarized
@@ -124,10 +126,6 @@ if filereadable($HOME."/.vim/vim-spell.add")
 endif
 
 let g:checkbox_states = [' ', 'x', '-', '>']
-
-" enable mouse support
-set ttymouse=xterm2
-set mouse=a
 
 " Autocomplete with dictionary words when spell check is on
 set complete+=kspell
