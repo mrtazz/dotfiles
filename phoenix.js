@@ -4,8 +4,6 @@
  * https://github.com/kasper/phoenix
  *
  */
-var mash = ['cmd', 'ctrl'];
-
 var fullscreen = function () {
 
   var screen = Screen.main().flippedVisibleFrame();
@@ -31,11 +29,11 @@ var center = function () {
   if (window) {
     window.setTopLeft({
       x: screen.x + screen.width * 0.125,
-      y: screen.y + screen.height * 0.125
+      y: screen.y
     });
     window.setSize({
       width: screen.width * 0.75,
-      height: screen.height * 0.75
+      height: screen.height
     });
   }
 }
@@ -82,6 +80,23 @@ var right_two_thirds = function () {
   if (window) {
     window.setTopLeft({
       x: screen.x + screen.width * 0.33,
+      y: screen.y
+    });
+    window.setSize({
+      width: screen.width * 0.667,
+      height: screen.height
+    });
+  }
+}
+
+var left_two_thirds = function () {
+
+  var screen = Screen.main().flippedVisibleFrame();
+  var window = Window.focused();
+
+  if (window) {
+    window.setTopLeft({
+      x: screen.x,
       y: screen.y
     });
     window.setSize({
@@ -166,11 +181,12 @@ var quarterScreen = function (position) {
   }
 }
 
+var mash = ['cmd', 'ctrl'];
+
 Key.on('c', mash, center);
 Key.on('l', mash, lefthalf);
 Key.on('r', mash, righthalf);
 Key.on('f', mash, fullscreen);
-Key.on('t', mash, right_two_thirds);
 Key.on('q', mash, function() { quarterScreen('lefttop'); });
 Key.on('w', mash, function() { quarterScreen('righttop'); });
 Key.on('a', mash, function() { quarterScreen('leftbottom'); });
