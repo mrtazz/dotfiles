@@ -1,9 +1,3 @@
-![Help Wanted](http://blog.ncce.org/wp-content/uploads/2013/12/help-wanted.jpg)
-
-**NERDTree** is on the lookout for a new maintainer. See [issue #1280](https://github.com/preservim/nerdtree/issues/1280) to submit your name for consideration.
-
----
-
 # The NERDTree [![Vint](https://github.com/preservim/nerdtree/workflows/Vint/badge.svg)](https://github.com/preservim/nerdtree/actions?workflow=Vint)
 
 ## Introduction
@@ -170,7 +164,7 @@ autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTa
 
 ```vim
 " If another buffer tries to replace NERDTree, put it in the other window, and bring back NERDTree.
-autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
+autocmd BufEnter * if winnr() == winnr('h') && bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
     \ let buf=bufnr() | buffer# | execute "normal! \<C-W>w" | execute 'buffer'.buf | endif
 ```
 
