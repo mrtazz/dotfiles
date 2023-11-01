@@ -54,16 +54,6 @@ let g:syntastic_auto_loc_list=1
 let g:syntastic_loc_list_height=5
 set laststatus=2
 
-" cpplint for syntastic
-let g:syntastic_cpp_cpplint_exec = 'cpplint'
-let g:syntastic_cpp_cpplint_args = '--filter=-legal/copyright'
-
-" C++11 for syntastic
-let g:syntastic_cpp_compiler = 'clang++'
-let g:syntastic_cpp_compiler_options = ' -std=c++11 -stdlib=libc++'
-" add vendorized gtest and json.h  to include path
-let syntastic_cpp_include_dirs = ['vendor/gtest-1.7.0/include', 'vendor/jsoncpp-0.10.5/dist']
-
 " tab completion for file opening
 set wildmode=longest,list,full
 set wildmenu
@@ -80,6 +70,8 @@ nmap <C-P> :FZF<CR>
 " rg search from vim with fzf preview
 map <Leader>s :Rg<CR>
 
+
+""" vim-plan related settings
 " set rg as grep program
 set grepprg=rg\ --vimgrep\ --no-heading\ --smart-case\ --sortr=path
 
@@ -89,6 +81,9 @@ map <leader>pf :PlanFindTodos<CR>
 map <leader>pn :PlanNote<CR>
 map <leader>pd :PlanMarkDone<CR>
 map <leader>pm :PlanMigrateToToday<CR>
+
+" states for markdown checkboxes
+let g:checkbox_states = [' ', 'x', '-', '>']
 
 " nerdtree bindings
 map <leader>t :NERDTreeToggle<CR>
@@ -110,22 +105,11 @@ let g:SuperTabDefaultCompletionTypeDiscovery = [
 \ ]
 let g:SuperTabLongestHighlight = 1
 
-" set indents for python files
-au FileType python setl autoindent tabstop=4 expandtab shiftwidth=4 softtabstop=4
-" set indents for php files
-au FileType php setl autoindent tabstop=4 expandtab shiftwidth=4 softtabstop=4
-" handle .json files as javascript
-autocmd BufNewFile,BufRead *.json set filetype=javascript
-" make .md files markdown
-autocmd BufNewFile,BufReadPost *.md set filetype=markdown
-
-" spell checking settings
+""" spell checking settings
 " set the spellfile for added words if it exists
 if filereadable($HOME."/.vim/vim-spell.add")
   set spellfile=$HOME/.vim/vim-spell.add
 endif
-
-let g:checkbox_states = [' ', 'x', '-', '>']
 
 " Autocomplete with dictionary words when spell check is on
 set complete+=kspell
