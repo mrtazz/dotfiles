@@ -40,30 +40,63 @@ type httpServer struct {
 	responseChannel chan string
 }
 
-func startHttpServer(port int, actionChannel chan []*action, responseChannel chan string) (error, int) {
-	if port < 0 {
-		return nil, port
-	}
+type listenAddress struct {
+	host string
+	port int
+}
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+func (addr listenAddress) IsLocal() bool {
+	return addr.host == "localhost" || addr.host == "127.0.0.1"
+}
+
+var defaultListenAddr = listenAddress{"localhost", 0}
+
+func parseListenAddress(address string) (error, listenAddress) {
+	parts := strings.SplitN(address, ":", 3)
+	if len(parts) == 1 {
+		parts = []string{"localhost", parts[0]}
+	}
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid listen address: %s", address), defaultListenAddr
+	}
+	portStr := parts[len(parts)-1]
+	port, err := strconv.Atoi(portStr)
+	if err != nil || port < 0 || port > 65535 {
+		return fmt.Errorf("invalid listen port: %s", portStr), defaultListenAddr
+	}
+	if len(parts[0]) == 0 {
+		parts[0] = "localhost"
+	}
+	return nil, listenAddress{parts[0], port}
+}
+
+func startHttpServer(address listenAddress, actionChannel chan []*action, responseChannel chan string) (error, int) {
+	host := address.host
+	port := address.port
+	apiKey := os.Getenv("FZF_API_KEY")
+	if !address.IsLocal() && len(apiKey) == 0 {
+		return fmt.Errorf("FZF_API_KEY is required to allow remote access"), port
+	}
+	addrStr := fmt.Sprintf("%s:%d", host, port)
+	listener, err := net.Listen("tcp", addrStr)
 	if err != nil {
-		return fmt.Errorf("port not available: %d", port), port
+		return fmt.Errorf("failed to listen on %s", addrStr), port
 	}
 	if port == 0 {
 		addr := listener.Addr().String()
-		parts := strings.SplitN(addr, ":", 2)
+		parts := strings.Split(addr, ":")
 		if len(parts) < 2 {
 			return fmt.Errorf("cannot extract port: %s", addr), port
 		}
 		var err error
-		port, err = strconv.Atoi(parts[1])
+		port, err = strconv.Atoi(parts[len(parts)-1])
 		if err != nil {
 			return err, port
 		}
 	}
 
 	server := httpServer{
-		apiKey:          []byte(os.Getenv("FZF_API_KEY")),
+		apiKey:          []byte(apiKey),
 		actionChannel:   actionChannel,
 		responseChannel: responseChannel,
 	}
