@@ -140,6 +140,9 @@ if executable('gopls')
   let g:lsp_diagnostics_echo_cursor = 1
 endif
 
+" rust.vim options
+let g:rustfmt_autosave = 1
+
 " let's see if we can work without arrow keys
 inoremap  <Up>     <NOP>
 inoremap  <Down>   <NOP>
