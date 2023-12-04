@@ -17,10 +17,13 @@ bind index k previous-entry
 bind index j next-entry
 
 # filtering macros
-macro index,pager A "<save-message>=Archive/<enter><sync-mailbox>"
-macro index,pager J "<save-message>=Junk/<enter><sync-mailbox>"
-macro index Si "<change-folder>=INBOX/<enter>"
-macro index SA "<change-folder>=Archive/<enter>"
+macro index,pager A "<save-message>=Archive/<enter><sync-mailbox>" 'Archive message'
+macro index,pager J "<save-message>=Junk/<enter><sync-mailbox>" 'Move message to Junk'
+macro index Si "<change-folder>=INBOX/<enter>" 'Switch to INBOX'
+macro index SA "<change-folder>=Archive/<enter>" 'Switch to Archive'
+
+# pipe attachment to marked
+macro index,pager .m "<enter-command>set wait_key=no<enter><enter-command>set pipe_decode=yes<enter><pipe-entry>~/bin/mutt_to_marked.sh<enter>" 'Open entry in Marked app'
 
 # thread collapsing
 bind index - collapse-thread
