@@ -741,6 +741,12 @@ class TestGoFZF < TestBase
       'xxoxxxxxxx',
       'xoxxxxxxxx'
     ], `#{FZF} -fo --tiebreak=end,length,begin < #{tempname}`.lines(chomp: true)
+
+    writelines(tempname, ['/bar/baz', '/foo/bar/baz'])
+    assert_equal [
+      '/foo/bar/baz',
+      '/bar/baz'
+    ], `#{FZF} -fbaz --tiebreak=end < #{tempname}`.lines(chomp: true)
   end
 
   def test_tiebreak_length_with_nth
@@ -2014,6 +2020,13 @@ class TestGoFZF < TestBase
     tmux.until { |lines| assert_equal '> rab', lines[-1] }
     tmux.send_keys 'C-u'
     tmux.until { |lines| assert_equal '> RAB', lines[-1] }
+  end
+
+  def test_transform
+    tmux.send_keys %{#{FZF} --bind 'focus:transform:echo "change-prompt({fzf:action})"'}, :Enter
+    tmux.until { |lines| assert_equal 'start', lines[-1] }
+    tmux.send_keys :Up
+    tmux.until { |lines| assert_equal 'up', lines[-1] }
   end
 
   def test_clear_selection
