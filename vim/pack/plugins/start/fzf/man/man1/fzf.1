@@ -1,7 +1,7 @@
 .ig
 The MIT License (MIT)
 
-Copyright (c) 2013-2023 Junegunn Choi
+Copyright (c) 2013-2024 Junegunn Choi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ..
-.TH fzf 1 "Dec 2023" "fzf 0.45.0" "fzf - a command-line fuzzy finder"
+.TH fzf 1 "Jan 2024" "fzf 0.45.0" "fzf - a command-line fuzzy finder"
 
 .SH NAME
 fzf - a command-line fuzzy finder
@@ -593,6 +593,7 @@ Also,
   Use \fB{+n}\fR if you want all index numbers when multiple lines are selected.
 .br
 * \fB{fzf:action}\fR is replaced to to the name of the last action performed
+* \fB{fzf:prompt}\fR is replaced to to the prompt string
 
 Note that you can escape a placeholder pattern by prepending a backslash.
 
@@ -1182,6 +1183,7 @@ A key or an event can be bound to one or more of the following actions.
     \fBpage-up\fR                      \fIpgup\fR
     \fBhalf-page-down\fR
     \fBhalf-page-up\fR
+    \fBhide-header\fR
     \fBhide-preview\fR
     \fBoffset-down\fR                  (similar to CTRL-E of Vim)
     \fBoffset-up\fR                    (similar to CTRL-Y of Vim)
@@ -1207,6 +1209,7 @@ A key or an event can be bound to one or more of the following actions.
     \fBreplace-query\fR                (replace query string with the current selection)
     \fBselect\fR
     \fBselect-all\fR                   (select all matches)
+    \fBshow-header\fR
     \fBshow-preview\fR
     \fBtoggle\fR                       (\fIright-click\fR)
     \fBtoggle-all\fR                   (toggle all matches)
