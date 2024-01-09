@@ -73,7 +73,7 @@ map <Leader>s :Rg<CR>
 
 """ vim-plan related settings
 " set rg as grep program
-set grepprg=rg\ --vimgrep\ --no-heading\ --smart-case\ --sortr=path
+set grepprg=rg\ --vimgrep\ --no-heading\ --smart-case\ --sort=path
 
 " vim-plan keybindings
 map <leader>d :PlanDaily<CR>
