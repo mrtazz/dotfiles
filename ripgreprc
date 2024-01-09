@@ -4,3 +4,4 @@
 # ignore vendor directories by default
 --glob=!vendor/*
 --glob=!tags
+--glob=!node_modules
