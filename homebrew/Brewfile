@@ -25,6 +25,10 @@ brew "universal-ctags"
 brew "gotags"
 brew "fd"
 
+# add my OSS tap
+tap "mrtazz/oss"
+brew "mrtazz/oss/snipple"
+
 if macos?
   cask "1password"
   cask "1password-cli"
