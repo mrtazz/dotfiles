@@ -10,3 +10,8 @@ brew "tree"
 brew "ledger"
 brew "coreutils"
 brew "grdl/tap/git-get"
+
+# add my OSS tap
+tap "mrtazz/oss"
+brew "mrtazz/oss/plan"
+brew "mrtazz/oss/pd"

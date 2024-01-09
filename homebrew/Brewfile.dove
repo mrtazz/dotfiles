@@ -1,2 +1,7 @@
 # vim: set ft=ruby:
 # things I usually use on my GH work laptop
+
+# add my OSS tap
+tap "mrtazz/oss"
+brew "mrtazz/oss/plan"
+brew "mrtazz/oss/pd"
