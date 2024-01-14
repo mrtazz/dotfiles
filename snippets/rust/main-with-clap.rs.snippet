@@ -1,0 +1,52 @@
+use current_platform::{COMPILED_ON, CURRENT_PLATFORM};
+use std::env::VarError;
+
+use clap::{Parser, Subcommand};
+
+const VERSION: Option<&'static str> = option_env!("VERSION");
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+#[command(arg_required_else_help(true))]
+#[command(disable_version_flag(true))]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Get {
+        /// Path to a thing to get
+        thing: String,
+    },
+    /// List all available things
+    List {
+        /// Run in debug mode
+        #[arg(long)]
+        debug: bool,
+    },
+    /// Print version and exit
+    Version {},
+}
+
+fn main() {
+    let cli = Cli::parse();
+
+    match &cli.command {
+        Some(Commands::List { debug }) => { }
+        Some(Commands::Get { thing }) => { }
+        Some(Commands::Version {}) => {
+            println!(
+                "tool {} {} compiled on {}",
+                VERSION.unwrap_or("dev"),
+                CURRENT_PLATFORM,
+                COMPILED_ON
+            )
+        }
+
+        None => {
+            println!("unknown command")
+        }
+    }
+}
