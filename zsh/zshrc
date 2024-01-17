@@ -3,7 +3,6 @@ ZSHDIR="${HOME}/.zsh"
 source ${ZSHDIR}/history.zsh
 source ${ZSHDIR}/look.zsh
 source ${ZSHDIR}/completion.zsh
-source ${ZSHDIR}/iterm.zsh
 source ${ZSHDIR}/aliases_functions.zsh
 [ -z "$CODESPACES" ] && source ${ZSHDIR}/gpg.zsh
 source ${ZSHDIR}/tmux.zsh
@@ -16,7 +15,7 @@ if [ "$(uname)" = "FreeBSD" ]; then
 fi
 
 # load plugins that I took from oh-my-zsh
-plugins=(heroku brew knife)
+plugins=(brew)
 for plugin ($plugins); do
   fpath=(${ZSHDIR}/$plugin $fpath)
 done

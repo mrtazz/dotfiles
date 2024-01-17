@@ -43,25 +43,6 @@ parse_git_dirty() {
   fi
 }
 
-# k8s stuff
-_kubectl-installed() {
-which kubectl > /dev/null 2>&1
-}
-
-function kube_context_prompt() {
-  if _kubectl-installed && [ -n "${SHOW_K8S_PROMPT}" ]; then
-    echo "[k8s:%{$fg_bold[cyan]%}$(kubectl config current-context)]%{$reset_color%}"
-  fi
-}
-
-function k8s_toggle_prompt() {
-  if [ -z "${SHOW_K8S_PROMPT}" ]; then
-    export SHOW_K8S_PROMPT=true
-  else
-    unset SHOW_K8S_PROMPT
-  fi
-}
-
 ORIG_PROMPT=$PROMPT
 set_prompt() {
   PROMPT="%{$fg_bold[white]%}%2m%{$reset_color%} $(kube_context_prompt) ${ORIG_PROMPT}"
