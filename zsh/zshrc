@@ -7,10 +7,10 @@ source ${ZSHDIR}/aliases_functions.zsh
 [ -z "$CODESPACES" ] && source ${ZSHDIR}/gpg.zsh
 source ${ZSHDIR}/tmux.zsh
 source ${ZSHDIR}/path.zsh
-if [ "$(uname)" = "Darwin" ]; then
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
   source ${ZSHDIR}/osx.zsh
-fi
-if [ "$(uname)" = "FreeBSD" ]; then
+elif [[ "$OSTYPE" == "freebsd"* ]]; then
   source ${ZSHDIR}/freebsd.zsh
 fi
 
