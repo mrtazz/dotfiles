@@ -48,7 +48,7 @@ set_prompt() {
   PROMPT="%{$fg_bold[white]%}%2m%{$reset_color%} ${ORIG_PROMPT}"
 }
 
-PROMPT='%{$fg_bold[red]%}%m%{$reset_color%}:%{$fg[cyan]%}%c%{$reset_color%}%{$fg_bold[green]%}$(git_prompt_info)$(kube_context_prompt)%{$reset_color%}%:%# '
+PROMPT='%{$fg_bold[red]%}%m%{$reset_color%}:%{$fg[cyan]%}%c%{$reset_color%}%{$fg_bold[green]%}$(git_prompt_info)%{$reset_color%}%:%# '
 
 ZSH_THEME_GIT_PROMPT_PREFIX="[%{$fg[red]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}"
