@@ -4,7 +4,7 @@
 
 GIT := $(shell which git)
 # files you want to install
-EXCLUDE := README.md Makefile vscode ssh install.sh homebrew bin spec
+EXCLUDE := README.md Makefile ssh install.sh homebrew bin spec firefox slack script
 FILES := $(shell ls)
 SOURCES := $(filter-out $(EXCLUDE),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
@@ -75,17 +75,10 @@ ${HOME}/.zprofile:
 ${HOME}/.tmux.conf:
 	ln -fs $(PWD)/tmux/tmux.conf $@
 
-${HOME}/.config/Code/User/settings.json:
-	install -d $(dir $@)
-	ln -fs $(PWD)/vscode/settings.json $@
-
-.PHONY: vscode
-vscode: ${HOME}/.config/Code/User/settings.json
-
 ifeq ($(CODESPACES), true)
 # don't fully clone homebrew on codespaces
 export HOMEBREW_INSTALL_FROM_API=true
-install: $(DEFAULT_TARGETS) brew-bundle codespaces vscode
+install: $(DEFAULT_TARGETS) brew-bundle codespaces
 else ifeq ($(OS), FreeBSD)
 install: $(DEFAULT_TARGETS)
 else ifeq ($(CI), true)
