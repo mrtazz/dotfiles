@@ -5,3 +5,5 @@
 tap "mrtazz/oss"
 brew "mrtazz/oss/plan"
 brew "mrtazz/oss/pd"
+
+cask "meetingbar"
