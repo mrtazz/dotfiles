@@ -36,6 +36,7 @@ if macos?
   cask "kitty"
   cask "phoenix"
   cask "qlmarkdown"
+  cask "zotero"
   # git, go, and gh are already installed on codespaces
   brew "git"
   brew "go" unless ci?
