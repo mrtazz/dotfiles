@@ -273,6 +273,9 @@ function! s:TempScript(...) abort
   if !filereadable(temp)
     call writefile(['#!/bin/sh'] + a:000, temp)
   endif
+  if temp =~# '\s'
+    let temp = '"' . temp . '"'
+  endif
   return FugitiveGitPath(temp)
 endfunction
 
@@ -1007,7 +1010,7 @@ function! s:StdoutToFile(out, cmd, ...) abort
     throw 'fugitive: Vim 8 or higher required to use ' . &shell
   else
     let cmd = fugitive#ShellCommand(a:cmd)
-    return s:SystemError(' (' . cmd . ' >' . a:out . ') ')
+    return call('s:SystemError', [' (' . cmd . ' >' . (len(a:out) ? a:out : '/dev/null') . ') '] + a:000)
   endif
 endfunction
 
@@ -1118,7 +1121,7 @@ function! fugitive#Config(...) abort
       let callback = a:000[1:-1]
     endif
   elseif a:0 >= 2 && type(a:2) == type({}) && has_key(a:2, 'GetAll')
-    return get(fugitive#ConfigGetAll(a:1, a:2), 0, default)
+    return get(fugitive#ConfigGetAll(a:1, a:2), -1, default)
   elseif a:0 >= 2
     let dir = s:Dir(a:2)
     let name = a:1
@@ -1200,7 +1203,7 @@ function! s:config_GetAll(name) dict abort
 endfunction
 
 function! s:config_Get(name, ...) dict abort
-  return get(self.GetAll(a:name), 0, a:0 ? a:1 : '')
+  return get(self.GetAll(a:name), -1, a:0 ? a:1 : '')
 endfunction
 
 function! s:config_GetRegexp(pattern) dict abort
@@ -1235,12 +1238,15 @@ function! s:SshParseHost(value) abort
   return '^\%(' . join(patterns, '\|') . '\)$' . join(negates, '')
 endfunction
 
-function! s:SshParseConfig(into, root, file, ...) abort
-  if !filereadable(a:file)
+function! s:SshParseConfig(into, root, file) abort
+  try
+    let lines = readfile(a:file)
+  catch
     return a:into
-  endif
-  let host = a:0 ? a:1 : '^\%(.*\)$'
-  for line in readfile(a:file)
+  endtry
+  let host = '^\%(.*\)$'
+  while !empty(lines)
+    let line = remove(lines, 0)
     let key = tolower(matchstr(line, '^\s*\zs\w\+\ze\s'))
     let value = matchstr(line, '^\s*\w\+\s\+\zs.*\S')
     if key ==# 'match'
@@ -1248,24 +1254,20 @@ function! s:SshParseConfig(into, root, file, ...) abort
     elseif key ==# 'host'
       let host = s:SshParseHost(value)
     elseif key ==# 'include'
-      call s:SshParseInclude(a:into, a:root, host, value)
+      for glob in split(value)
+        if glob !~# '^/'
+          let glob = a:root . glob
+        endif
+        for included in reverse(split(glob(glob), "\n"))
+          call extend(lines, readfile(included), 'keep')
+        endfor
+      endfor
     elseif len(key) && len(host)
       call extend(a:into, {key : []}, 'keep')
       call add(a:into[key], [host, value])
     endif
-  endfor
+  endwhile
   return a:into
-endfunction
-
-function! s:SshParseInclude(into, root, host, value) abort
-  for glob in split(a:value)
-    if glob !~# '^/'
-      let glob = a:root . glob
-    endif
-    for file in split(glob(glob), "\n")
-      call s:SshParseConfig(a:into, a:root, file, a:host)
-    endfor
-  endfor
 endfunction
 
 unlet! s:ssh_config
