@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/junegunn/uniseg"
+	"github.com/rivo/uniseg"
 )
 
 // Types of user action
@@ -494,6 +494,7 @@ type Renderer interface {
 	Close()
 	PassThrough(string)
 	NeedScrollbarRedraw() bool
+	ShouldEmitResizeEvent() bool
 
 	GetChar() Event
 

@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/junegunn/uniseg"
+	"github.com/rivo/uniseg"
 
 	"golang.org/x/term"
 )
@@ -691,6 +691,10 @@ func (r *LightRenderer) Clear() {
 }
 
 func (r *LightRenderer) NeedScrollbarRedraw() bool {
+	return false
+}
+
+func (r *LightRenderer) ShouldEmitResizeEvent() bool {
 	return false
 }
 

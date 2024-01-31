@@ -10,7 +10,7 @@ import (
 	"github.com/gdamore/tcell/v2/encoding"
 	"github.com/junegunn/fzf/src/util"
 
-	"github.com/junegunn/uniseg"
+	"github.com/rivo/uniseg"
 )
 
 func HasFullscreenRenderer() bool {
@@ -199,6 +199,10 @@ func (r *FullscreenRenderer) Clear() {
 }
 
 func (r *FullscreenRenderer) NeedScrollbarRedraw() bool {
+	return true
+}
+
+func (r *FullscreenRenderer) ShouldEmitResizeEvent() bool {
 	return true
 }
 
