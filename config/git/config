@@ -1,5 +1,5 @@
 [core]
-  excludesfile = ~/.gitignore
+  excludesfile = ~/.config/git/ignore
   editor = vim
   whitespace = trailing-space,space-before-tab
   autocrlf = false
