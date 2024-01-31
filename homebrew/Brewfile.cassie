@@ -4,7 +4,7 @@
 brew "offlineimap"
 brew "tarsnap"
 brew "mutt"
-brew "elinks"
+brew "felinks"
 brew "pinentry-mac"
 brew "tree"
 brew "ledger"
