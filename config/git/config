@@ -68,7 +68,7 @@
   path = ~/.config/git/config-github
 
 [http]
-  cookiefile = /Users/mrtazz/.gitcookies
+  cookiefile = ~/.config/git/cookies
 [init]
 	defaultBranch = main
 [pull]
