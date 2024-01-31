@@ -8,4 +8,3 @@ brew "mrtazz/oss/pd"
 
 # menu bar tools and stuff
 cask "meetingbar"
-cask "hiddenbar"
