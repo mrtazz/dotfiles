@@ -1,0 +1,5 @@
+mutt/cache/headers/*
+mutt/cache/bodies/*
+!*.gitignore
+identity
+certificates
