@@ -33,7 +33,7 @@ if macos?
   cask "1password"
   cask "1password-cli"
   cask "alfred"
-  cask "kitty"
+  cask "alacritty"
   cask "phoenix"
   cask "qlmarkdown"
   cask "zotero"

@@ -1,0 +1,31 @@
+# some terminal configs
+
+# importing other configs
+import = [
+  "~/.config/alacritty/solarized_light.toml",
+]
+
+# font settings
+[font]
+size = 14.0
+
+[font.normal]
+family = "Bitstream Vera Sans Mono"
+
+[font.bold]
+family = "Bitstream Vera Sans Mono"
+style  = "Bold"
+
+[font.bold_italic]
+family = "Bitstream Vera Sans Mono"
+style  = "Bold Italic"
+
+[font.italic]
+family = "Bitstream Vera Sans Mono"
+style  = "Italic"
+
+[window]
+dynamic_title = true
+startup_mode  = "Windowed"
+
+
