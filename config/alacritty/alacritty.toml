@@ -5,6 +5,10 @@ import = [
   "~/.config/alacritty/solarized_light.toml",
 ]
 
+# be more comaptible when ssh-ing into other computers
+[env]
+TERM = "xterm-256color"
+
 # font settings
 [font]
 size = 14.0
