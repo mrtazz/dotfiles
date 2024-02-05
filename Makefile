@@ -8,7 +8,7 @@ EXCLUDE := README.md Makefile ssh install.sh homebrew bin spec firefox slack scr
 FILES := $(shell ls)
 SOURCES := $(filter-out $(EXCLUDE),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
-NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.zshrc ${HOME}/.zlogin ${HOME}/.zprofile ${HOME}/.tmux.conf
+NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.zshrc ${HOME}/.zlogin ${HOME}/.zprofile ${HOME}/.tmux.conf ${HOME}/.phoenix.js
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
 BREW_OPTIONS := --no-lock
@@ -71,6 +71,9 @@ ${HOME}/.zprofile:
 
 ${HOME}/.tmux.conf:
 	ln -fs $(PWD)/config/tmux/tmux.conf $@
+
+${HOME}/.phoenix.js:
+	ln -fs $(PWD)/config/phoenix/phoenix.js $@
 
 ifeq ($(CODESPACES), true)
 # don't fully clone homebrew on codespaces
