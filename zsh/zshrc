@@ -47,7 +47,7 @@ export BAT_CONFIG_PATH="$HOME/.batrc"
 
 
 # mutt files are now always in the same place
-export MUTT_HOME=$HOME/.dotfiles/mutt
+export MUTT_HOME=$HOME/.config/mutt
 
 # go setup
 export GOPATH=$HOME
