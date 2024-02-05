@@ -4,11 +4,7 @@
 
 GIT := $(shell which git)
 # files you want to install
-EXCLUDE := README.md Makefile ssh install.sh homebrew bin spec firefox slack script
-FILES := $(shell ls)
-SOURCES := $(filter-out $(EXCLUDE),$(FILES))
-DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
-NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.zshenv ${HOME}/.tmux.conf ${HOME}/.phoenix.js
+DOTFILES := ${HOME}/.vimrc ${HOME}/.zshenv ${HOME}/.tmux.conf ${HOME}/.phoenix.js ${HOME}/.config
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
 BREW_OPTIONS := --no-lock
@@ -27,7 +23,7 @@ SSH_FILES := $(patsubst %, ${HOME}/.ssh/%, $(shell ls ssh))
 ${HOME}/.ssh/%: ${PWD}/ssh/% | ${HOME}/.ssh
 	ln -fs $< $@
 
-DEFAULT_TARGETS := $(DOTFILES) $(NESTED_DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS) $(BIN)
+DEFAULT_TARGETS := $(DOTFILES) $(SSH_FILES) $(AUTHORIZED_KEYS) $(BIN)
 
 # allow hostname based brewfiles
 HOSTNAME := $(shell hostname -s)
@@ -54,8 +50,8 @@ $(AUTHORIZED_KEYS): ${HOME}/.ssh
 # tasks
 .PHONY : uninstall install
 
-$(DOTFILES): $(addprefix ${HOME}/., %) : ${PWD}/%
-	ln -fs $< $@
+${HOME}/.config: $(PWD)/config
+	ln -fs @< $@
 
 ${HOME}/.vimrc:
 	ln -fs $(PWD)/vim/vimrc $@
