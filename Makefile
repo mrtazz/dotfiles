@@ -70,7 +70,7 @@ ${HOME}/.zprofile:
 	ln -fs $(PWD)/zsh/zprofile $@
 
 ${HOME}/.tmux.conf:
-	ln -fs $(PWD)/tmux/tmux.conf $@
+	ln -fs $(PWD)/config/tmux/tmux.conf $@
 
 ifeq ($(CODESPACES), true)
 # don't fully clone homebrew on codespaces
