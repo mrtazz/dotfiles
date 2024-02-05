@@ -1,5 +1,5 @@
 # source all extra config files
-ZSHDIR="${HOME}/.zsh"
+ZSHDIR="${HOME}/.config/zsh"
 source ${ZSHDIR}/history.zsh
 source ${ZSHDIR}/look.zsh
 source ${ZSHDIR}/completion.zsh

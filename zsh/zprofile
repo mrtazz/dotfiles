@@ -1,2 +1,0 @@
-ZSHDIR="${HOME}/.zsh"
-source ${ZSHDIR}/path.zsh

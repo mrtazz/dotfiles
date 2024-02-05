@@ -8,7 +8,7 @@ EXCLUDE := README.md Makefile ssh install.sh homebrew bin spec firefox slack scr
 FILES := $(shell ls)
 SOURCES := $(filter-out $(EXCLUDE),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
-NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.zshrc ${HOME}/.zlogin ${HOME}/.zprofile ${HOME}/.tmux.conf ${HOME}/.phoenix.js
+NESTED_DOTFILES := ${HOME}/.vimrc ${HOME}/.zshenv ${HOME}/.tmux.conf ${HOME}/.phoenix.js
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
 BREW_OPTIONS := --no-lock
@@ -60,14 +60,8 @@ $(DOTFILES): $(addprefix ${HOME}/., %) : ${PWD}/%
 ${HOME}/.vimrc:
 	ln -fs $(PWD)/vim/vimrc $@
 
-${HOME}/.zshrc: $(PWD)/zsh/zshrc
-	ln -fs $(PWD)/zsh/zshrc $@
-
-${HOME}/.zlogin:
-	ln -fs $(PWD)/zsh/zlogin $@
-
-${HOME}/.zprofile:
-	ln -fs $(PWD)/zsh/zprofile $@
+${HOME}/.zshenv: $(PWD)/config/zsh/.zshenv
+	ln -fs @< $@
 
 ${HOME}/.tmux.conf:
 	ln -fs $(PWD)/config/tmux/tmux.conf $@
