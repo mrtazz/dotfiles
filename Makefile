@@ -51,13 +51,13 @@ $(AUTHORIZED_KEYS): ${HOME}/.ssh
 .PHONY : uninstall install
 
 ${HOME}/.config: $(PWD)/config
-	ln -fs @< $@
+	ln -fs $< $@
 
 ${HOME}/.vimrc:
 	ln -fs $(PWD)/vim/vimrc $@
 
 ${HOME}/.zshenv: $(PWD)/config/zsh/.zshenv
-	ln -fs @< $@
+	ln -fs $< $@
 
 ${HOME}/.tmux.conf:
 	ln -fs $(PWD)/config/tmux/tmux.conf $@
