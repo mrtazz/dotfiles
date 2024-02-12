@@ -183,6 +183,7 @@ var quarterScreen = function (position) {
 
 var mash = ['cmd', 'ctrl'];
 
+// window positioning shortcuts
 Key.on('c', mash, center);
 Key.on('l', mash, lefthalf);
 Key.on('r', mash, righthalf);
@@ -193,3 +194,9 @@ Key.on('a', mash, function() { quarterScreen('leftbottom'); });
 Key.on('s', mash, function() { quarterScreen('rightbottom'); });
 Key.on('e', mash, tophalf);
 Key.on('d', mash, bottomhalf);
+
+// app launching
+var app_mash = ['cmd', 'ctrl', 'shift', 'option'];
+Key.on('t', app_mash, function() { App.launch('Alacritty', { focus: true }); });
+Key.on('b', app_mash, function() { App.launch('Firefox', { focus: true }); });
+Key.on('s', app_mash, function() { App.launch('Slack', { focus: true }); });
