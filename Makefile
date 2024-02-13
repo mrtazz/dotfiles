@@ -4,7 +4,7 @@
 
 GIT := $(shell which git)
 # files you want to install
-DOTFILES := ${HOME}/.vimrc ${HOME}/.zshenv ${HOME}/.tmux.conf ${HOME}/.phoenix.js ${HOME}/.config
+DOTFILES := ${HOME}/.vim ${HOME}/.zshenv ${HOME}/.tmux.conf ${HOME}/.phoenix.js ${HOME}/.config
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
 BREW_OPTIONS := --no-lock
@@ -53,8 +53,8 @@ $(AUTHORIZED_KEYS): ${HOME}/.ssh
 ${HOME}/.config: $(PWD)/config
 	ln -fs $< $@
 
-${HOME}/.vimrc:
-	ln -fs $(PWD)/vim/vimrc $@
+${HOME}/.vim:
+	ln -fs $(PWD)/config/vim $@
 
 ${HOME}/.zshenv: $(PWD)/config/zsh/.zshenv
 	ln -fs $< $@
