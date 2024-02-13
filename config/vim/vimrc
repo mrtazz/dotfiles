@@ -154,6 +154,6 @@ noremap   <Left>   <NOP>
 noremap   <Right>  <NOP>
 
 " source overrides configs
-if filereadable($HOME."/.dotoverrides/vimrc")
-  exec ":source ". $HOME . "/.dotoverrides/vimrc"
+if filereadable($HOME."/.config/dotoverrides/vimrc")
+  exec ":source ". $HOME . "/.config/dotoverrides/vimrc"
 endif

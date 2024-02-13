@@ -3,4 +3,4 @@ Host *
   UseKeychain yes
   IdentityFile ~/.ssh/id_ecdsa
 
-Include ~/.dotoverrides/ssh_config
+Include ~/.config/dotoverrides/ssh_config

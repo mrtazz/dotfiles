@@ -20,12 +20,12 @@ fi
 
 echo "Installing codespace related dotoverrides configs..."
 # we need to use the gpg wrapper for codespaces
-echo -e "[gpg]\n  program = /.codespaces/bin/gh-gpgsign" > dotoverrides/gitconfig
+echo -e "[gpg]\n  program = /.codespaces/bin/gh-gpgsign" > config/dotoverrides/gitconfig
 
 # set up org specific overrides
 if [[ "$GITHUB_REPOSITORY" =~ .*"github".* ]]; then
   echo "Installing GitHub codespace related dotoverrides configs..."
-  echo -e "[user]\n  email = mrtazz@github.com" >> dotoverrides/gitconfig
+  echo -e "[user]\n  email = mrtazz@github.com" >> config/dotoverrides/gitconfig
 
   echo "Installing go proxy auth"
   echo "machine goproxy.githubapp.com login nobody password ${GOPROXY_TOKEN_GITHUB}" > ${USER_HOME}/.netrc

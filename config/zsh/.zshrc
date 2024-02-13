@@ -45,7 +45,6 @@ export GREP_COLORS="mt=1;32"
 export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/config"
 export BAT_CONFIG_PATH="$HOME/.config/bat/config"
 
-
 # mutt files are now always in the same place
 export MUTT_HOME=$HOME/.config/mutt
 

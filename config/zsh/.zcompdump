@@ -914,6 +914,7 @@ _comps=(
 'md5' '_cksum'
 'md5sum' '_md5sum'
 'mdadm' '_mdadm'
+'mdatp' '_mdatp'
 'mdel' '_mtools'
 'mdeltree' '_mtools'
 'mdfind' '_mdfind'
@@ -1839,7 +1840,7 @@ bindkey '^[,' _history-complete-newer
 bindkey '^[/' _history-complete-older
 bindkey '^[~' _bash_complete-word
 
-autoload -Uz _brew _brew _SUSEconfig __arguments _a2ps \
+autoload -Uz _brew _mdatp _SUSEconfig __arguments _a2ps \
             _a2utils _aap _abcde _absolute_command_paths _ack \
             _acpi _acpitool _acroread _adb _add-zle-hook-widget \
             _add-zsh-hook _alias _aliases _all_labels _all_matches \

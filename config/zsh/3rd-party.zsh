@@ -7,4 +7,4 @@ case "$TERM" in
 esac
 
 # source overrides (should be the last line)
-[ -f ${HOME}/.dotoverrides/zshrc ] && source ${HOME}/.dotoverrides/zshrc
+[ -f ${HOME}/.config/dotoverrides/zshrc ] && source ${HOME}/.config/dotoverrides/zshrc

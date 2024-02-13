@@ -12,7 +12,7 @@ function cp_gh_link() {
 
 # custom aliases
 alias irc='set_iTerm_title irc;mosh portal.unwiredcouch.com -- tmux attach -d -t werk'
-alias mutt='MUTT_IDENTITY=~/.dotoverrides/identity-unwiredcouch mutt'
+alias mutt='MUTT_IDENTITY=~/.config/dotoverrides/identity-unwiredcouch mutt'
 alias fcd="cd \$(FZF_DEFAULT_COMMAND='fd --type directory' fzf --height 40%)"
 alias ggrep='grep -R -I -i --exclude=tags --color=auto'
 alias cssh='gh cs ssh'

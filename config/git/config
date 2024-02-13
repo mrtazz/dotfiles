@@ -57,7 +57,7 @@
 
 [include]
   path = ~/.githubtokens
-  path = ~/.dotoverrides/gitconfig
+  path = ~/.config/dotoverrides/gitconfig
 [includeIf "hasconfig:remote.*.url:https://github.com/mrtazz/**"]
   path = ~/.config/git/config-personal
 [includeIf "hasconfig:remote.*.url:git@github.com:mrtazz/**"]

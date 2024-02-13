@@ -20,7 +20,7 @@ source $my_mutt_dir/regex-settings
 source $my_mutt_dir/subscription-settings
 source $my_mutt_dir/gpg-settings
 source $my_mutt_dir/smtp-settings
-set mailcap_path=$HOME/.dotoverrides/mailcap
+set mailcap_path=$HOME/.config/dotoverrides/mailcap
 
 # keep a cache of headers and bodies for faster loading
 set header_cache=$my_mutt_dir/cache/headers
@@ -153,4 +153,4 @@ set ssl_ciphers = "ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128
 set message_id_format = "<%Y%02m%02d%02H%02M%02S.G%c%p@%f>"
 
 # source override
-source $HOME/.dotoverrides/muttrc
+source $HOME/.config/dotoverrides/muttrc
