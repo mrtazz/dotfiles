@@ -79,9 +79,8 @@ set user_agent
 # use system editor
 set editor=$EDITOR
 
-# use ISO-8859-1 and UTF-8 as fallback
-#set charset="iso-8859-1:utf-8"
 set charset="utf-8"
+set send_charset="utf-8"
 
 # make sure not to use quoted printables
 unset allow_8bit
