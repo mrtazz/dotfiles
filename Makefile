@@ -68,7 +68,7 @@ ${HOME}/.phoenix.js:
 ifeq ($(CODESPACES), true)
 # don't fully clone homebrew on codespaces
 export HOMEBREW_INSTALL_FROM_API=true
-install: $(DEFAULT_TARGETS) brew-bundle codespaces
+install: codespaces $(DEFAULT_TARGETS) brew-bundle
 else ifeq ($(OS), FreeBSD)
 install: $(DEFAULT_TARGETS)
 else ifeq ($(CI), true)
