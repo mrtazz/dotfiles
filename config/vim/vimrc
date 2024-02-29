@@ -122,25 +122,21 @@ autocmd InsertLeave *.tex setlocal nospell
 autocmd FileType markdown setlocal spell
 autocmd FileType mail setlocal spell
 
-" try and set up gopls
-if executable('gopls')
-  au User lsp_setup call lsp#register_server({
-        \ 'name': 'gopls',
-        \ 'cmd': {server_info->['gopls']},
-        \ 'whitelist': ['go'],
-        \ })
-  autocmd BufWritePre *.go LspDocumentFormatSync
-  map <leader>pi :LspPeekImplementation<CR>
-  map <leader>pd :LspPeekDefinition<CR>
-  map <leader>pt :LspPeekTypeDefinition<CR>
-  " replace ctags definition with LSP if possible
-  map <C-]> :LspDefinition<CR>
-  " Splits horizontally and opens a window to the above.
-  map <C-\> :leftabove LspDefinition<CR>
-  " Splits vertically and opens a window to the right.
-  map <leader>] :rightbelow vertical LspDefinition<CR>
-  let g:lsp_diagnostics_echo_cursor = 1
-endif
+" some LSP settings
+map <leader>pi :LspPeekImplementation<CR>
+map <leader>pd :LspPeekDefinition<CR>
+map <leader>pt :LspPeekTypeDefinition<CR>
+" replace ctags definition with LSP if possible
+map <C-]> :LspDefinition<CR>
+" Splits horizontally and opens a window to the above.
+map <C-\> :leftabove LspDefinition<CR>
+" Splits vertically and opens a window to the right.
+map <leader>] :rightbelow vertical LspDefinition<CR>
+" show diagnostics in status line for line under cursor
+let g:lsp_diagnostics_echo_cursor = 1
+" don't add virtual text into the file for diagnostics
+let g:lsp_diagnostics_virtual_text_enabled = 0
+
 
 " rust.vim options
 let g:rustfmt_autosave = 1
