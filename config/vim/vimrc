@@ -38,9 +38,11 @@ let g:solarized_visibility="high"
 set guifont=BitstreamVeraSansMono\ Nerd\ Font\ Mono:h14
 set guioptions+=k
 
-" mouse options
-set ttymouse=xterm2
-set mouse=a
+" mouse options, only set when not in codespace
+if !empty($CODESPACES)
+  set ttymouse=xterm2
+  set mouse=a
+endif
 
 syntax on
 colorscheme solarized
