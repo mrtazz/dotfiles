@@ -39,7 +39,7 @@ set guifont=BitstreamVeraSansMono\ Nerd\ Font\ Mono:h14
 set guioptions+=k
 
 " mouse options, only set when not in codespace
-if !empty($CODESPACES)
+if empty($CODESPACES)
   set ttymouse=xterm2
   set mouse=a
 endif
