@@ -25,18 +25,11 @@ function fzf_key_bindings
     set -l fzf_query $commandline[2]
     set -l prefix $commandline[3]
 
-    # "-path \$dir'*/.*'" matches hidden files/folders inside $dir but not
-    # $dir itself, even if hidden.
-    test -n "$FZF_CTRL_T_COMMAND"; or set -l FZF_CTRL_T_COMMAND "
-    command find -L \$dir -mindepth 1 \\( -path \$dir'*/.*' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' \\) -prune \
-    -o -type f -print \
-    -o -type d -print \
-    -o -type l -print 2> /dev/null | sed 's@^\./@@'"
-
     test -n "$FZF_TMUX_HEIGHT"; or set FZF_TMUX_HEIGHT 40%
     begin
-      set -lx FZF_DEFAULT_OPTS "--height $FZF_TMUX_HEIGHT --reverse --scheme=path --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS $FZF_CTRL_T_OPTS"
-      eval "$FZF_CTRL_T_COMMAND | "(__fzfcmd)' -m --query "'$fzf_query'"' | while read -l r; set result $result $r; end
+      set -lx FZF_DEFAULT_OPTS "--height $FZF_TMUX_HEIGHT --reverse --walker=file,dir,follow,hidden --walker-root='$dir' --scheme=path --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS $FZF_CTRL_T_OPTS"
+      set -lx FZF_DEFAULT_COMMAND "$FZF_CTRL_T_COMMAND"
+      eval (__fzfcmd)' -m --query "'$fzf_query'"' | while read -l r; set result $result $r; end
     end
     if [ -z "$result" ]
       commandline -f repaint
@@ -81,13 +74,11 @@ function fzf_key_bindings
     set -l fzf_query $commandline[2]
     set -l prefix $commandline[3]
 
-    test -n "$FZF_ALT_C_COMMAND"; or set -l FZF_ALT_C_COMMAND "
-    command find -L \$dir -mindepth 1 \\( -path \$dir'*/.*' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' \\) -prune \
-    -o -type d -print 2> /dev/null | sed 's@^\./@@'"
     test -n "$FZF_TMUX_HEIGHT"; or set FZF_TMUX_HEIGHT 40%
     begin
-      set -lx FZF_DEFAULT_OPTS "--height $FZF_TMUX_HEIGHT --reverse --scheme=path --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS"
-      eval "$FZF_ALT_C_COMMAND | "(__fzfcmd)' +m --query "'$fzf_query'"' | read -l result
+      set -lx FZF_DEFAULT_OPTS "--height $FZF_TMUX_HEIGHT --reverse --walker=dir,follow,hidden --walker-root='$dir' --scheme=path --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS"
+      set -lx FZF_DEFAULT_COMMAND "$FZF_ALT_C_COMMAND"
+      eval (__fzfcmd)' +m --query "'$fzf_query'"' | read -l result
 
       if [ -n "$result" ]
         cd -- $result
@@ -113,14 +104,22 @@ function fzf_key_bindings
     end
   end
 
-  bind \ct fzf-file-widget
   bind \cr fzf-history-widget
-  bind \ec fzf-cd-widget
+  if not set -q FZF_CTRL_T_COMMAND; or test -n "$FZF_CTRL_T_COMMAND"
+    bind \ct fzf-file-widget
+  end
+  if not set -q FZF_ALT_C_COMMAND; or test -n "$FZF_ALT_C_COMMAND"
+    bind \ec fzf-cd-widget
+  end
 
   if bind -M insert > /dev/null 2>&1
-    bind -M insert \ct fzf-file-widget
     bind -M insert \cr fzf-history-widget
-    bind -M insert \ec fzf-cd-widget
+    if not set -q FZF_CTRL_T_COMMAND; or test -n "$FZF_CTRL_T_COMMAND"
+      bind -M insert \ct fzf-file-widget
+    end
+    if not set -q FZF_ALT_C_COMMAND; or test -n "$FZF_ALT_C_COMMAND"
+      bind -M insert \ec fzf-cd-widget
+    end
   end
 
   function __fzf_parse_commandline -d 'Parse the current command line token and return split of existing filepath, fzf query, and optional -option= prefix'
