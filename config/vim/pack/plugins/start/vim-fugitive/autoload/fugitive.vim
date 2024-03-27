@@ -2994,7 +2994,7 @@ function! fugitive#BufReadStatus(cmdbang) abort
         call s:AddHeader(to, 'Error', s:worktree_error)
       endif
     endif
-    if get(fugitive#ConfigGetAll('advice.tousHints', config), 0, 'true') !~# '^\%(false\|no|off\|0\|\)$'
+    if get(fugitive#ConfigGetAll('advice.statusHints', config), 0, 'true') !~# '^\%(false\|no|off\|0\|\)$'
       call s:AddHeader(to, 'Help', 'g?')
     endif
 
@@ -3350,8 +3350,8 @@ function! s:TempReadPost(file) abort
     if !&modifiable
       call s:Map('n', 'gq', ":<C-U>bdelete<CR>", '<silent> <unique>')
     endif
+    return 'doautocmd <nomodeline> User FugitivePager'
   endif
-  return s:DoAutocmd('User FugitivePager')
 endfunction
 
 function! s:TempDelete(file) abort
