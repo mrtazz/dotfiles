@@ -151,6 +151,9 @@ noremap   <Down>   <NOP>
 noremap   <Left>   <NOP>
 noremap   <Right>  <NOP>
 
+" set snipple dir
+let g:SnippleBaseDir = $HOME . "/.config/snipple/snippets"
+
 " source overrides configs
 if filereadable($HOME."/.config/dotoverrides/vimrc")
   exec ":source ". $HOME . "/.config/dotoverrides/vimrc"
