@@ -158,3 +158,13 @@ let g:SnippleBaseDir = $HOME . "/.config/snipple/snippets"
 if filereadable($HOME."/.config/dotoverrides/vimrc")
   exec ":source ". $HOME . "/.config/dotoverrides/vimrc"
 endif
+
+function! GitHubMDTitle()
+  let current_line = getline('.')
+  let gh_url = matchstr(current_line, 'https:\/\/github.com\/[a-zA-Z0-9/_p-]\+')
+  if !empty(gh_url)
+    let new_url = system('gh md link -n ' . gh_url)
+    call setline(line('.'), substitute(getline('.'), gh_url, new_url, ''))
+  endif
+endfunction
+command! GHMDTitle :call GitHubMDTitle()
