@@ -167,4 +167,6 @@ function! GitHubMDTitle()
     call setline(line('.'), substitute(getline('.'), gh_url, new_url, ''))
   endif
 endfunction
+
 command! GHMDTitle :call GitHubMDTitle()
+map <silent> <leader>g :call GitHubMDTitle()<cr>
