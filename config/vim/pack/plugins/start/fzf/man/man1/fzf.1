@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ..
-.TH fzf 1 "Apr 2024" "fzf 0.49.0" "fzf - a command-line fuzzy finder"
+.TH fzf 1 "Apr 2024" "fzf 0.50.0" "fzf - a command-line fuzzy finder"
 
 .SH NAME
 fzf - a command-line fuzzy finder
@@ -191,7 +191,7 @@ actions are affected:
 \fBkill-word\fR
 .TP
 .BI "--jump-labels=" "CHARS"
-Label characters for \fBjump\fR and \fBjump-accept\fR
+Label characters for \fBjump\fR mode.
 .SS Layout
 .TP
 .BI "--height=" "[~]HEIGHT[%]"
@@ -982,6 +982,8 @@ fzf exports the following environment variables to its child processes.
 .br
 .BR FZF_ACTION "          The name of the last action performed"
 .br
+.BR FZF_KEY "             The name of the last key pressed"
+.br
 .BR FZF_PORT "            Port number when --listen option is used"
 .br
 
@@ -1052,21 +1054,21 @@ e.g.
 .br
 \fIctrl-]\fR
 .br
-\fIctrl-^\fR      (\fIctrl-6\fR)
+\fIctrl-^\fR         (\fIctrl-6\fR)
 .br
-\fIctrl-/\fR      (\fIctrl-_\fR)
+\fIctrl-/\fR         (\fIctrl-_\fR)
 .br
 \fIctrl-alt-[a-z]\fR
 .br
-\fIalt-[*]\fR     (Any case-sensitive single character is allowed)
+\fIalt-[*]\fR        (Any case-sensitive single character is allowed)
 .br
 \fIf[1-12]\fR
 .br
-\fIenter\fR       (\fIreturn\fR \fIctrl-m\fR)
+\fIenter\fR          (\fIreturn\fR \fIctrl-m\fR)
 .br
 \fIspace\fR
 .br
-\fIbspace\fR      (\fIbs\fR)
+\fIbackspace\fR      (\fIbspace\fR \fIbs\fR)
 .br
 \fIalt-up\fR
 .br
@@ -1080,15 +1082,15 @@ e.g.
 .br
 \fIalt-space\fR
 .br
-\fIalt-bspace\fR  (\fIalt-bs\fR)
+\fIalt-backspace\fR  (\fIalt-bspace\fR \fIalt-bs\fR)
 .br
 \fItab\fR
 .br
-\fIbtab\fR        (\fIshift-tab\fR)
+\fIshift-tab\fR      (\fIbtab\fR)
 .br
 \fIesc\fR
 .br
-\fIdel\fR
+\fIdelete\fR         (\fIdel\fR)
 .br
 \fIup\fR
 .br
@@ -1104,9 +1106,9 @@ e.g.
 .br
 \fIinsert\fR
 .br
-\fIpgup\fR        (\fIpage-up\fR)
+\fIpage-up\fR        (\fIpgup\fR)
 .br
-\fIpgdn\fR        (\fIpage-down\fR)
+\fIpage-down\fR      (\fIpgdn\fR)
 .br
 \fIshift-up\fR
 .br
@@ -1160,6 +1162,7 @@ e.g.
      \fB# Move cursor to the last item and select all items
      seq 1000 | fzf --multi --sync --bind start:last+select-all\fR
 .RE
+
 \fIload\fR
 .RS
 Triggered when the input stream is complete and the initial processing of the
@@ -1169,6 +1172,7 @@ e.g.
      \fB# Change the prompt to "loaded" when the input stream is complete
      (seq 10; sleep 1; seq 11 20) | fzf --prompt 'Loading> ' --bind 'load:change-prompt:Loaded> '\fR
 .RE
+
 \fIresize\fR
 .RS
 Triggered when the terminal size is changed.
@@ -1176,6 +1180,7 @@ Triggered when the terminal size is changed.
 e.g.
      \fBfzf --bind 'resize:transform-header:echo Resized: ${FZF_COLUMNS}x${FZF_LINES}'\fR
 .RE
+
 \fIresult\fR
 .RS
 Triggered when the filtering for the current query is complete and the result list is ready.
@@ -1209,6 +1214,7 @@ e.g.
      # Beware not to introduce an infinite loop
      seq 10 | fzf --bind 'focus:up' --cycle\fR
 .RE
+
 \fIone\fR
 .RS
 Triggered when there's only one match. \fBone:accept\fR binding is comparable
@@ -1220,6 +1226,7 @@ e.g.
      \fB# Automatically select the only match
      seq 10 | fzf --bind one:accept\fR
 .RE
+
 \fIzero\fR
 .RS
 Triggered when there's no match. \fBzero:abort\fR binding is comparable to
@@ -1239,6 +1246,22 @@ backward.
 
 e.g.
      \fBfzf --bind backward-eof:abort\fR
+.RE
+
+\fIjump\fR
+.RS
+Triggered when successfully jumped to the target item in \fBjump\fR mode.
+
+e.g.
+     \fBfzf --bind space:jump,jump:accept\fR
+.RE
+
+\fIjump-cancel\fR
+.RS
+Triggered when \fBjump\fR mode is cancelled.
+
+e.g.
+     \fBfzf --bind space:jump,jump:accept,jump-cancel:abort\fR
 .RE
 
 .SS AVAILABLE ACTIONS:
@@ -1283,7 +1306,6 @@ A key or an event can be bound to one or more of the following actions.
     \fBforward-word\fR                 \fIalt-f   shift-right\fR
     \fBignore\fR
     \fBjump\fR                         (EasyMotion-like 2-keystroke movement)
-    \fBjump-accept\fR                  (jump and accept)
     \fBkill-line\fR
     \fBkill-word\fR                    \fIalt-d\fR
     \fBlast\fR                         (move to the last match; same as \fBpos(-1)\fR)
