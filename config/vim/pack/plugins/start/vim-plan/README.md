@@ -22,6 +22,7 @@ command! PlanNote :call plan#OpenNote()
 command! PlanMarkDone :call plan#MarkDone()
 command! PlanMarkCanceled :call plan#MarkCanceled()
 command! PlanMigrateToToday :call plan#MigrateToToday()
+command! -nargs=1 PlanImportAsset :call plan#ImportAsset(<q-args>)
 ```
 
 ### Syntax
@@ -173,7 +174,7 @@ jobs:
 
 ### Additional tooling
 There is a commandline tool [`plan`](https://github.com/mrtazz/plan) which provides some additional
-support tooling mostly around automation. For example I run this Action every weekday morning to 
+support tooling mostly around automation. For example I run this Action every weekday morning to
 prep my daily note with some information:
 
 ```
@@ -221,6 +222,8 @@ let g:PlanNotesDir = get(g:, 'PlanTemplatePath', "notes")
 " allow user to append a title to default note file name
 " set to 0 or omit to disable adding a title to notes
 let g:PlanPromptForTitle = get(g:, 'PlanPromptForTitle', 1)
+" the name of the directory relative to the current file to import assets to
+let g:PlanAssetsDirectory = get(g:, 'PlanAssetsDirectory', "assets")
 ```
 
 ## See also

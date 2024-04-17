@@ -9,6 +9,7 @@ let s:dailiesDirectory = g:PlanBaseDir . "/" . g:PlanDailiesDir
 let s:notesDirectory = g:PlanBaseDir . "/" . g:PlanNotesDir
 let s:templatePath = g:PlanBaseDir . "/" . g:PlanTemplateDir
 let s:titleEnabled = g:PlanPromptForTitle
+let s:assetsDirectoryName = g:PlanAssetsDirectory
 
 function! plan#OpenDailyNote()
   let today = strftime("%Y%m%d")
@@ -99,4 +100,15 @@ function! plan#FindTodos()
   call plan#setupBuffer()
   execute ':silent lgrep! "\- \[ \]" ' . s:dailiesDirectory . ' ' . s:notesDirectory
   execute ':redraw!'
+endfunction
+
+
+function! plan#ImportAsset(full_file_path)
+  let full_file_path = trim(a:full_file_path)
+  let current_dir = expand("%:h")
+  let filename = fnamemodify(full_file_path, ":t")
+  let current_asset_dir = current_dir . "/" . s:assetsDirectoryName
+  call plan#EnsureDirectoryExists(current_asset_dir)
+  let _ = system('cp -p ' . shellescape(full_file_path) . ' ' . current_asset_dir)
+  execute "normal! A" . '![](./' . s:assetsDirectoryName . '/' . filename . ')'
 endfunction
