@@ -6,12 +6,18 @@ source ${ZSHDIR}/completion.zsh
 source ${ZSHDIR}/aliases_functions.zsh
 [ -z "$CODESPACES" ] && source ${ZSHDIR}/gpg.zsh
 source ${ZSHDIR}/tmux.zsh
-source ${ZSHDIR}/path.zsh
+
+# set base PATH includes. This is just my folder of scripts and some sane
+# defaults. The rest will be included in more focused configs like homebrew's
+# location in macos or linux below
+export PATH=~/bin:/usr/local/bin:/usr/local/sbin:$PATH
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   source ${ZSHDIR}/osx.zsh
 elif [[ "$OSTYPE" == "freebsd"* ]]; then
   source ${ZSHDIR}/freebsd.zsh
+elif [[ "$OSTYPE" == "linux"* ]]; then
+  source ${ZSHDIR}/linux.zsh
 fi
 
 # load plugins that I took from oh-my-zsh

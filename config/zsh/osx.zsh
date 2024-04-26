@@ -1,6 +1,10 @@
 # this file holds OSX specific configuration and is sourced from zshrc for
 # Darwin systems only
 
+# make sure homebrew bin is in PATH. This is only the location on arm macs but
+# I don't run any intel macs anymore, so this should be fine.
+export PATH=/opt/homebrew/bin:$PATH
+
 # turn off weird ctrl-O behaviour on OSX
 stty discard undef
 
