@@ -936,12 +936,13 @@ function! fzf#vim#grep2(command_prefix, query, ...)
   endfor
   let words = empty(words) ? ['grep'] : words
   let name = join(words, '-')
+  let fallback = s:is_win ? '' : ' || :'
   let opts = {
   \ 'source': ':',
   \ 'options': ['--ansi', '--prompt', toupper(name).'> ', '--query', a:query,
   \             '--disabled',
   \             '--bind', 'start:reload:'.a:command_prefix.' '.fzf#shellescape(a:query),
-  \             '--bind', 'change:reload:'.a:command_prefix.' {q} || :',
+  \             '--bind', 'change:reload:'.a:command_prefix.' {q}'.fallback,
   \             '--multi', '--bind', 'alt-a:select-all,alt-d:deselect-all',
   \             '--delimiter', ':', '--preview-window', '+{2}-/2']
   \}
@@ -1082,6 +1083,10 @@ function! fzf#vim#tags(query, ...)
   if !executable('perl')
     return s:warn('Tags command requires perl')
   endif
+  if len(a:query) && !executable('readtags')
+    return s:warn('readtags from universal-ctags is required to pre-filter tags with a prefix')
+  endif
+
   if empty(tagfiles())
     call inputsave()
     echohl WarningMsg
