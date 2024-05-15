@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ..
-.TH fzf 1 "May 2024" "fzf 0.52.0" "fzf - a command-line fuzzy finder"
+.TH fzf 1 "May 2024" "fzf 0.52.1" "fzf - a command-line fuzzy finder"
 
 .SH NAME
 fzf - a command-line fuzzy finder
@@ -46,10 +46,10 @@ it with \fB+x\fR or \fB--no-extended\fR.
 .B "-e, --exact"
 Enable exact-match
 .TP
-.B "-i"
+.B "-i, --ignore-case"
 Case-insensitive match (default: smart-case match)
 .TP
-.B "+i"
+.B "+i, --no-ignore-case"
 Case-sensitive match
 .TP
 .B "--literal"
@@ -911,7 +911,7 @@ e.g. \fBeval "$(fzf --bash)"\fR
 .B "--zsh"
 Print script to set up Zsh shell integration
 
-e.g. \fBeval "$(fzf --zsh)"\fR
+e.g. \fBsource <(fzf --zsh)\fR
 
 .TP
 .B "--fish"

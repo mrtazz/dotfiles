@@ -7,11 +7,19 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/junegunn/fzf/src/util"
 	"golang.org/x/sys/unix"
 	"golang.org/x/term"
+)
+
+var (
+	tty    string
+	ttyin  *os.File
+	ttyout *os.File
+	mutex  sync.Mutex
 )
 
 func IsLightRendererSupported() bool {
@@ -48,18 +56,48 @@ func (r *LightRenderer) closePlatform() {
 	// NOOP
 }
 
-func openTtyIn() (*os.File, error) {
-	in, err := os.OpenFile(consoleDevice, syscall.O_RDONLY, 0)
+func openTty(mode int) (*os.File, error) {
+	in, err := os.OpenFile(consoleDevice, mode, 0)
 	if err != nil {
-		tty := ttyname()
+		if len(tty) == 0 {
+			tty = ttyname()
+		}
 		if len(tty) > 0 {
-			if in, err := os.OpenFile(tty, syscall.O_RDONLY, 0); err == nil {
+			if in, err := os.OpenFile(tty, mode, 0); err == nil {
 				return in, nil
 			}
 		}
 		return nil, errors.New("failed to open " + consoleDevice)
 	}
 	return in, nil
+}
+
+func openTtyIn() (*os.File, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if ttyin != nil {
+		return ttyin, nil
+	}
+	in, err := openTty(syscall.O_RDONLY)
+	if err == nil {
+		ttyin = in
+	}
+	return in, err
+}
+
+func openTtyOut() (*os.File, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if ttyout != nil {
+		return ttyout, nil
+	}
+	out, err := openTty(syscall.O_WRONLY)
+	if err == nil {
+		ttyout = out
+	}
+	return out, err
 }
 
 func (r *LightRenderer) setupTerminal() {
