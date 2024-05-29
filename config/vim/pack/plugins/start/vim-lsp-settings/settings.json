@@ -560,6 +560,14 @@
       ]
     }
   ],
+  "helm": [
+    {
+      "command": "helm-ls",
+      "url": "https://github.com/mrjosh/helm-ls",
+      "description": "Helm-ls is a helm language server protocol LSP implementation.",
+      "requires": []
+    }
+  ],
   "html": [
     {
       "command": "vscode-html-language-server",
@@ -663,6 +671,18 @@
       ]
     },
     {
+      "command": "vtsls",
+      "url": "https://github.com/yioneko/vtsls",
+      "description": "LSP wrapper for typescript extension of vscode",
+      "requires": [
+        "npm"
+      ],
+      "root_uri_patterns": [
+        "package.json",
+        "tsconfig.json"
+      ]
+    },
+    {
       "command": "javascript-typescript-stdio",
       "url": "https://github.com/sourcegraph/javascript-typescript-langserver",
       "description": "JavaScript and TypeScript code intelligence through the Language Server Protocol",
@@ -747,6 +767,18 @@
       ],
       "root_uri_patterns": [
         "package.json"
+      ]
+    },
+    {
+      "command": "vtsls",
+      "url": "https://github.com/yioneko/vtsls",
+      "description": "LSP wrapper for typescript extension of vscode",
+      "requires": [
+        "npm"
+      ],
+      "root_uri_patterns": [
+        "package.json",
+        "tsconfig.json"
       ]
     },
     {
@@ -927,6 +959,17 @@
     }
   ],
   "less": [
+    {
+      "command": "vscode-css-language-server",
+      "url": "https://github.com/hrsh7th/vscode-langservers-extracted",
+      "description": "HTML/CSS/JSON language servers extracted from vscode.",
+      "config": {
+        "refresh_pattern": "\\([a-zA-Z0-9_-]\\+\\)$"
+      },
+      "requires": [
+        "npm"
+      ]
+    },
     {
       "command": "css-languageserver",
       "url": "https://github.com/vscode-langservers/vscode-css-languageserver-bin",
@@ -1483,6 +1526,17 @@
   ],
   "sass": [
     {
+      "command": "vscode-css-language-server",
+      "url": "https://github.com/hrsh7th/vscode-langservers-extracted",
+      "description": "HTML/CSS/JSON language servers extracted from vscode.",
+      "config": {
+        "refresh_pattern": "\\([a-zA-Z0-9_-]\\+\\)$"
+      },
+      "requires": [
+        "npm"
+      ]
+    },
+    {
       "command": "css-languageserver",
       "url": "https://github.com/vscode-langservers/vscode-css-languageserver-bin",
       "description": "Binary version published on npm of vscode-css-languageserver extracted from VSCode tree",
@@ -1492,6 +1546,17 @@
     }
   ],
   "scss": [
+    {
+      "command": "vscode-css-language-server",
+      "url": "https://github.com/hrsh7th/vscode-langservers-extracted",
+      "description": "HTML/CSS/JSON language servers extracted from vscode.",
+      "config": {
+        "refresh_pattern": "\\([a-zA-Z0-9_-]\\+\\)$"
+      },
+      "requires": [
+        "npm"
+      ]
+    },
     {
       "command": "css-languageserver",
       "url": "https://github.com/vscode-langservers/vscode-css-languageserver-bin",
@@ -1717,6 +1782,18 @@
       ]
     },
     {
+      "command": "vtsls",
+      "url": "https://github.com/yioneko/vtsls",
+      "description": "LSP wrapper for typescript extension of vscode",
+      "requires": [
+        "npm"
+      ],
+      "root_uri_patterns": [
+        "package.json",
+        "tsconfig.json"
+      ]
+    },
+    {
       "command": "eslint-language-server",
       "url": "https://www.npmjs.com/package/eslint-language-server",
       "description": "eslint language server",
@@ -1769,6 +1846,18 @@
       "command": "typescript-language-server",
       "url": "https://github.com/typescript-language-server/typescript-language-server",
       "description": "TypeScript & JavaScript Language Server",
+      "requires": [
+        "npm"
+      ],
+      "root_uri_patterns": [
+        "package.json",
+        "tsconfig.json"
+      ]
+    },
+    {
+      "command": "vtsls",
+      "url": "https://github.com/yioneko/vtsls",
+      "description": "LSP wrapper for typescript extension of vscode",
       "requires": [
         "npm"
       ],
