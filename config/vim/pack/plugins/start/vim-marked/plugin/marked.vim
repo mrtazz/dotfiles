@@ -2,7 +2,7 @@
 " Author:  Joshua Priddle <jpriddle@me.com>
 " URL:     https://github.com/itspriddle/vim-marked
 " Version: 2.0.0-beta
-" License: Same as Vim itself (see :help license)
+" License: MIT
 
 " Don't do anything if we're not on macOS.
 if &cp || (exists("g:marked_loaded") && g:marked_loaded) || !executable("osascript")
@@ -25,11 +25,7 @@ function! s:AddDocument(path) abort
 endfunction
 
 function! s:RemoveDocument(path) abort
-  let index = index(s:open_documents, a:path)
-
-  if index >= 0
-    unlet s:open_documents[index]
-  endif
+  unlet! s:open_documents[index(s:open_documents, a:path)]
 endfunction
 
 function! s:MarkedOpenURI(background, command, args) abort
@@ -42,29 +38,20 @@ function! s:MarkedOpenURI(background, command, args) abort
   execute printf("silent !open %s %s", (a:background ? "-g" : ""), shellescape(uri, 1))
 endfunction
 
-function! s:MarkedOpen(background) abort
-  let l:filename = expand("%:p")
+function! s:MarkedOpen(background, path) abort
+  call s:AddDocument(a:path)
+  call s:MarkedOpenURI(a:background, "open", { "file": a:path })
 
-  call s:AddDocument(l:filename)
-
-  call s:MarkedOpenURI(a:background, "open", {"file": l:filename})
   redraw!
 endfunction
 
 function! s:MarkedQuit(force, path) abort
-  call s:RemoveDocument(a:path)
-
   if a:force
+    let s:open_documents = []
     call s:RunApplescript("quit")
   else
-    call s:RunApplescript([
-      \ 'try',
-      \ '  close (first document whose path is equal to (item 1 of argv as string))',
-      \ '  if count of documents is equal to 0 then',
-      \ '    quit',
-      \ '  end if',
-      \ 'end try',
-      \ ], a:path)
+    call s:RemoveDocument(a:path)
+    call s:RunApplescript("closeDocument", a:path)
   endif
 
   redraw!
@@ -76,30 +63,37 @@ function! s:MarkedPreview(background, line1, line2) abort
   call s:MarkedOpenURI(a:background, "preview", { "text": join(lines, "\n") })
 endfunction
 
-function! s:RunApplescript(raw, ...) abort
+let s:js =<< trim JS
+  function run(argv) {
+    let appId = argv[0], action = argv[1], path = argv[2];
+
+    try {
+      var app = Application(appId);
+    } catch (e) {
+      return `error:Couldn't find Marked 2 application.`;
+    }
+
+    if (!app.running()) return;
+
+    if (action == "quit") {
+      app.quit();
+    } else if (action == "closeDocument") {
+      let doc = app.documents().find((d) => d.path() == path)
+
+      if (doc) {
+        doc.close();
+        if (app.documents().length == 0) app.quit();
+      }
+    }
+  }
+JS
+
+function! s:RunApplescript(...) abort
   let app = get(g:, "marked_app", "Marked 2")
 
-  let lines = [
-    \ 'on run argv',
-    \ '  if application "' . app . '" is running then',
-    \ '    tell application "' . app . '"',
-    \ ]
+  let args = join(map([app] + copy(a:000), "shellescape(v:val, 1)"), " ")
 
-  let lines += type(a:raw) == type([]) ? a:raw : [a:raw]
-
-  let lines += [
-    \ '    end tell',
-    \ '  end if',
-    \ 'end run',
-    \ ]
-
-  let applescript = join(map(lines, "'-e ' . shellescape(v:val, 1)"), " ")
-
-  let args = join(map(copy(a:000), "shellescape(v:val, 1)"), " ")
-
-  silent let output = system(printf("osascript %s %s", applescript, args))
-
-  return trim(output)
+  silent return trim(system("osascript -l JavaScript - " . args, s:js))
 endfunction
 
 " From the legend
@@ -110,7 +104,7 @@ endfunction
 
 function! s:MarkedToggle(background_or_force_quit, path) abort
   if index(s:open_documents, a:path) < 0
-    call s:MarkedOpen(a:background_or_force_quit)
+    call s:MarkedOpen(a:background_or_force_quit, a:path)
   else
     call s:MarkedQuit(a:background_or_force_quit, a:path)
   endif
@@ -126,7 +120,7 @@ endfunction
 
 function! s:RegisterCommands(filetype) abort
   if index(g:marked_filetypes, a:filetype) >= 0
-    command! -buffer -bang          MarkedOpen    call s:MarkedOpen(<bang>0)
+    command! -buffer -bang          MarkedOpen    call s:MarkedOpen(<bang>0, expand('%:p'))
     command! -buffer -bang          MarkedQuit    call s:MarkedQuit(<bang>0, expand('%:p'))
     command! -buffer -bang          MarkedToggle  call s:MarkedToggle(<bang>0, expand('%:p'))
     command! -buffer -bang -range=% MarkedPreview call s:MarkedPreview(<bang>0, <line1>, <line2>)
