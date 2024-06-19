@@ -38,12 +38,14 @@ func (r revision) compatible(other revision) bool {
 
 // Run starts fzf
 func Run(opts *Options) (int, error) {
-	if opts.Tmux != nil && len(os.Getenv("TMUX")) > 0 && opts.Tmux.index >= opts.Height.index {
-		return runTmux(os.Args, opts)
-	}
+	if opts.Filter == nil {
+		if opts.Tmux != nil && len(os.Getenv("TMUX")) > 0 && opts.Tmux.index >= opts.Height.index {
+			return runTmux(os.Args, opts)
+		}
 
-	if needWinpty(opts) {
-		return runWinpty(os.Args, opts)
+		if needWinpty(opts) {
+			return runWinpty(os.Args, opts)
+		}
 	}
 
 	if err := postProcessOptions(opts); err != nil {
@@ -245,7 +247,7 @@ func Run(opts *Options) (int, error) {
 	if heightUnknown {
 		maxFit, padHeight = terminal.MaxFitAndPad()
 	}
-	deferred := opts.Select1 || opts.Exit0
+	deferred := opts.Select1 || opts.Exit0 || opts.Sync
 	go terminal.Loop()
 	if !deferred && !heightUnknown {
 		// Start right away
@@ -337,9 +339,6 @@ func Run(opts *Options) (int, error) {
 					}
 					total = count
 					terminal.UpdateCount(total, !reading, value.(*string))
-					if opts.Sync {
-						terminal.UpdateList(PassMerger(&snapshot, opts.Tac, snapshotRevision), false)
-					}
 					if heightUnknown && !deferred {
 						determine(!reading)
 					}
@@ -427,7 +426,7 @@ func Run(opts *Options) (int, error) {
 								determine(val.final)
 							}
 						}
-						terminal.UpdateList(val, true)
+						terminal.UpdateList(val)
 					}
 				}
 			}

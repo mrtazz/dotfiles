@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ..
-.TH fzf 1 "Jun 2024" "fzf 0.53.0" "fzf - a command-line fuzzy finder"
+.TH fzf 1 "Jun 2024" "fzf 0.54.0" "fzf - a command-line fuzzy finder"
 
 .SH NAME
 fzf - a command-line fuzzy finder
@@ -665,7 +665,7 @@ e.g.
 
 Also,
 
-* \fB{q}\fR (or \fB{fzf:query}\fR) is replaced to the current query string
+* \fB{q}\fR is replaced to the current query string
 .br
 * \fB{n}\fR is replaced to the zero-based ordinal index of the current item.
   Use \fB{+n}\fR if you want all index numbers when multiple lines are selected.
@@ -889,10 +889,17 @@ e.g.
 .TP
 .B "--sync"
 Synchronous search for multi-staged filtering. If specified, fzf will launch
-the finder only after the input stream is complete.
+the finder only after the input stream is complete and the initial filtering
+and the associated actions (bound to any of \fBstart\fR, \fBload\fR,
+\fBresult\fR, or \fBfocus\fR) are complete.
 
 .RS
-e.g. \fBfzf --multi | fzf --sync\fR
+e.g. \fB# Avoid rendering both fzf instances at the same time
+     fzf --multi | fzf --sync
+
+     # fzf will not render intermediate states
+     (sleep 1; seq 1000000; sleep 1) |
+       fzf --sync --query 5 --listen --bind start:up,load:up,result:up,focus:change-header:Ready\fR
 .RE
 .TP
 .B "--with-shell=STR"
@@ -1288,7 +1295,7 @@ Triggered when the filtering for the current query is complete and the result li
 e.g.
      \fB# Put the cursor on the second item when the query string is empty
      # * Note that you can't use 'change' event in this case because the second position may not be available
-     fzf --sync --bind 'result:transform:[[ -z {fzf:query} ]] && echo "pos(2)"'\fR
+     fzf --sync --bind 'result:transform:[[ -z {q} ]] && echo "pos(2)"'\fR
 .RE
 \fIchange\fR
 .RS
@@ -1430,6 +1437,7 @@ A key or an event can be bound to one or more of the following actions.
     \fBhide-preview\fR
     \fBoffset-down\fR                  (similar to CTRL-E of Vim)
     \fBoffset-up\fR                    (similar to CTRL-Y of Vim)
+    \fBoffset-middle\fR                (place the current item is in the middle of the screen)
     \fBpos(...)\fR                     (move cursor to the numeric position; negative number to count from the end)
     \fBprev-history\fR                 (\fIctrl-p\fR on \fB--history\fR)
     \fBprev-selected\fR                (move to the previous selected item)
