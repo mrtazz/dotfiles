@@ -3,6 +3,28 @@ CHANGELOG
 
 0.54.0
 ------
+- Implemented line wrap of long items
+    - `--wrap` option enables line wrap
+    - `--wrap-sign` customizes the sign for wrapped lines (default: `↳ `)
+    - `toggle-wrap` action toggles line wrap
+  ```sh
+  history | fzf --tac --wrap --bind 'ctrl-/:toggle-wrap'
+
+  # You can press CTRL-/ to toggle line wrap in CTRL-R binding
+  export FZF_CTRL_R_OPTS=$'--bind ctrl-/:toggle-wrap --wrap-sign "\t↳ "'
+  ```
+- Added `--info-command` option for customizing the info line
+  ```sh
+  # Prepend the current cursor position in yellow
+  fzf --info-command='echo -e "\x1b[33;1m$FZF_POS\x1b[m/$FZF_INFO 💛"'
+  ```
+    - `$FZF_INFO` is set to the original info text
+    - ANSI color codes are supported
+- Pointer and marker signs can be set to empty strings
+  ```sh
+  # Minimal style
+  fzf --pointer '' --marker '' --prompt '' --info hidden
+  ```
 - Better cache management and improved rendering for `--tail`
 - Improved `--sync` behavior
     - When `--sync` is provided, fzf will not render the interface until the initial filtering and the associated actions (bound to any of `start`, `load`, `result`, or `focus`) are complete.
@@ -16,6 +38,15 @@ CHANGELOG
   fzf --listen --sync --bind 'focus:transform-header:curl -s localhost:$FZF_PORT?limit=0 | jq .'
   ```
 - Added `offset-middle` action to place the current item is in the middle of the screen
+- fzf will not start the initial reader when `reload` or `reload-sync` is bound to `start` event. `fzf < /dev/null` or `: | fzf` are no longer required and extraneous `load` event will not fire due to the empty list.
+  ```sh
+  # Now this will work as expected. Previously, this would print an invalid header line.
+  # `fzf < /dev/null` or `: | fzf` would fix the problem, but then an extraneous 
+  # `load` event would fire and the header would be prematurely updated.
+  fzf --header 'Loading ...' --header-lines 1 \
+      --bind 'start:reload:sleep 1; ps -ef' \
+      --bind 'load:change-header:Loaded!'
+  ```
 - Fixed mouse support on Windows
 - Fixed crash when using `--tiebreak=end` with very long items
 - zsh 5.0 compatibility (thanks to @LangLangBart)
