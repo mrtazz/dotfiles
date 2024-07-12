@@ -170,3 +170,12 @@ endfunction
 
 command! GHMDTitle :call GitHubMDTitle()
 map <silent> <leader>g :call GitHubMDTitle()<cr>
+
+" helper function to close all buffers that point to files that don't exist
+function! CloseBuffersForUnreadableFiles()
+  for buf in getbufinfo()
+    if buf.listed && !filereadable(buf.name)
+      exec ":bdelete! " . buf.bufnr
+    endif
+  endfor
+endfunction
