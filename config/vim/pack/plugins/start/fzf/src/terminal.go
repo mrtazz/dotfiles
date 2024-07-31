@@ -728,7 +728,7 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		}
 	}
 	if fullscreen {
-		if !tui.IsLightRendererSupported() {
+		if tui.HasFullscreenRenderer() {
 			renderer = tui.NewFullscreenRenderer(opts.Theme, opts.Black, opts.Mouse)
 		} else {
 			renderer, err = tui.NewLightRenderer(ttyin, opts.Theme, opts.Black, opts.Mouse, opts.Tabstop, opts.ClearOnExit,
@@ -2944,6 +2944,10 @@ type replacePlaceholderParams struct {
 	lastAction actionType
 	prompt     string
 	executor   *util.Executor
+}
+
+func (t *Terminal) replacePlaceholderInInitialCommand(template string) (string, []string) {
+	return t.replacePlaceholder(template, false, string(t.input), []*Item{nil, nil})
 }
 
 func (t *Terminal) replacePlaceholder(template string, forcePlus bool, input string, list []*Item) (string, []string) {

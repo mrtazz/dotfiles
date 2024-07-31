@@ -948,6 +948,9 @@
       "requires": [
         "java"
       ],
+      "root_uri_patterns": [
+        "pom.xml"
+      ],
       "vim_plugin": {
         "extensions": [
           "kt"
@@ -1382,6 +1385,22 @@
       "command": "jedi-language-server",
       "url": "https://github.com/pappasam/jedi-language-server",
       "description": "A Python language server exclusively for Jedi.",
+      "requires": [
+        "python3"
+      ]
+    },
+    {
+      "command": "ruff",
+      "url": "https://github.com/astral-sh/ruff",
+      "description": "A language server written in Rust and built into Ruff.",
+      "requires": [
+        "py"
+      ]
+    },
+    {
+      "command": "ruff",
+      "url": "https://github.com/astral-sh/ruff",
+      "description": "A language server written in Rust and built into Ruff.",
       "requires": [
         "python3"
       ]
