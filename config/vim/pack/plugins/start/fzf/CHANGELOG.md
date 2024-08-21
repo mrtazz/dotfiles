@@ -17,6 +17,14 @@ CHANGELOG
     # ...
   '
   ```
+- Hyperlinks (OSC 8) are now supported in the preview window and in the main window
+  ```sh
+  printf '<< \e]8;;http://github.com/junegunn/fzf\e\\Link to \e[32mfz\e[0mf\e]8;;\e\\ >>' | fzf --ansi
+
+  fzf --preview "printf '<< \e]8;;http://github.com/junegunn/fzf\e\\Link to \e[32mfz\e[0mf\e]8;;\e\\ >>'"
+  ```
+- [vim] A spec can have `exit` callback that is called with the exit status of fzf
+    - This can be used to clean up temporary resources or restore the original state when fzf is closed without a selection
 - Fixed `--tmux bottom` when the status line is not at the bottom
 - Fixed extra scroll offset in multi-line mode (`--read0` or `--wrap`)
 - Added fallback `ps` command for `kill` completion on Cygwin
