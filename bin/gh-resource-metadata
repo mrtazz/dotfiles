@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# This is a small wrapper around `gh api` to easily extract some metadata from
+# github resources. This can be used in e.g. obsidian templater user scripts
+# to add more data to imported/linked issues and discussions
+
+METADATA=${1}
+URL=${2}
+pattern="https://github.com/"
+API_RESOURCE=${URL/$pattern/}
+gh api repos/${API_RESOURCE} --jq ".${METADATA}"
