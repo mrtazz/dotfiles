@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -25,16 +24,26 @@ type Reader struct {
 	event    int32
 	finChan  chan bool
 	mutex    sync.Mutex
-	exec     *exec.Cmd
-	execOut  io.ReadCloser
-	command  *string
 	killed   bool
+	termFunc func()
+	command  *string
 	wait     bool
 }
 
 // NewReader returns new Reader object
 func NewReader(pusher func([]byte) bool, eventBox *util.EventBox, executor *util.Executor, delimNil bool, wait bool) *Reader {
-	return &Reader{pusher, executor, eventBox, delimNil, int32(EvtReady), make(chan bool, 1), sync.Mutex{}, nil, nil, nil, false, wait}
+	return &Reader{
+		pusher,
+		executor,
+		eventBox,
+		delimNil,
+		int32(EvtReady),
+		make(chan bool, 1),
+		sync.Mutex{},
+		false,
+		func() { os.Stdin.Close() },
+		nil,
+		wait}
 }
 
 func (r *Reader) startEventPoller() {
@@ -80,19 +89,19 @@ func (r *Reader) fin(success bool) {
 func (r *Reader) terminate() {
 	r.mutex.Lock()
 	r.killed = true
-	if r.exec != nil && r.exec.Process != nil {
-		r.execOut.Close()
-		util.KillCommand(r.exec)
-	} else {
-		os.Stdin.Close()
+	if r.termFunc != nil {
+		r.termFunc()
+		r.termFunc = nil
 	}
 	r.mutex.Unlock()
 }
 
-func (r *Reader) restart(command commandSpec, environ []string) {
+func (r *Reader) restart(command commandSpec, environ []string, readyChan chan bool) {
 	r.event = int32(EvtReady)
 	r.startEventPoller()
-	success := r.readFromCommand(command.command, environ)
+	success := r.readFromCommand(command.command, environ, func() {
+		readyChan <- true
+	})
 	r.fin(success)
 	removeFiles(command.tempFiles)
 }
@@ -111,21 +120,29 @@ func (r *Reader) readChannel(inputChan chan string) bool {
 }
 
 // ReadSource reads data from the default command or from standard input
-func (r *Reader) ReadSource(inputChan chan string, root string, opts walkerOpts, ignores []string, initCmd string, initEnv []string) {
+func (r *Reader) ReadSource(inputChan chan string, root string, opts walkerOpts, ignores []string, initCmd string, initEnv []string, readyChan chan bool) {
 	r.startEventPoller()
 	var success bool
+	signalReady := func() {
+		if readyChan != nil {
+			readyChan <- true
+		}
+	}
 	if inputChan != nil {
+		signalReady()
 		success = r.readChannel(inputChan)
 	} else if len(initCmd) > 0 {
-		success = r.readFromCommand(initCmd, initEnv)
+		success = r.readFromCommand(initCmd, initEnv, signalReady)
 	} else if util.IsTty(os.Stdin) {
 		cmd := os.Getenv("FZF_DEFAULT_COMMAND")
 		if len(cmd) == 0 {
+			signalReady()
 			success = r.readFiles(root, opts, ignores)
 		} else {
-			success = r.readFromCommand(cmd, initEnv)
+			success = r.readFromCommand(cmd, initEnv, signalReady)
 		}
 	} else {
+		signalReady()
 		success = r.readFromStdin()
 	}
 	r.fin(success)
@@ -249,7 +266,6 @@ func trimPath(path string) string {
 }
 
 func (r *Reader) readFiles(root string, opts walkerOpts, ignores []string) bool {
-	r.killed = false
 	conf := fastwalk.Config{
 		Follow: opts.follow,
 		// Use forward slashes when running a Windows binary under WSL or MSYS
@@ -288,31 +304,32 @@ func (r *Reader) readFiles(root string, opts walkerOpts, ignores []string) bool 
 	return fastwalk.Walk(&conf, root, fn) == nil
 }
 
-func (r *Reader) readFromCommand(command string, environ []string) bool {
+func (r *Reader) readFromCommand(command string, environ []string, signalReady func()) bool {
 	r.mutex.Lock()
+
 	r.killed = false
+	r.termFunc = nil
 	r.command = &command
-	r.exec = r.executor.ExecCommand(command, true)
+	exec := r.executor.ExecCommand(command, true)
 	if environ != nil {
-		r.exec.Env = environ
+		exec.Env = environ
 	}
-
-	var err error
-	r.execOut, err = r.exec.StdoutPipe()
-	if err != nil {
-		r.exec = nil
+	execOut, err := exec.StdoutPipe()
+	if err != nil || exec.Start() != nil {
+		signalReady()
 		r.mutex.Unlock()
 		return false
 	}
 
-	err = r.exec.Start()
-	if err != nil {
-		r.exec = nil
-		r.mutex.Unlock()
-		return false
+	// Function to call to terminate the running command
+	r.termFunc = func() {
+		execOut.Close()
+		util.KillCommand(exec)
 	}
 
+	signalReady()
 	r.mutex.Unlock()
-	r.feed(r.execOut)
-	return r.exec.Wait() == nil
+
+	r.feed(execOut)
+	return exec.Wait() == nil
 }
