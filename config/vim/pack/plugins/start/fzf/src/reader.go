@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -120,7 +121,7 @@ func (r *Reader) readChannel(inputChan chan string) bool {
 }
 
 // ReadSource reads data from the default command or from standard input
-func (r *Reader) ReadSource(inputChan chan string, root string, opts walkerOpts, ignores []string, initCmd string, initEnv []string, readyChan chan bool) {
+func (r *Reader) ReadSource(inputChan chan string, roots []string, opts walkerOpts, ignores []string, initCmd string, initEnv []string, readyChan chan bool) {
 	r.startEventPoller()
 	var success bool
 	signalReady := func() {
@@ -137,7 +138,7 @@ func (r *Reader) ReadSource(inputChan chan string, root string, opts walkerOpts,
 		cmd := os.Getenv("FZF_DEFAULT_COMMAND")
 		if len(cmd) == 0 {
 			signalReady()
-			success = r.readFiles(root, opts, ignores)
+			success = r.readFiles(roots, opts, ignores)
 		} else {
 			success = r.readFromCommand(cmd, initEnv, signalReady)
 		}
@@ -265,12 +266,32 @@ func trimPath(path string) string {
 	return byteString(bytes)
 }
 
-func (r *Reader) readFiles(root string, opts walkerOpts, ignores []string) bool {
+func (r *Reader) readFiles(roots []string, opts walkerOpts, ignores []string) bool {
 	conf := fastwalk.Config{
 		Follow: opts.follow,
 		// Use forward slashes when running a Windows binary under WSL or MSYS
 		ToSlash: fastwalk.DefaultToSlash(),
 		Sort:    fastwalk.SortFilesFirst,
+	}
+	ignoresBase := []string{}
+	ignoresFull := []string{}
+	ignoresSuffix := []string{}
+	sep := string(os.PathSeparator)
+	for _, ignore := range ignores {
+		if strings.ContainsRune(ignore, os.PathSeparator) {
+			if strings.HasPrefix(ignore, sep) {
+				ignoresSuffix = append(ignoresSuffix, ignore)
+			} else {
+				// 'foo/bar' should match match
+				// * 'foo/bar'
+				// * 'baz/foo/bar'
+				// * but NOT 'bazfoo/bar'
+				ignoresFull = append(ignoresFull, ignore)
+				ignoresSuffix = append(ignoresSuffix, sep+ignore)
+			}
+		} else {
+			ignoresBase = append(ignoresBase, ignore)
+		}
 	}
 	fn := func(path string, de os.DirEntry, err error) error {
 		if err != nil {
@@ -284,8 +305,18 @@ func (r *Reader) readFiles(root string, opts walkerOpts, ignores []string) bool 
 				if !opts.hidden && base[0] == '.' && base != ".." {
 					return filepath.SkipDir
 				}
-				for _, ignore := range ignores {
+				for _, ignore := range ignoresBase {
 					if ignore == base {
+						return filepath.SkipDir
+					}
+				}
+				for _, ignore := range ignoresFull {
+					if ignore == path {
+						return filepath.SkipDir
+					}
+				}
+				for _, ignore := range ignoresSuffix {
+					if strings.HasSuffix(path, ignore) {
 						return filepath.SkipDir
 					}
 				}
@@ -301,7 +332,11 @@ func (r *Reader) readFiles(root string, opts walkerOpts, ignores []string) bool 
 		}
 		return nil
 	}
-	return fastwalk.Walk(&conf, root, fn) == nil
+	noerr := true
+	for _, root := range roots {
+		noerr = noerr && (fastwalk.Walk(&conf, root, fn) == nil)
+	}
+	return noerr
 }
 
 func (r *Reader) readFromCommand(command string, environ []string, signalReady func()) bool {
