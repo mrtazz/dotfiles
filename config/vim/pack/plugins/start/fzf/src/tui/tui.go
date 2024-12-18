@@ -387,6 +387,14 @@ func (s BorderShape) HasTop() bool {
 	return true
 }
 
+func (s BorderShape) HasBottom() bool {
+	switch s {
+	case BorderNone, BorderLeft, BorderRight, BorderTop, BorderVertical: // No bottom
+		return false
+	}
+	return true
+}
+
 type BorderStyle struct {
 	shape       BorderShape
 	top         rune
@@ -402,6 +410,18 @@ type BorderStyle struct {
 type BorderCharacter int
 
 func MakeBorderStyle(shape BorderShape, unicode bool) BorderStyle {
+	if shape == BorderNone {
+		return BorderStyle{
+			shape:       shape,
+			top:         ' ',
+			bottom:      ' ',
+			left:        ' ',
+			right:       ' ',
+			topLeft:     ' ',
+			topRight:    ' ',
+			bottomLeft:  ' ',
+			bottomRight: ' '}
+	}
 	if !unicode {
 		return BorderStyle{
 			shape:       shape,
@@ -498,19 +518,6 @@ func MakeBorderStyle(shape BorderShape, unicode bool) BorderStyle {
 	}
 }
 
-func MakeTransparentBorder() BorderStyle {
-	return BorderStyle{
-		shape:       BorderRounded,
-		top:         ' ',
-		bottom:      ' ',
-		left:        ' ',
-		right:       ' ',
-		topLeft:     ' ',
-		topRight:    ' ',
-		bottomLeft:  ' ',
-		bottomRight: ' '}
-}
-
 type TermSize struct {
 	Lines    int
 	Columns  int
@@ -552,7 +559,6 @@ type Window interface {
 	DrawHBorder()
 	Refresh()
 	FinishFill()
-	Close()
 
 	X() int
 	Y() int
