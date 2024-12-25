@@ -1442,9 +1442,13 @@ class TestGoFZF < TestBase
     writelines(['=' * 10_000 + '0123456789'])
     [0, 3, 6].each do |off|
       tmux.prepare
-      tmux.send_keys "#{FZF} --hscroll-off=#{off} -q 0 < #{tempname}", :Enter
+      tmux.send_keys "#{FZF} --hscroll-off=#{off} -q 0 --bind space:toggle-hscroll < #{tempname}", :Enter
       tmux.until { |lines| assert lines[-3]&.end_with?((0..off).to_a.join + '··') }
       tmux.send_keys '9'
+      tmux.until { |lines| assert lines[-3]&.end_with?('789') }
+      tmux.send_keys :Space
+      tmux.until { |lines| assert lines[-3]&.end_with?('=··') }
+      tmux.send_keys :Space
       tmux.until { |lines| assert lines[-3]&.end_with?('789') }
       tmux.send_keys :Enter
     end
@@ -2133,7 +2137,11 @@ class TestGoFZF < TestBase
   end
 
   def test_keep_right
-    tmux.send_keys "seq 10000 | #{FZF} --read0 --keep-right --no-multi-line", :Enter
+    tmux.send_keys "seq 10000 | #{FZF} --read0 --keep-right --no-multi-line --bind space:toggle-multi-line", :Enter
+    tmux.until { |lines| assert lines.any_include?('9999␊10000') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('> 1') }
+    tmux.send_keys :Space
     tmux.until { |lines| assert lines.any_include?('9999␊10000') }
   end
 
