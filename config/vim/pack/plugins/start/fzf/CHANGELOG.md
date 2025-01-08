@@ -3,7 +3,16 @@ CHANGELOG
 
 0.58.0
 ------
-- Additional border and label for the list section
+
+This version introduces three new border types, `--list-border`, `--input-border`, and `--header-border`, offering much greater flexibility for customizing the user interface.
+
+Also, fzf now offers three "style presets" for easier customization, which can be activated using the `--style=[default|minimal|full]` option.
+
+- Style presets (#4160)
+    - `--style=full`
+    - `--style=default`
+    - `--style=minimal`
+- Border and label for the list section (#4148)
     - Options
         - `--list-border[=STYLE]`
         - `--list-label=LABEL`
@@ -16,6 +25,40 @@ CHANGELOG
     - Actions
         - `change-list-label`
         - `transform-list-label`
+- Border and label for the input section (prompt line and info line) (#4154)
+    - Options
+        - `--input-border[=STYLE]`
+        - `--input-label=LABEL`
+        - `--input-label-pos=COL[:bottom]`
+    - Colors
+        - `input-fg` (`query`)
+        - `input-bg`
+        - `input-border`
+        - `input-label`
+    - Actions
+        - `change-input-label`
+        - `transform-input-label`
+- Border and label for the header section (#4159)
+    - Options
+        - `--header-border[=STYLE]`
+        - `--header-label=LABEL`
+        - `--header-label-pos=COL[:bottom]`
+    - Colors
+        - `header-fg` (`header`)
+        - `header-bg`
+        - `header-border`
+        - `header-label`
+    - Actions
+        - `change-header-label`
+        - `transform-header-label`
+- Added `--preview-border[=STYLE]` as short for `--preview-window=border[-STYLE]`
+- Added new preview border style `line` which draws a single separator line between the preview window and the rest of the interface
+- You can specify `border-native` to `--tmux` so that native tmux border is used instead of `--border`. This can be useful if you start a different program from inside the popup.
+  ```sh
+  fzf --tmux border-native --bind 'enter:execute:less {}'
+  ```
+- Added `toggle-multi-line` action
+- Added `toggle-hscroll` action
 
 0.57.0
 ------

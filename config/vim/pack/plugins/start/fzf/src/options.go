@@ -24,154 +24,190 @@ with omitted characters and still get the results you want.
 Project URL: https://github.com/junegunn/fzf
 Author: Junegunn Choi <junegunn.c@gmail.com>
 
+* See man page for more information: fzf --man
+
 Usage: fzf [options]
 
-  Search
-    -x, --extended          Extended-search mode
-                            (enabled by default; +x or --no-extended to disable)
-    -e, --exact             Enable Exact-match
-    -i, --ignore-case       Case-insensitive match (default: smart-case match)
-    +i, --no-ignore-case    Case-sensitive match
-    --scheme=SCHEME         Scoring scheme [default|path|history]
-    --literal               Do not normalize latin script letters before matching
-    -n, --nth=N[,..]        Comma-separated list of field index expressions
-                            for limiting search scope. Each can be a non-zero
-                            integer or a range expression ([BEGIN]..[END]).
-    --with-nth=N[,..]       Transform the presentation of each line using
-                            field index expressions
-    -d, --delimiter=STR     Field delimiter regex (default: AWK-style)
-    +s, --no-sort           Do not sort the result
-    --tail=NUM              Maximum number of items to keep in memory
-    --track                 Track the current selection when the result is updated
-    --tac                   Reverse the order of the input
-    --disabled              Do not perform search
-    --tiebreak=CRI[,..]     Comma-separated list of sort criteria to apply
-                            when the scores are tied [length|chunk|begin|end|index]
-                            (default: length)
-  Interface
-    -m, --multi[=MAX]       Enable multi-select with tab/shift-tab
-    --no-mouse              Disable mouse
-    --bind=KEYBINDS         Custom key bindings. Refer to the man page.
-    --cycle                 Enable cyclic scroll
-    --wrap                  Enable line wrap
-    --wrap-sign=STR         Indicator for wrapped lines
-    --no-multi-line         Disable multi-line display of items when using --read0
-    --gap[=N]               Render empty lines between each item
-    --keep-right            Keep the right end of the line visible on overflow
-    --scroll-off=LINES      Number of screen lines to keep above or below when
-                            scrolling to the top or to the bottom (default: 0)
-    --no-hscroll            Disable horizontal scroll
-    --hscroll-off=COLS      Number of screen columns to keep to the right of the
-                            highlighted substring (default: 10)
-    --filepath-word         Make word-wise movements respect path separators
-    --jump-labels=CHARS     Label characters for jump mode
+  SEARCH
+    -e, --exact              Enable exact-match
+    +x, --no-extended        Disable extended-search mode
+    -i, --ignore-case        Case-insensitive match
+    +i, --no-ignore-case     Case-sensitive match
+        --smart-case         Smart-case match (default)
+    --scheme=SCHEME          Scoring scheme [default|path|history]
+    -n, --nth=N[,..]         Comma-separated list of field index expressions
+                             for limiting search scope. Each can be a non-zero
+                             integer or a range expression ([BEGIN]..[END]).
+    --with-nth=N[,..]        Transform the presentation of each line using
+                             field index expressions
+    -d, --delimiter=STR      Field delimiter regex (default: AWK-style)
+    +s, --no-sort            Do not sort the result
+    --literal                Do not normalize latin script letters
+    --tail=NUM               Maximum number of items to keep in memory
+    --disabled               Do not perform search
+    --tiebreak=CRI[,..]      Comma-separated list of sort criteria to apply
+                             when the scores are tied [length|chunk|begin|end|index]
+                             (default: length)
 
-  Layout
-    --height=[~]HEIGHT[%]   Display fzf window below the cursor with the given
-                            height instead of using fullscreen.
-                            A negative value is calculated as the terminal height
-                            minus the given value.
-                            If prefixed with '~', fzf will determine the height
-                            according to the input size.
-    --min-height=HEIGHT     Minimum height when --height is given in percent
-                            (default: 10)
-    --tmux[=OPTS]           Start fzf in a tmux popup (requires tmux 3.3+)
-                            [center|top|bottom|left|right][,SIZE[%]][,SIZE[%]]
-                            (default: center,50%)
-    --layout=LAYOUT         Choose layout: [default|reverse|reverse-list]
-    --border[=STYLE]        Draw border around the finder
-                            [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
-                             top|bottom|left|right|none] (default: rounded)
-    --border-label=LABEL    Label to print on the border
-    --border-label-pos=COL  Position of the border label
-                            [POSITIVE_INTEGER: columns from left|
-                             NEGATIVE_INTEGER: columns from right][:bottom]
-                            (default: 0 or center)
-    --list-border[=STYLE]   Draw border around the list section
-                            [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
-                             top|bottom|left|right|none] (default: none)
-    --list-label=LABEL      Label to print on the list border
-    --list-label-pos=COL    Position of the list label
-                            [POSITIVE_INTEGER: columns from left|
-                             NEGATIVE_INTEGER: columns from right][:bottom]
-                            (default: 0 or center)
-    --margin=MARGIN         Screen margin (TRBL | TB,RL | T,RL,B | T,R,B,L)
-    --padding=PADDING       Padding inside border (TRBL | TB,RL | T,RL,B | T,R,B,L)
-    --info=STYLE            Finder info style
-                            [default|right|hidden|inline[-right][:PREFIX]]
-    --info-command=COMMAND  Command to generate info line
-    --separator=STR         String to form horizontal separator on info line
-    --no-separator          Hide info line separator
-    --scrollbar[=C1[C2]]    Scrollbar character(s) (each for main and preview window)
-    --no-scrollbar          Hide scrollbar
-    --prompt=STR            Input prompt (default: '> ')
-    --pointer=STR           Pointer to the current line (default: '▌' or '>')
-    --marker=STR            Multi-select marker (default: '┃' or '>')
-    --marker-multi-line=STR Multi-select marker for multi-line entries;
-                            3 elements for top, middle, and bottom (default: '╻┃╹')
-    --header=STR            String to print as header
-    --header-lines=N        The first N lines of the input are treated as header
-    --header-first          Print header before the prompt line
-    --ellipsis=STR          Ellipsis to show when line is truncated (default: '··')
+  INPUT/OUTPUT
+    --read0                  Read input delimited by ASCII NUL characters
+    --print0                 Print output delimited by ASCII NUL characters
+    --ansi                   Enable processing of ANSI color codes
+    --sync                   Synchronous search for multi-staged filtering
 
-  Display
-    --ansi                  Enable processing of ANSI color codes
-    --tabstop=SPACES        Number of spaces for a tab character (default: 8)
-    --color=COLSPEC         Base scheme (dark|light|16|bw) and/or custom colors
-    --highlight-line        Highlight the whole current line
-    --no-bold               Do not use bold text
+  GLOBAL STYLE
+    --style=PRESET           Apply a style preset [default|minimal|full]
+    --color=COLSPEC          Base scheme (dark|light|16|bw) and/or custom colors
+    --no-color               Disable colors
+    --no-bold                Do not use bold text
 
-  History
-    --history=FILE          History file
-    --history-size=N        Maximum number of history entries (default: 1000)
+  DISPLAY MODE
+    --height=[~]HEIGHT[%]    Display fzf window below the cursor with the given
+                             height instead of using fullscreen.
+                             A negative value is calculated as the terminal height
+                             minus the given value.
+                             If prefixed with '~', fzf will determine the height
+                             according to the input size.
+    --min-height=HEIGHT      Minimum height for percent --height is given in percent
+                             (default: 10)
+    --tmux[=OPTS]            Start fzf in a tmux popup (requires tmux 3.3+)
+                             [center|top|bottom|left|right][,SIZE[%]][,SIZE[%]]
+                             [,border-native] (default: center,50%)
 
-  Preview
-    --preview=COMMAND       Command to preview highlighted line ({})
-    --preview-window=OPT    Preview window layout (default: right:50%)
-                            [up|down|left|right][,SIZE[%]]
-                            [,[no]wrap][,[no]cycle][,[no]follow][,[no]info]
-                            [,[no]hidden][,border-BORDER_OPT]
-                            [,+SCROLL[OFFSETS][/DENOM]][,~HEADER_LINES]
-                            [,default][,<SIZE_THRESHOLD(ALTERNATIVE_LAYOUT)]
+  LAYOUT
+    --layout=LAYOUT          Choose layout: [default|reverse|reverse-list]
+    --margin=MARGIN          Screen margin (TRBL | TB,RL | T,RL,B | T,R,B,L)
+    --padding=PADDING        Padding inside border (TRBL | TB,RL | T,RL,B | T,R,B,L)
+    --border[=STYLE]         Draw border around the finder
+                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
+                              top|bottom|left|right|none] (default: rounded)
+    --border-label=LABEL     Label to print on the border
+    --border-label-pos=COL   Position of the border label
+                             [POSITIVE_INTEGER: columns from left|
+                              NEGATIVE_INTEGER: columns from right][:bottom]
+                             (default: 0 or center)
+
+  LIST SECTION
+    -m, --multi[=MAX]        Enable multi-select with tab/shift-tab
+    --highlight-line         Highlight the whole current line
+    --cycle                  Enable cyclic scroll
+    --wrap                   Enable line wrap
+    --wrap-sign=STR          Indicator for wrapped lines
+    --no-multi-line          Disable multi-line display of items when using --read0
+    --track                  Track the current selection when the result is updated
+    --tac                    Reverse the order of the input
+    --gap[=N]                Render empty lines between each item
+    --keep-right             Keep the right end of the line visible on overflow
+    --scroll-off=LINES       Number of screen lines to keep above or below when
+                             scrolling to the top or to the bottom (default: 0)
+    --no-hscroll             Disable horizontal scroll
+    --hscroll-off=COLS       Number of screen columns to keep to the right of the
+                             highlighted substring (default: 10)
+    --jump-labels=CHARS      Label characters for jump mode
+    --pointer=STR            Pointer to the current line (default: '▌' or '>')
+    --marker=STR             Multi-select marker (default: '┃' or '>')
+    --marker-multi-line=STR  Multi-select marker for multi-line entries;
+                             3 elements for top, middle, and bottom (default: '╻┃╹')
+    --ellipsis=STR           Ellipsis to show when line is truncated (default: '··')
+    --tabstop=SPACES         Number of spaces for a tab character (default: 8)
+    --scrollbar[=C1[C2]]     Scrollbar character(s)
+                             (each for list section and preview window)
+    --no-scrollbar           Hide scrollbar
+    --list-border[=STYLE]    Draw border around the list section
+                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
+                              top|bottom|left|right|none] (default: rounded)
+    --list-label=LABEL       Label to print on the list border
+    --list-label-pos=COL     Position of the list label
+                             [POSITIVE_INTEGER: columns from left|
+                              NEGATIVE_INTEGER: columns from right][:bottom]
+                             (default: 0 or center)
+
+  INPUT SECTION
+    --prompt=STR             Input prompt (default: '> ')
+    --info=STYLE             Finder info style
+                             [default|right|hidden|inline[-right][:PREFIX]]
+    --info-command=COMMAND   Command to generate info line
+    --separator=STR          String to form horizontal separator on info line
+    --no-separator           Hide info line separator
+    --filepath-word          Make word-wise movements respect path separators
+    --input-border[=STYLE]   Draw border around the input section
+                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
+                              top|bottom|left|right|none] (default: rounded)
+    --input-label=LABEL      Label to print on the input border
+    --input-label-pos=COL    Position of the input label
+                             [POSITIVE_INTEGER: columns from left|
+                              NEGATIVE_INTEGER: columns from right][:bottom]
+                             (default: 0 or center)
+
+  PREVIEW WINDOW
+    --preview=COMMAND        Command to preview highlighted line ({})
+    --preview-window=OPT     Preview window layout (default: right:50%)
+                             [up|down|left|right][,SIZE[%]]
+                             [,[no]wrap][,[no]cycle][,[no]follow][,[no]info]
+                             [,[no]hidden][,border-STYLE]
+                             [,+SCROLL[OFFSETS][/DENOM]][,~HEADER_LINES]
+                             [,default][,<SIZE_THRESHOLD(ALTERNATIVE_LAYOUT)]
+    --preview-border[=STYLE] Short for --preview-window=border-STYLE
+                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
+                              top|bottom|left|right|line|none] (default: rounded)
     --preview-label=LABEL
-    --preview-label-pos=N   Same as --border-label and --border-label-pos,
-                            but for preview window
+    --preview-label-pos=N    Same as --border-label and --border-label-pos,
+                             but for preview window
 
-  Scripting
-    -q, --query=STR         Start the finder with the given query
-    -1, --select-1          Automatically select the only match
-    -0, --exit-0            Exit immediately when there's no match
-    -f, --filter=STR        Filter mode. Do not start interactive finder.
-    --print-query           Print query as the first line
-    --expect=KEYS           Comma-separated list of keys to complete fzf
-    --read0                 Read input delimited by ASCII NUL characters
-    --print0                Print output delimited by ASCII NUL characters
-    --sync                  Synchronous search for multi-staged filtering
-    --with-shell=STR        Shell command and flags to start child processes with
-    --listen[=[ADDR:]PORT]  Start HTTP server to receive actions (POST /)
-                            (To allow remote process execution, use --listen-unsafe)
+  HEADER
+    --header=STR             String to print as header
+    --header-lines=N         The first N lines of the input are treated as header
+    --header-first           Print header before the prompt line
+    --header-border[=STYLE]  Draw border around the header section
+                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
+                              top|bottom|left|right|none] (default: rounded)
+    --header-label=LABEL     Label to print on the header border
+    --header-label-pos=COL   Position of the header label
+                             [POSITIVE_INTEGER: columns from left|
+                              NEGATIVE_INTEGER: columns from right][:bottom]
+                             (default: 0 or center)
 
-  Directory traversal       (Only used when $FZF_DEFAULT_COMMAND is not set)
-    --walker=OPTS           [file][,dir][,follow][,hidden] (default: file,follow,hidden)
-    --walker-root=DIR [...] List of directories to walk (default: .)
-    --walker-skip=DIRS      Comma-separated list of directory names to skip
-                            (default: .git,node_modules)
+  SCRIPTING
+    -q, --query=STR          Start the finder with the given query
+    -1, --select-1           Automatically select the only match
+    -0, --exit-0             Exit immediately when there's no match
+    -f, --filter=STR         Print matches for the initial query and exit
+    --print-query            Print query as the first line
+    --expect=KEYS            Comma-separated list of keys to complete fzf
 
-  Shell integration
-    --bash                  Print script to set up Bash shell integration
-    --zsh                   Print script to set up Zsh shell integration
-    --fish                  Print script to set up Fish shell integration
+  KEY/EVENT BINDING
+    --bind=BINDINGS          Custom key/event bindings
 
-  Help
-    --version               Display version information and exit
-    --help                  Show this message
-    --man                   Show man page
+  ADVANCED
+    --with-shell=STR         Shell command and flags to start child processes with
+    --listen[=[ADDR:]PORT]   Start HTTP server to receive actions (POST /)
+                             (To allow remote process execution, use --listen-unsafe)
 
-  Environment variables
-    FZF_DEFAULT_COMMAND     Default command to use when input is tty
-    FZF_DEFAULT_OPTS        Default options (e.g. '--layout=reverse --info=inline')
-    FZF_DEFAULT_OPTS_FILE   Location of the file to read default options from
-    FZF_API_KEY             X-API-Key header for HTTP server (--listen)
+  DIRECTORY TRAVERSAL        (Only used when $FZF_DEFAULT_COMMAND is not set)
+    --walker=OPTS            [file][,dir][,follow][,hidden] (default: file,follow,hidden)
+    --walker-root=DIR [...]  List of directories to walk (default: .)
+    --walker-skip=DIRS       Comma-separated list of directory names to skip
+                             (default: .git,node_modules)
+
+  HISTORY
+    --history=FILE           History file
+    --history-size=N         Maximum number of history entries (default: 1000)
+
+  SHELL INTEGRATION
+    --bash                   Print script to set up Bash shell integration
+    --zsh                    Print script to set up Zsh shell integration
+    --fish                   Print script to set up Fish shell integration
+
+  HELP
+    --version                Display version information and exit
+    --help                   Show this message
+    --man                    Show man page
+
+  ENVIRONMENT VARIABLES
+    FZF_DEFAULT_COMMAND      Default command to use when input is tty
+    FZF_DEFAULT_OPTS         Default options (e.g. '--layout=reverse --info=inline')
+    FZF_DEFAULT_OPTS_FILE    Location of the file to read default options from
+    FZF_API_KEY              X-API-Key header for HTTP server (--listen)
 
 `
 
@@ -245,6 +281,7 @@ type tmuxOptions struct {
 	height   sizeSpec
 	position windowPosition
 	index    int
+	border   bool
 }
 
 type layoutType int
@@ -295,6 +332,10 @@ func (o *previewOpts) Toggle() {
 	o.hidden = !o.hidden
 }
 
+func (o *previewOpts) HasBorderRight() bool {
+	return o.border.HasRight() || o.border == tui.BorderLine && o.position == posLeft
+}
+
 func defaultTmuxOptions(index int) *tmuxOptions {
 	return &tmuxOptions{
 		position: posCenter,
@@ -307,13 +348,26 @@ func parseTmuxOptions(arg string, index int) (*tmuxOptions, error) {
 	var err error
 	opts := defaultTmuxOptions(index)
 	tokens := splitRegexp.Split(arg, -1)
-	errorToReturn := errors.New("invalid tmux option: " + arg + " (expected: [center|top|bottom|left|right][,SIZE[%]][,SIZE[%]])")
-	if len(tokens) == 0 || len(tokens) > 3 {
+	errorToReturn := errors.New("invalid tmux option: " + arg + " (expected: [center|top|bottom|left|right][,SIZE[%]][,SIZE[%][,border-native]])")
+	if len(tokens) == 0 || len(tokens) > 4 {
 		return nil, errorToReturn
 	}
 
+	for i, token := range tokens {
+		if token == "border-native" {
+			tokens = append(tokens[:i], tokens[i+1:]...) // cut the 'border-native' option
+			opts.border = true
+			break
+		}
+	}
+
 	// Defaults to 'center'
-	switch tokens[0] {
+	first := "center"
+	if len(tokens) > 0 {
+		first = tokens[0]
+	}
+
+	switch first {
 	case "top", "up":
 		opts.position = posUp
 		opts.width = sizeSpec{100, true}
@@ -444,102 +498,106 @@ type walkerOpts struct {
 
 // Options stores the values of command-line options
 type Options struct {
-	Input           chan string
-	Output          chan string
-	NoWinpty        bool
-	Tmux            *tmuxOptions
-	ForceTtyIn      bool
-	ProxyScript     string
-	Bash            bool
-	Zsh             bool
-	Fish            bool
-	Man             bool
-	Fuzzy           bool
-	FuzzyAlgo       algo.Algo
-	Scheme          string
-	Extended        bool
-	Phony           bool
-	Case            Case
-	Normalize       bool
-	Nth             []Range
-	WithNth         []Range
-	Delimiter       Delimiter
-	Sort            int
-	Track           trackOption
-	Tac             bool
-	Tail            int
-	Criteria        []criterion
-	Multi           int
-	Ansi            bool
-	Mouse           bool
-	Theme           *tui.ColorTheme
-	Black           bool
-	Bold            bool
-	Height          heightSpec
-	MinHeight       int
-	Layout          layoutType
-	Cycle           bool
-	Wrap            bool
-	WrapSign        *string
-	MultiLine       bool
-	CursorLine      bool
-	KeepRight       bool
-	Hscroll         bool
-	HscrollOff      int
-	ScrollOff       int
-	FileWord        bool
-	InfoStyle       infoStyle
-	InfoPrefix      string
-	InfoCommand     string
-	Separator       *string
-	JumpLabels      string
-	Prompt          string
-	Pointer         *string
-	Marker          *string
-	MarkerMulti     *[3]string
-	Query           string
-	Select1         bool
-	Exit0           bool
-	Filter          *string
-	ToggleSort      bool
-	Expect          map[tui.Event]string
-	Keymap          map[tui.Event][]*action
-	Preview         previewOpts
-	PrintQuery      bool
-	ReadZero        bool
-	Printer         func(string)
-	PrintSep        string
-	Sync            bool
-	History         *History
-	Header          []string
-	HeaderLines     int
-	HeaderFirst     bool
-	Gap             int
-	Ellipsis        *string
-	Scrollbar       *string
-	Margin          [4]sizeSpec
-	Padding         [4]sizeSpec
-	BorderShape     tui.BorderShape
-	ListBorderShape tui.BorderShape
-	BorderLabel     labelOpts
-	ListLabel       labelOpts
-	PreviewLabel    labelOpts
-	Unicode         bool
-	Ambidouble      bool
-	Tabstop         int
-	WithShell       string
-	ListenAddr      *listenAddress
-	Unsafe          bool
-	ClearOnExit     bool
-	WalkerOpts      walkerOpts
-	WalkerRoot      []string
-	WalkerSkip      []string
-	Version         bool
-	Help            bool
-	CPUProfile      string
-	MEMProfile      string
-	BlockProfile    string
-	MutexProfile    string
+	Input             chan string
+	Output            chan string
+	NoWinpty          bool
+	Tmux              *tmuxOptions
+	ForceTtyIn        bool
+	ProxyScript       string
+	Bash              bool
+	Zsh               bool
+	Fish              bool
+	Man               bool
+	Fuzzy             bool
+	FuzzyAlgo         algo.Algo
+	Scheme            string
+	Extended          bool
+	Phony             bool
+	Case              Case
+	Normalize         bool
+	Nth               []Range
+	WithNth           []Range
+	Delimiter         Delimiter
+	Sort              int
+	Track             trackOption
+	Tac               bool
+	Tail              int
+	Criteria          []criterion
+	Multi             int
+	Ansi              bool
+	Mouse             bool
+	Theme             *tui.ColorTheme
+	Black             bool
+	Bold              bool
+	Height            heightSpec
+	MinHeight         int
+	Layout            layoutType
+	Cycle             bool
+	Wrap              bool
+	WrapSign          *string
+	MultiLine         bool
+	CursorLine        bool
+	KeepRight         bool
+	Hscroll           bool
+	HscrollOff        int
+	ScrollOff         int
+	FileWord          bool
+	InfoStyle         infoStyle
+	InfoPrefix        string
+	InfoCommand       string
+	Separator         *string
+	JumpLabels        string
+	Prompt            string
+	Pointer           *string
+	Marker            *string
+	MarkerMulti       *[3]string
+	Query             string
+	Select1           bool
+	Exit0             bool
+	Filter            *string
+	ToggleSort        bool
+	Expect            map[tui.Event]string
+	Keymap            map[tui.Event][]*action
+	Preview           previewOpts
+	PrintQuery        bool
+	ReadZero          bool
+	Printer           func(string)
+	PrintSep          string
+	Sync              bool
+	History           *History
+	Header            []string
+	HeaderLines       int
+	HeaderFirst       bool
+	Gap               int
+	Ellipsis          *string
+	Scrollbar         *string
+	Margin            [4]sizeSpec
+	Padding           [4]sizeSpec
+	BorderShape       tui.BorderShape
+	ListBorderShape   tui.BorderShape
+	InputBorderShape  tui.BorderShape
+	HeaderBorderShape tui.BorderShape
+	InputLabel        labelOpts
+	HeaderLabel       labelOpts
+	BorderLabel       labelOpts
+	ListLabel         labelOpts
+	PreviewLabel      labelOpts
+	Unicode           bool
+	Ambidouble        bool
+	Tabstop           int
+	WithShell         string
+	ListenAddr        *listenAddress
+	Unsafe            bool
+	ClearOnExit       bool
+	WalkerOpts        walkerOpts
+	WalkerRoot        []string
+	WalkerSkip        []string
+	Version           bool
+	Help              bool
+	CPUProfile        string
+	MEMProfile        string
+	BlockProfile      string
+	MutexProfile      string
 }
 
 func filterNonEmpty(input []string) []string {
@@ -642,52 +700,9 @@ func defaultOptions() *Options {
 		Version:      false}
 }
 
-func optString(arg string, prefixes ...string) (bool, string) {
-	for _, prefix := range prefixes {
-		if strings.HasPrefix(arg, prefix) {
-			return true, arg[len(prefix):]
-		}
-	}
-	return false, ""
-}
-
-func nextString(args []string, i *int, message string) (string, error) {
-	if len(args) > *i+1 {
-		*i++
-	} else {
-		return "", errors.New(message)
-	}
-	return args[*i], nil
-}
-
-func optionalNextString(args []string, i *int) (bool, string) {
-	if len(args) > *i+1 && !strings.HasPrefix(args[*i+1], "-") && !strings.HasPrefix(args[*i+1], "+") {
-		*i++
-		return true, args[*i]
-	}
-	return false, ""
-}
-
 func isDir(path string) bool {
 	stat, err := os.Stat(path)
 	return err == nil && stat.IsDir()
-}
-
-func nextDirs(args []string, i *int) ([]string, error) {
-	dirs := []string{}
-	for *i < len(args)-1 {
-		arg := args[*i+1]
-		if isDir(arg) {
-			dirs = append(dirs, arg)
-			*i++
-		} else {
-			break
-		}
-	}
-	if len(dirs) == 0 {
-		return nil, errors.New("no directory specified")
-	}
-	return dirs, nil
 }
 
 func atoi(str string) (int, error) {
@@ -704,33 +719,6 @@ func atof(str string) (float64, error) {
 		return 0, errors.New("not a valid number: " + str)
 	}
 	return num, nil
-}
-
-func nextInt(args []string, i *int, message string) (int, error) {
-	if len(args) > *i+1 {
-		*i++
-	} else {
-		return 0, errors.New(message)
-	}
-	n, err := atoi(args[*i])
-	if err != nil {
-		return 0, errors.New(message)
-	}
-	return n, nil
-}
-
-func optionalNumeric(args []string, i *int, defaultValue int) (int, error) {
-	if len(args) > *i+1 {
-		if strings.IndexAny(args[*i+1], "0123456789") == 0 {
-			*i++
-			n, err := atoi(args[*i])
-			if err != nil {
-				return 0, err
-			}
-			return n, nil
-		}
-	}
-	return defaultValue, nil
 }
 
 func splitNth(str string) ([]Range, error) {
@@ -797,8 +785,13 @@ func processScheme(opts *Options) error {
 	return nil
 }
 
-func parseBorder(str string, optional bool) (tui.BorderShape, error) {
+func parseBorder(str string, optional bool, allowLine bool) (tui.BorderShape, error) {
 	switch str {
+	case "line":
+		if !allowLine {
+			return tui.BorderNone, errors.New("'line' is only allowed for preview border")
+		}
+		return tui.BorderLine, nil
 	case "rounded":
 		return tui.BorderRounded, nil
 	case "sharp":
@@ -1168,7 +1161,7 @@ func parseTheme(defaultTheme *tui.ColorTheme, str string) (*tui.ColorTheme, erro
 				}
 			}
 			switch components[0] {
-			case "query", "input":
+			case "query", "input", "input-fg":
 				mergeAttr(&theme.Input)
 			case "disabled":
 				mergeAttr(&theme.Disabled)
@@ -1220,6 +1213,16 @@ func parseTheme(defaultTheme *tui.ColorTheme, str string) (*tui.ColorTheme, erro
 				mergeAttr(&theme.PreviewLabel)
 			case "prompt":
 				mergeAttr(&theme.Prompt)
+			case "input-bg":
+				mergeAttr(&theme.InputBg)
+			case "input-border":
+				mergeAttr(&theme.InputBorder)
+			case "input-label":
+				mergeAttr(&theme.InputLabel)
+			case "header-border":
+				mergeAttr(&theme.HeaderBorder)
+			case "header-label":
+				mergeAttr(&theme.HeaderLabel)
 			case "spinner":
 				mergeAttr(&theme.Spinner)
 			case "info":
@@ -1228,8 +1231,10 @@ func parseTheme(defaultTheme *tui.ColorTheme, str string) (*tui.ColorTheme, erro
 				mergeAttr(&theme.Cursor)
 			case "marker":
 				mergeAttr(&theme.Marker)
-			case "header":
+			case "header", "header-fg":
 				mergeAttr(&theme.Header)
+			case "header-bg":
+				mergeAttr(&theme.HeaderBg)
 			default:
 				fail()
 			}
@@ -1283,7 +1288,7 @@ const (
 
 func init() {
 	executeRegexp = regexp.MustCompile(
-		`(?si)[:+](become|execute(?:-multi|-silent)?|reload(?:-sync)?|preview|(?:change|transform)-(?:header|query|prompt|border-label|list-label|preview-label)|transform|change-(?:preview-window|preview|multi)|(?:re|un)bind|pos|put|print)`)
+		`(?si)[:+](become|execute(?:-multi|-silent)?|reload(?:-sync)?|preview|(?:change|transform)-(?:query|prompt|(?:border|list|preview|input|header)-label|header)|transform|change-(?:preview-window|preview|multi)|(?:re|un)bind|pos|put|print)`)
 	splitRegexp = regexp.MustCompile("[,:]+")
 	actionNameRegexp = regexp.MustCompile("(?i)^[a-z-]+")
 }
@@ -1639,14 +1644,18 @@ func isExecuteAction(str string) actionType {
 		return actRebind
 	case "preview":
 		return actPreview
+	case "change-header":
+		return actChangeHeader
 	case "change-list-label":
 		return actChangeListLabel
 	case "change-border-label":
 		return actChangeBorderLabel
-	case "change-header":
-		return actChangeHeader
 	case "change-preview-label":
 		return actChangePreviewLabel
+	case "change-input-label":
+		return actChangeInputLabel
+	case "change-header-label":
+		return actChangeHeaderLabel
 	case "change-preview-window":
 		return actChangePreviewWindow
 	case "change-preview":
@@ -1677,6 +1686,10 @@ func isExecuteAction(str string) actionType {
 		return actTransformBorderLabel
 	case "transform-preview-label":
 		return actTransformPreviewLabel
+	case "transform-input-label":
+		return actTransformInputLabel
+	case "transform-header-label":
+		return actTransformHeaderLabel
 	case "transform-header":
 		return actTransformHeader
 	case "transform-prompt":
@@ -1845,6 +1858,8 @@ func parsePreviewWindowImpl(opts *previewOpts, input string) error {
 			opts.position = posRight
 		case "rounded", "border", "border-rounded":
 			opts.border = tui.BorderRounded
+		case "border-line":
+			opts.border = tui.BorderLine
 		case "sharp", "border-sharp":
 			opts.border = tui.BorderSharp
 		case "border-bold":
@@ -1992,6 +2007,13 @@ func parseMarkerMultiLine(str string) (*[3]string, error) {
 	return &result, nil
 }
 
+func optString(arg string, prefix string) (bool, string) {
+	if strings.HasPrefix(arg, prefix) {
+		return true, arg[len(prefix):]
+	}
+	return false, ""
+}
+
 func parseOptions(index *int, opts *Options, allArgs []string) error {
 	var err error
 	var historyMax int
@@ -2028,10 +2050,101 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		opts.Version = false
 		opts.Man = false
 	}
+
 	startIndex := *index
-	for i := 0; i < len(allArgs); i++ {
+
+	var i int
+	var val *string = nil
+	nextString := func(message string) (string, error) {
+		defer func() { val = nil }()
+		if val != nil {
+			return *val, nil
+		}
+		if len(allArgs) > i+1 {
+			i++
+		} else {
+			return "", errors.New(message)
+		}
+		return allArgs[i], nil
+	}
+
+	optionalNextString := func() (bool, string) {
+		defer func() { val = nil }()
+		if val != nil {
+			return true, *val
+		}
+		if len(allArgs) > i+1 && !strings.HasPrefix(allArgs[i+1], "-") && !strings.HasPrefix(allArgs[i+1], "+") {
+			i++
+			return true, allArgs[i]
+		}
+		return false, ""
+	}
+
+	nextDirs := func() ([]string, error) {
+		defer func() { val = nil }()
+		dirs := []string{}
+		if val != nil {
+			dirs = append(dirs, *val)
+		}
+		for i < len(allArgs)-1 {
+			arg := allArgs[i+1]
+			if isDir(arg) {
+				dirs = append(dirs, arg)
+				i++
+			} else {
+				break
+			}
+		}
+		if len(dirs) == 0 {
+			return nil, errors.New("no directory specified")
+		}
+		return dirs, nil
+	}
+
+	nextInt := func(message string) (int, error) {
+		defer func() { val = nil }()
+		var str string
+		if val != nil {
+			str = *val
+		} else if len(allArgs) > i+1 {
+			i++
+			str = allArgs[i]
+		} else {
+			return 0, errors.New(message)
+		}
+		n, err := atoi(str)
+		if err != nil {
+			return 0, errors.New(message)
+		}
+		return n, nil
+	}
+
+	optionalNumeric := func(defaultValue int) (int, error) {
+		defer func() { val = nil }()
+		var str string
+		if val != nil {
+			str = *val
+		} else if len(allArgs) > i+1 && strings.IndexAny(allArgs[i+1], "0123456789") == 0 {
+			i++
+			str = allArgs[i]
+		} else {
+			return defaultValue, nil
+		}
+		n, err := atoi(str)
+		if err != nil {
+			return 0, err
+		}
+		return n, nil
+	}
+
+	for ; i < len(allArgs); i++ {
 		arg := allArgs[i]
 		index := i + startIndex
+		if strings.HasPrefix(arg, "--") && strings.IndexRune(arg, '=') > 0 {
+			tokens := strings.SplitN(arg, "=", 2)
+			arg = tokens[0]
+			val = &tokens[1]
+		}
 		switch arg {
 		case "--man":
 			clearExitingOpts()
@@ -2054,7 +2167,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-winpty":
 			opts.NoWinpty = true
 		case "--tmux":
-			given, str := optionalNextString(allArgs, &i)
+			given, str := optionalNextString()
 			if given {
 				if opts.Tmux, err = parseTmuxOptions(str, index); err != nil {
 					return err
@@ -2071,7 +2184,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-force-tty-in":
 			opts.ForceTtyIn = false
 		case "--proxy-script":
-			if opts.ProxyScript, err = nextString(allArgs, &i, ""); err != nil {
+			if opts.ProxyScript, err = nextString(""); err != nil {
 				return err
 			}
 		case "-x", "--extended":
@@ -2087,11 +2200,11 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "+e", "--no-exact":
 			opts.Fuzzy = true
 		case "-q", "--query":
-			if opts.Query, err = nextString(allArgs, &i, "query string required"); err != nil {
+			if opts.Query, err = nextString("query string required"); err != nil {
 				return err
 			}
 		case "-f", "--filter":
-			filter, err := nextString(allArgs, &i, "query string required")
+			filter, err := nextString("query string required")
 			if err != nil {
 				return err
 			}
@@ -2101,7 +2214,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-literal":
 			opts.Normalize = true
 		case "--algo":
-			str, err := nextString(allArgs, &i, "algorithm required (v1|v2)")
+			str, err := nextString("algorithm required (v1|v2)")
 			if err != nil {
 				return err
 			}
@@ -2109,13 +2222,13 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--scheme":
-			str, err := nextString(allArgs, &i, "scoring scheme required (default|path|history)")
+			str, err := nextString("scoring scheme required (default|path|history)")
 			if err != nil {
 				return err
 			}
 			opts.Scheme = strings.ToLower(str)
 		case "--expect":
-			str, err := nextString(allArgs, &i, "key names required")
+			str, err := nextString("key names required")
 			if err != nil {
 				return err
 			}
@@ -2133,7 +2246,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--disabled", "--phony":
 			opts.Phony = true
 		case "--tiebreak":
-			str, err := nextString(allArgs, &i, "sort criterion required")
+			str, err := nextString("sort criterion required")
 			if err != nil {
 				return err
 			}
@@ -2141,7 +2254,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--bind":
-			str, err := nextString(allArgs, &i, "bind expression required")
+			str, err := nextString("bind expression required")
 			if err != nil {
 				return err
 			}
@@ -2149,7 +2262,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--color":
-			_, spec := optionalNextString(allArgs, &i)
+			_, spec := optionalNextString()
 			if len(spec) == 0 {
 				opts.Theme = tui.EmptyTheme()
 			} else {
@@ -2158,7 +2271,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				}
 			}
 		case "--toggle-sort":
-			str, err := nextString(allArgs, &i, "key name required")
+			str, err := nextString("key name required")
 			if err != nil {
 				return err
 			}
@@ -2166,13 +2279,13 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "-d", "--delimiter":
-			str, err := nextString(allArgs, &i, "delimiter required")
+			str, err := nextString("delimiter required")
 			if err != nil {
 				return err
 			}
 			opts.Delimiter = delimiterRegexp(str)
 		case "-n", "--nth":
-			str, err := nextString(allArgs, &i, "nth expression required")
+			str, err := nextString("nth expression required")
 			if err != nil {
 				return err
 			}
@@ -2180,7 +2293,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--with-nth":
-			str, err := nextString(allArgs, &i, "nth expression required")
+			str, err := nextString("nth expression required")
 			if err != nil {
 				return err
 			}
@@ -2188,7 +2301,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "-s", "--sort":
-			if opts.Sort, err = optionalNumeric(allArgs, &i, 1); err != nil {
+			if opts.Sort, err = optionalNumeric(1); err != nil {
 				return err
 			}
 		case "+s", "--no-sort":
@@ -2202,7 +2315,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-tac":
 			opts.Tac = false
 		case "--tail":
-			if opts.Tail, err = nextInt(allArgs, &i, "number of items to keep required"); err != nil {
+			if opts.Tail, err = nextInt("number of items to keep required"); err != nil {
 				return err
 			}
 			if opts.Tail <= 0 {
@@ -2210,12 +2323,14 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 			}
 		case "--no-tail":
 			opts.Tail = 0
+		case "--smart-case":
+			opts.Case = CaseSmart
 		case "-i", "--ignore-case":
 			opts.Case = CaseIgnore
 		case "+i", "--no-ignore-case":
 			opts.Case = CaseRespect
 		case "-m", "--multi":
-			if opts.Multi, err = optionalNumeric(allArgs, &i, maxMulti); err != nil {
+			if opts.Multi, err = optionalNumeric(maxMulti); err != nil {
 				return err
 			}
 		case "+m", "--no-multi":
@@ -2239,7 +2354,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-bold":
 			opts.Bold = false
 		case "--layout":
-			str, err := nextString(allArgs, &i, "layout required (default / reverse / reverse-list)")
+			str, err := nextString("layout required (default / reverse / reverse-list)")
 			if err != nil {
 				return err
 			}
@@ -2263,7 +2378,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-wrap":
 			opts.Wrap = false
 		case "--wrap-sign":
-			str, err := nextString(allArgs, &i, "wrap sign required")
+			str, err := nextString("wrap sign required")
 			if err != nil {
 				return err
 			}
@@ -2281,11 +2396,11 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-hscroll":
 			opts.Hscroll = false
 		case "--hscroll-off":
-			if opts.HscrollOff, err = nextInt(allArgs, &i, "hscroll offset required"); err != nil {
+			if opts.HscrollOff, err = nextInt("hscroll offset required"); err != nil {
 				return err
 			}
 		case "--scroll-off":
-			if opts.ScrollOff, err = nextInt(allArgs, &i, "scroll offset required"); err != nil {
+			if opts.ScrollOff, err = nextInt("scroll offset required"); err != nil {
 				return err
 			}
 		case "--filepath-word":
@@ -2293,7 +2408,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-filepath-word":
 			opts.FileWord = false
 		case "--info":
-			str, err := nextString(allArgs, &i, "info style required")
+			str, err := nextString("info style required")
 			if err != nil {
 				return err
 			}
@@ -2301,7 +2416,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--info-command":
-			if opts.InfoCommand, err = nextString(allArgs, &i, "info command required"); err != nil {
+			if opts.InfoCommand, err = nextString("info command required"); err != nil {
 				return err
 			}
 		case "--no-info-command":
@@ -2314,7 +2429,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-inline-info":
 			opts.InfoStyle = infoDefault
 		case "--separator":
-			separator, err := nextString(allArgs, &i, "separator character required")
+			separator, err := nextString("separator character required")
 			if err != nil {
 				return err
 			}
@@ -2323,7 +2438,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 			nosep := ""
 			opts.Separator = &nosep
 		case "--scrollbar":
-			given, bar := optionalNextString(allArgs, &i)
+			given, bar := optionalNextString()
 			if given {
 				opts.Scrollbar = &bar
 			} else {
@@ -2333,7 +2448,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 			noBar := ""
 			opts.Scrollbar = &noBar
 		case "--jump-labels":
-			if opts.JumpLabels, err = nextString(allArgs, &i, "label characters required"); err != nil {
+			if opts.JumpLabels, err = nextString("label characters required"); err != nil {
 				return err
 			}
 			validateJumpLabels = true
@@ -2360,26 +2475,26 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-print-query":
 			opts.PrintQuery = false
 		case "--prompt":
-			opts.Prompt, err = nextString(allArgs, &i, "prompt string required")
+			opts.Prompt, err = nextString("prompt string required")
 			if err != nil {
 				return err
 			}
 		case "--pointer":
-			str, err := nextString(allArgs, &i, "pointer sign required")
+			str, err := nextString("pointer sign required")
 			if err != nil {
 				return err
 			}
 			str = firstLine(str)
 			opts.Pointer = &str
 		case "--marker":
-			str, err := nextString(allArgs, &i, "marker sign required")
+			str, err := nextString("marker sign required")
 			if err != nil {
 				return err
 			}
 			str = firstLine(str)
 			opts.Marker = &str
 		case "--marker-multi-line":
-			str, err := nextString(allArgs, &i, "marker sign for multi-line entries required")
+			str, err := nextString("marker sign for multi-line entries required")
 			if err != nil {
 				return err
 			}
@@ -2393,7 +2508,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-history":
 			opts.History = nil
 		case "--history":
-			str, err := nextString(allArgs, &i, "history file path required")
+			str, err := nextString("history file path required")
 			if err != nil {
 				return err
 			}
@@ -2401,7 +2516,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--history-size":
-			n, err := nextInt(allArgs, &i, "history max size required")
+			n, err := nextInt("history max size required")
 			if err != nil {
 				return err
 			}
@@ -2413,13 +2528,13 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-header-lines":
 			opts.HeaderLines = 0
 		case "--header":
-			str, err := nextString(allArgs, &i, "header string required")
+			str, err := nextString("header string required")
 			if err != nil {
 				return err
 			}
 			opts.Header = strLines(str)
 		case "--header-lines":
-			if opts.HeaderLines, err = nextInt(allArgs, &i, "number of header lines required"); err != nil {
+			if opts.HeaderLines, err = nextInt("number of header lines required"); err != nil {
 				return err
 			}
 		case "--header-first":
@@ -2427,34 +2542,41 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-header-first":
 			opts.HeaderFirst = false
 		case "--gap":
-			if opts.Gap, err = optionalNumeric(allArgs, &i, 1); err != nil {
+			if opts.Gap, err = optionalNumeric(1); err != nil {
 				return err
 			}
 		case "--no-gap":
 			opts.Gap = 0
 		case "--ellipsis":
-			str, err := nextString(allArgs, &i, "ellipsis string required")
+			str, err := nextString("ellipsis string required")
 			if err != nil {
 				return err
 			}
 			str = firstLine(str)
 			opts.Ellipsis = &str
 		case "--preview":
-			if opts.Preview.command, err = nextString(allArgs, &i, "preview command required"); err != nil {
+			if opts.Preview.command, err = nextString("preview command required"); err != nil {
 				return err
 			}
 		case "--no-preview":
 			opts.Preview.command = ""
 		case "--preview-window":
-			str, err := nextString(allArgs, &i, "preview window layout required: [up|down|left|right][,SIZE[%]][,border-BORDER_OPT][,wrap][,cycle][,hidden][,+SCROLL[OFFSETS][/DENOM]][,~HEADER_LINES][,default]")
+			str, err := nextString("preview window layout required: [up|down|left|right][,SIZE[%]][,border-STYLE][,wrap][,cycle][,hidden][,+SCROLL[OFFSETS][/DENOM]][,~HEADER_LINES][,default]")
 			if err != nil {
 				return err
 			}
 			if err := parsePreviewWindow(&opts.Preview, str); err != nil {
 				return err
 			}
+		case "--no-preview-border":
+			opts.Preview.border = tui.BorderNone
+		case "--preview-border":
+			hasArg, arg := optionalNextString()
+			if opts.Preview.border, err = parseBorder(arg, !hasArg, true); err != nil {
+				return err
+			}
 		case "--height":
-			str, err := nextString(allArgs, &i, "height required: [~]HEIGHT[%]")
+			str, err := nextString("height required: [~]HEIGHT[%]")
 			if err != nil {
 				return err
 			}
@@ -2462,7 +2584,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--min-height":
-			if opts.MinHeight, err = nextInt(allArgs, &i, "height required: HEIGHT"); err != nil {
+			if opts.MinHeight, err = nextInt("height required: HEIGHT"); err != nil {
 				return err
 			}
 		case "--no-height":
@@ -2474,13 +2596,13 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-border":
 			opts.BorderShape = tui.BorderNone
 		case "--border":
-			hasArg, arg := optionalNextString(allArgs, &i)
-			if opts.BorderShape, err = parseBorder(arg, !hasArg); err != nil {
+			hasArg, arg := optionalNextString()
+			if opts.BorderShape, err = parseBorder(arg, !hasArg, false); err != nil {
 				return err
 			}
 		case "--list-border":
-			hasArg, arg := optionalNextString(allArgs, &i)
-			if opts.ListBorderShape, err = parseBorder(arg, !hasArg); err != nil {
+			hasArg, arg := optionalNextString()
+			if opts.ListBorderShape, err = parseBorder(arg, !hasArg, false); err != nil {
 				return err
 			}
 		case "--no-list-border":
@@ -2488,27 +2610,69 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-list-label":
 			opts.ListLabel.label = ""
 		case "--list-label":
-			opts.ListLabel.label, err = nextString(allArgs, &i, "label required")
+			opts.ListLabel.label, err = nextString("label required")
 			if err != nil {
 				return err
 			}
 		case "--list-label-pos":
-			pos, err := nextString(allArgs, &i, "label position required (positive or negative integer or 'center')")
+			pos, err := nextString("label position required (positive or negative integer or 'center')")
 			if err != nil {
 				return err
 			}
 			if err := parseLabelPosition(&opts.ListLabel, pos); err != nil {
 				return err
 			}
+		case "--no-header-border":
+			opts.HeaderBorderShape = tui.BorderNone
+		case "--header-border":
+			hasArg, arg := optionalNextString()
+			if opts.HeaderBorderShape, err = parseBorder(arg, !hasArg, false); err != nil {
+				return err
+			}
+		case "--no-header-label":
+			opts.HeaderLabel.label = ""
+		case "--header-label":
+			if opts.HeaderLabel.label, err = nextString("header label required"); err != nil {
+				return err
+			}
+		case "--header-label-pos":
+			pos, err := nextString("header label position required (positive or negative integer or 'center')")
+			if err != nil {
+				return err
+			}
+			if err := parseLabelPosition(&opts.HeaderLabel, pos); err != nil {
+				return err
+			}
+		case "--no-input-border":
+			opts.InputBorderShape = tui.BorderNone
+		case "--input-border":
+			hasArg, arg := optionalNextString()
+			if opts.InputBorderShape, err = parseBorder(arg, !hasArg, false); err != nil {
+				return err
+			}
+		case "--no-input-label":
+			opts.InputLabel.label = ""
+		case "--input-label":
+			if opts.InputLabel.label, err = nextString("input label required"); err != nil {
+				return err
+			}
+		case "--input-label-pos":
+			pos, err := nextString("input label position required (positive or negative integer or 'center')")
+			if err != nil {
+				return err
+			}
+			if err := parseLabelPosition(&opts.InputLabel, pos); err != nil {
+				return err
+			}
 		case "--no-border-label":
 			opts.BorderLabel.label = ""
 		case "--border-label":
-			opts.BorderLabel.label, err = nextString(allArgs, &i, "label required")
+			opts.BorderLabel.label, err = nextString("label required")
 			if err != nil {
 				return err
 			}
 		case "--border-label-pos":
-			pos, err := nextString(allArgs, &i, "label position required (positive or negative integer or 'center')")
+			pos, err := nextString("label position required (positive or negative integer or 'center')")
 			if err != nil {
 				return err
 			}
@@ -2518,15 +2682,23 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-preview-label":
 			opts.PreviewLabel.label = ""
 		case "--preview-label":
-			if opts.PreviewLabel.label, err = nextString(allArgs, &i, "preview label required"); err != nil {
+			if opts.PreviewLabel.label, err = nextString("preview label required"); err != nil {
 				return err
 			}
 		case "--preview-label-pos":
-			pos, err := nextString(allArgs, &i, "preview label position required (positive or negative integer or 'center')")
+			pos, err := nextString("preview label position required (positive or negative integer or 'center')")
 			if err != nil {
 				return err
 			}
 			if err := parseLabelPosition(&opts.PreviewLabel, pos); err != nil {
+				return err
+			}
+		case "--style":
+			preset, err := nextString("preset name required: [default|minimal|full]")
+			if err != nil {
+				return err
+			}
+			if err := applyPreset(opts, preset); err != nil {
 				return err
 			}
 		case "--no-unicode":
@@ -2538,7 +2710,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-ambidouble":
 			opts.Ambidouble = false
 		case "--margin":
-			str, err := nextString(allArgs, &i, "margin required (TRBL / TB,RL / T,RL,B / T,R,B,L)")
+			str, err := nextString("margin required (TRBL / TB,RL / T,RL,B / T,R,B,L)")
 			if err != nil {
 				return err
 			}
@@ -2546,7 +2718,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--padding":
-			str, err := nextString(allArgs, &i, "padding required (TRBL / TB,RL / T,RL,B / T,R,B,L)")
+			str, err := nextString("padding required (TRBL / TB,RL / T,RL,B / T,R,B,L)")
 			if err != nil {
 				return err
 			}
@@ -2554,15 +2726,15 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--tabstop":
-			if opts.Tabstop, err = nextInt(allArgs, &i, "tab stop required"); err != nil {
+			if opts.Tabstop, err = nextInt("tab stop required"); err != nil {
 				return err
 			}
 		case "--with-shell":
-			if opts.WithShell, err = nextString(allArgs, &i, "shell command and flags required"); err != nil {
+			if opts.WithShell, err = nextString("shell command and flags required"); err != nil {
 				return err
 			}
 		case "--listen", "--listen-unsafe":
-			given, str := optionalNextString(allArgs, &i)
+			given, str := optionalNextString()
 			addr := defaultListenAddr
 			if given {
 				var err error
@@ -2581,7 +2753,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--no-clear":
 			opts.ClearOnExit = false
 		case "--walker":
-			str, err := nextString(allArgs, &i, "walker options required [file][,dir][,follow][,hidden]")
+			str, err := nextString("walker options required [file][,dir][,follow][,hidden]")
 			if err != nil {
 				return err
 			}
@@ -2589,242 +2761,57 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--walker-root":
-			if opts.WalkerRoot, err = nextDirs(allArgs, &i); err != nil {
+			if opts.WalkerRoot, err = nextDirs(); err != nil {
 				return err
 			}
 		case "--walker-skip":
-			str, err := nextString(allArgs, &i, "directory names to ignore required")
+			str, err := nextString("directory names to ignore required")
 			if err != nil {
 				return err
 			}
 			opts.WalkerSkip = filterNonEmpty(strings.Split(str, ","))
 		case "--profile-cpu":
-			if opts.CPUProfile, err = nextString(allArgs, &i, "file path required: cpu"); err != nil {
+			if opts.CPUProfile, err = nextString("file path required: cpu"); err != nil {
 				return err
 			}
 		case "--profile-mem":
-			if opts.MEMProfile, err = nextString(allArgs, &i, "file path required: mem"); err != nil {
+			if opts.MEMProfile, err = nextString("file path required: mem"); err != nil {
 				return err
 			}
 		case "--profile-block":
-			if opts.BlockProfile, err = nextString(allArgs, &i, "file path required: block"); err != nil {
+			if opts.BlockProfile, err = nextString("file path required: block"); err != nil {
 				return err
 			}
 		case "--profile-mutex":
-			if opts.MutexProfile, err = nextString(allArgs, &i, "file path required: mutex"); err != nil {
+			if opts.MutexProfile, err = nextString("file path required: mutex"); err != nil {
 				return err
 			}
 		case "--":
 			// Ignored
 		default:
-			if match, value := optString(arg, "--algo="); match {
-				if opts.FuzzyAlgo, err = parseAlgo(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--tmux="); match {
-				if opts.Tmux, err = parseTmuxOptions(value, index); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--scheme="); match {
-				opts.Scheme = strings.ToLower(value)
-			} else if match, value := optString(arg, "-q", "--query="); match {
+			if match, value := optString(arg, "-q"); match {
 				opts.Query = value
-			} else if match, value := optString(arg, "-f", "--filter="); match {
+			} else if match, value := optString(arg, "-f"); match {
 				opts.Filter = &value
-			} else if match, value := optString(arg, "-d", "--delimiter="); match {
+			} else if match, value := optString(arg, "-d"); match {
 				opts.Delimiter = delimiterRegexp(value)
-			} else if match, value := optString(arg, "--border="); match {
-				if opts.BorderShape, err = parseBorder(value, false); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--list-border="); match {
-				if opts.ListBorderShape, err = parseBorder(value, false); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--list-label="); match {
-				opts.ListLabel.label = value
-			} else if match, value := optString(arg, "--list-label-pos="); match {
-				if err := parseLabelPosition(&opts.ListLabel, value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--border-label="); match {
-				opts.BorderLabel.label = value
-			} else if match, value := optString(arg, "--border-label-pos="); match {
-				if err := parseLabelPosition(&opts.BorderLabel, value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--preview-label="); match {
-				opts.PreviewLabel.label = value
-			} else if match, value := optString(arg, "--preview-label-pos="); match {
-				if err := parseLabelPosition(&opts.PreviewLabel, value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--wrap-sign="); match {
-				opts.WrapSign = &value
-			} else if match, value := optString(arg, "--prompt="); match {
-				opts.Prompt = value
-			} else if match, value := optString(arg, "--pointer="); match {
-				str := firstLine(value)
-				opts.Pointer = &str
-			} else if match, value := optString(arg, "--marker="); match {
-				str := firstLine(value)
-				opts.Marker = &str
-			} else if match, value := optString(arg, "--marker-multi-line="); match {
-				if opts.MarkerMulti, err = parseMarkerMultiLine(firstLine(value)); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "-n", "--nth="); match {
+			} else if match, value := optString(arg, "-n"); match {
 				if opts.Nth, err = splitNth(value); err != nil {
 					return err
 				}
-			} else if match, value := optString(arg, "--with-nth="); match {
-				if opts.WithNth, err = splitNth(value); err != nil {
-					return err
-				}
-			} else if match, _ := optString(arg, "-s", "--sort="); match {
+			} else if match, _ := optString(arg, "-s"); match {
 				opts.Sort = 1 // Don't care
-			} else if match, value := optString(arg, "-m", "--multi="); match {
+			} else if match, value := optString(arg, "-m"); match {
 				if opts.Multi, err = atoi(value); err != nil {
 					return err
-				}
-			} else if match, value := optString(arg, "--height="); match {
-				if opts.Height, err = parseHeight(value, index); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--min-height="); match {
-				if opts.MinHeight, err = atoi(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--layout="); match {
-				if opts.Layout, err = parseLayout(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--info="); match {
-				if opts.InfoStyle, opts.InfoPrefix, err = parseInfoStyle(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--info-command="); match {
-				opts.InfoCommand = value
-			} else if match, value := optString(arg, "--separator="); match {
-				opts.Separator = &value
-			} else if match, value := optString(arg, "--scrollbar="); match {
-				opts.Scrollbar = &value
-			} else if match, value := optString(arg, "--toggle-sort="); match {
-				if err := parseToggleSort(opts.Keymap, value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--expect="); match {
-				chords, err := parseKeyChords(value, "key names required")
-				if err != nil {
-					return err
-				}
-				for k, v := range chords {
-					opts.Expect[k] = v
-				}
-			} else if match, value := optString(arg, "--tiebreak="); match {
-				if opts.Criteria, err = parseTiebreak(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--color="); match {
-				if opts.Theme, err = parseTheme(opts.Theme, value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--bind="); match {
-				if err := parseKeymap(opts.Keymap, value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--history="); match {
-				if err := setHistory(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--history-size="); match {
-				n, err := atoi(value)
-				if err != nil {
-					return err
-				}
-				if err := setHistoryMax(n); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--header="); match {
-				opts.Header = strLines(value)
-			} else if match, value := optString(arg, "--header-lines="); match {
-				if opts.HeaderLines, err = atoi(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--gap="); match {
-				if opts.Gap, err = atoi(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--ellipsis="); match {
-				str := firstLine(value)
-				opts.Ellipsis = &str
-			} else if match, value := optString(arg, "--preview="); match {
-				opts.Preview.command = value
-			} else if match, value := optString(arg, "--preview-window="); match {
-				if err := parsePreviewWindow(&opts.Preview, value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--margin="); match {
-				if opts.Margin, err = parseMargin("margin", value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--padding="); match {
-				if opts.Padding, err = parseMargin("padding", value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--tabstop="); match {
-				if opts.Tabstop, err = atoi(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--with-shell="); match {
-				opts.WithShell = value
-			} else if match, value := optString(arg, "--listen="); match {
-				addr, err := parseListenAddress(value)
-				if err != nil {
-					return err
-				}
-				opts.ListenAddr = &addr
-				opts.Unsafe = false
-			} else if match, value := optString(arg, "--listen-unsafe="); match {
-				addr, err := parseListenAddress(value)
-				if err != nil {
-					return err
-				}
-				opts.ListenAddr = &addr
-				opts.Unsafe = true
-			} else if match, value := optString(arg, "--walker="); match {
-				if opts.WalkerOpts, err = parseWalkerOpts(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--walker-root="); match {
-				if !isDir(value) {
-					return errors.New("not a directory: " + value)
-				}
-				dirs, _ := nextDirs(allArgs, &i)
-				opts.WalkerRoot = append([]string{value}, dirs...)
-			} else if match, value := optString(arg, "--walker-skip="); match {
-				opts.WalkerSkip = filterNonEmpty(strings.Split(value, ","))
-			} else if match, value := optString(arg, "--hscroll-off="); match {
-				if opts.HscrollOff, err = atoi(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--scroll-off="); match {
-				if opts.ScrollOff, err = atoi(value); err != nil {
-					return err
-				}
-			} else if match, value := optString(arg, "--jump-labels="); match {
-				opts.JumpLabels = value
-				validateJumpLabels = true
-			} else if match, value := optString(arg, "--tail="); match {
-				if opts.Tail, err = atoi(value); err != nil {
-					return err
-				}
-				if opts.Tail <= 0 {
-					return errors.New("number of items to keep must be a positive integer")
 				}
 			} else {
 				return errors.New("unknown option: " + arg)
 			}
+		}
+
+		if val != nil {
+			return errors.New("unexpected value for " + arg + ": " + *val)
 		}
 	}
 	*index += len(allArgs)
@@ -2857,6 +2844,48 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		}
 	}
 	return err
+}
+
+func applyPreset(opts *Options, preset string) error {
+	switch strings.ToLower(preset) {
+	case "default":
+		opts.ListBorderShape = tui.BorderUndefined
+		opts.InputBorderShape = tui.BorderUndefined
+		opts.HeaderBorderShape = tui.BorderUndefined
+		opts.Preview.border = tui.DefaultBorderShape
+		opts.Preview.info = true
+		opts.InfoStyle = infoDefault
+		opts.Theme.Gutter = tui.NewColorAttr()
+		opts.Separator = nil
+		opts.Scrollbar = nil
+		opts.CursorLine = false
+	case "minimal":
+		opts.ListBorderShape = tui.BorderUndefined
+		opts.InputBorderShape = tui.BorderUndefined
+		opts.HeaderBorderShape = tui.BorderUndefined
+		opts.Preview.border = tui.BorderLine
+		opts.Preview.info = false
+		opts.InfoStyle = infoDefault
+		opts.Theme.Gutter = tui.ColorAttr{Color: -1, Attr: 0}
+		empty := ""
+		opts.Separator = &empty
+		opts.Scrollbar = &empty
+		opts.CursorLine = false
+	case "full":
+		opts.ListBorderShape = tui.DefaultBorderShape
+		opts.InputBorderShape = tui.DefaultBorderShape
+		opts.HeaderBorderShape = tui.DefaultBorderShape
+		opts.Preview.border = tui.DefaultBorderShape
+		opts.Preview.info = true
+		opts.InfoStyle = infoInlineRight
+		opts.Theme.Gutter = tui.NewColorAttr()
+		opts.Separator = nil
+		opts.Scrollbar = nil
+		opts.CursorLine = true
+	default:
+		return errors.New("unsupported style preset: " + preset)
+	}
+	return nil
 }
 
 func validateSign(sign string, signOptName string) error {
@@ -2920,6 +2949,14 @@ func postProcessOptions(opts *Options) error {
 
 	if opts.ListBorderShape == tui.BorderUndefined {
 		opts.ListBorderShape = tui.BorderNone
+	}
+
+	if opts.InputBorderShape == tui.BorderUndefined {
+		opts.InputBorderShape = tui.BorderNone
+	}
+
+	if opts.HeaderBorderShape == tui.BorderUndefined {
+		opts.HeaderBorderShape = tui.BorderNone
 	}
 
 	if opts.Pointer == nil {
