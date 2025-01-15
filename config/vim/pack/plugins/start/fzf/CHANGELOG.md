@@ -6,7 +6,15 @@ CHANGELOG
 
 This version introduces three new border types, `--list-border`, `--input-border`, and `--header-border`, offering much greater flexibility for customizing the user interface.
 
-Also, fzf now offers three "style presets" for easier customization, which can be activated using the `--style=[default|minimal|full]` option.
+<img src="https://raw.githubusercontent.com/junegunn/i/master/fzf-4-borders.png" />
+
+Also, fzf now offers "style presets" for quick customization, which can be activated using the `--style` option.
+
+| Preset    | Screenshot                                                                             |
+| :---      | :---                                                                                   |
+| `default` | <img src="https://raw.githubusercontent.com/junegunn/i/master/fzf-style-default.png"/> |
+| `full`    | <img src="https://raw.githubusercontent.com/junegunn/i/master/fzf-style-full.png"/>    |
+| `minimal` | <img src="https://raw.githubusercontent.com/junegunn/i/master/fzf-style-minimal.png"/> |
 
 - Style presets (#4160)
     - `--style=full`
@@ -59,6 +67,15 @@ Also, fzf now offers three "style presets" for easier customization, which can b
   ```
 - Added `toggle-multi-line` action
 - Added `toggle-hscroll` action
+- Added `change-nth` action for dynamically changing the value of the `--nth` option
+  ```sh
+  # Start with --nth 1, then 2, then 3, then back to the default, 1
+  echo 'foo foobar foobarbaz' | fzf --bind 'space:change-nth(2|3|)' --nth 1 -q foo
+  ```
+- A single-character delimiter is now treated as a plain string delimiter rather than a regular expression delimiter, even if it's a regular expression meta-character.
+    - This means you can just write `--delimiter '|'` instead of escaping it as `--delimiter '\|'`
+- Bug fixes
+- Bug fixes in fish scripts (thanks to @bitraid)
 
 0.57.0
 ------

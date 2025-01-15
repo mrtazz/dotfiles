@@ -332,8 +332,21 @@ func (o *previewOpts) Toggle() {
 	o.hidden = !o.hidden
 }
 
-func (o *previewOpts) HasBorderRight() bool {
-	return o.border.HasRight() || o.border == tui.BorderLine && o.position == posLeft
+func (o *previewOpts) Border() tui.BorderShape {
+	shape := o.border
+	if shape == tui.BorderLine {
+		switch o.position {
+		case posUp:
+			shape = tui.BorderBottom
+		case posDown:
+			shape = tui.BorderTop
+		case posLeft:
+			shape = tui.BorderRight
+		case posRight:
+			shape = tui.BorderLeft
+		}
+	}
+	return shape
 }
 
 func defaultTmuxOptions(index int) *tmuxOptions {
@@ -742,18 +755,23 @@ func delimiterRegexp(str string) Delimiter {
 	// Special handling of \t
 	str = strings.ReplaceAll(str, "\\t", "\t")
 
-	// 1. Pattern does not contain any special character
+	// 1. Pattern is a single character
+	if len([]rune(str)) == 1 {
+		return Delimiter{str: &str}
+	}
+
+	// 2. Pattern does not contain any special character
 	if regexp.QuoteMeta(str) == str {
 		return Delimiter{str: &str}
 	}
 
 	rx, e := regexp.Compile(str)
-	// 2. Pattern is not a valid regular expression
+	// 3. Pattern is not a valid regular expression
 	if e != nil {
 		return Delimiter{str: &str}
 	}
 
-	// 3. Pattern as regular expression. Slow.
+	// 4. Pattern as regular expression. Slow.
 	return Delimiter{regex: rx}
 }
 
@@ -1288,7 +1306,7 @@ const (
 
 func init() {
 	executeRegexp = regexp.MustCompile(
-		`(?si)[:+](become|execute(?:-multi|-silent)?|reload(?:-sync)?|preview|(?:change|transform)-(?:query|prompt|(?:border|list|preview|input|header)-label|header)|transform|change-(?:preview-window|preview|multi)|(?:re|un)bind|pos|put|print)`)
+		`(?si)[:+](become|execute(?:-multi|-silent)?|reload(?:-sync)?|preview|(?:change|transform)-(?:query|prompt|(?:border|list|preview|input|header)-label|header)|transform|change-(?:preview-window|preview|multi|nth)|(?:re|un)bind|pos|put|print)`)
 	splitRegexp = regexp.MustCompile("[,:]+")
 	actionNameRegexp = regexp.MustCompile("(?i)^[a-z-]+")
 }
@@ -1666,6 +1684,8 @@ func isExecuteAction(str string) actionType {
 		return actChangeQuery
 	case "change-multi":
 		return actChangeMulti
+	case "change-nth":
+		return actChangeNth
 	case "pos":
 		return actPosition
 	case "execute":

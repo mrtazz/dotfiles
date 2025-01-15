@@ -73,11 +73,10 @@ function fzf_key_bindings
           builtin history -z --reverse | command perl -0 -pe 's/^/$.\t/g; s/\n/\n\t/gm' | eval (__fzfcmd) --tac --read0 --print0 -q '(commandline)' | string replace -r '^\d*\t' '' | read -lz result
           and commandline -- $result
         else
-          set -l line 0
-          for i in (builtin history -z --reverse | string split0)
-            set line (math $line + 1)
-            string escape -n -- $line\t$i
-          end | string join0 | string replace -a '\n' '\n\t' | string unescape -n | eval (__fzfcmd) --tac --read0 --print0 -q '(commandline)' | string replace -r '^\d*\t' '' | read -lz result
+          set -l h (builtin history -z | string split0)
+          for i in (seq (count $h) -1 1)
+            string join0 -- $i\t(string replace -a -- \n \n\t $h[$i] | string collect)
+          end | eval (__fzfcmd) --read0 --print0 -q '(commandline)' | string replace -r '^\d*\t' '' | read -lz result
           and commandline -- $result
         end
       else
@@ -133,14 +132,12 @@ function fzf_key_bindings
     bind \ec fzf-cd-widget
   end
 
-  if bind -M insert &> /dev/null
-    bind -M insert \cr fzf-history-widget
-    if not set -q FZF_CTRL_T_COMMAND; or test -n "$FZF_CTRL_T_COMMAND"
-      bind -M insert \ct fzf-file-widget
-    end
-    if not set -q FZF_ALT_C_COMMAND; or test -n "$FZF_ALT_C_COMMAND"
-      bind -M insert \ec fzf-cd-widget
-    end
+  bind -M insert \cr fzf-history-widget
+  if not set -q FZF_CTRL_T_COMMAND; or test -n "$FZF_CTRL_T_COMMAND"
+    bind -M insert \ct fzf-file-widget
+  end
+  if not set -q FZF_ALT_C_COMMAND; or test -n "$FZF_ALT_C_COMMAND"
+    bind -M insert \ec fzf-cd-widget
   end
 
   function __fzf_parse_commandline -d 'Parse the current command line token and return split of existing filepath, fzf query, and optional -option= prefix'
