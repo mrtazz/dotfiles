@@ -3423,28 +3423,28 @@ class TestGoFZF < TestBase
       │ >
       │   100/100 ──────
       │ > 1
-      │
+      │   ┈┈┈┈┈┈┈┈┈┈┈┈┈┈
       │   2
-      │
+      │   ┈┈┈┈┈┈┈┈┈┈┈┈┈┈
       │   3
-      │
+      │   ┈┈┈┈┈┈┈┈┈┈┈┈┈┈
       │   4
     BLOCK
     tmux.until { assert_block(block, _1) }
   end
 
   def test_gap_2
-    tmux.send_keys %(seq 100 | #{FZF} --gap=2 --border --reverse), :Enter
+    tmux.send_keys %(seq 100 | #{FZF} --gap=2 --gap-line xyz --border --reverse), :Enter
     block = <<~BLOCK
       ╭─────────────────
       │ >
       │   100/100 ──────
       │ > 1
       │
-      │
+      │   xyzxyzxyzxyzxy
       │   2
       │
-      │
+      │   xyzxyzxyzxyzxy
       │   3
     BLOCK
     tmux.until { assert_block(block, _1) }
@@ -3719,6 +3719,24 @@ class TestGoFZF < TestBase
     tmux.until { assert_block(block, _1) }
   end
 
+  def test_style_full_adaptive_height_double
+    tmux.send_keys %(seq 1| #{FZF} --style=full:double --border --height=~100% --header-lines=1 --info=default), :Enter
+    block = <<~BLOCK
+      ╔══════════
+      ║ ╔════════
+      ║ ╚════════
+      ║ ╔════════
+      ║ ║   1
+      ║ ╚════════
+      ║ ╔════════
+      ║ ║   0/0
+      ║ ║ >
+      ║ ╚════════
+      ╚══════════
+    BLOCK
+    tmux.until { assert_block(block, _1) }
+  end
+
   def test_change_nth
     input = [
       *[''] * 1000,
@@ -3729,19 +3747,38 @@ class TestGoFZF < TestBase
       *[''] * 1000
     ]
     writelines(input)
-    tmux.send_keys %(#{FZF} -qfoo -n1 --bind 'space:change-nth:2|3|4|5|' < #{tempname}), :Enter
+    nths = '1,2..4,-1,-3..,..2'
+    tmux.send_keys %(#{FZF} -qfoo -n#{nths} --bind 'space:change-nth(2|3|4|5|),result:transform-prompt:echo "[$FZF_NTH] "' < #{tempname}), :Enter
 
-    tmux.until { |lines| assert_equal 4, lines.match_count }
+    tmux.until do |lines|
+      assert lines.any_include?("[#{nths}] foo")
+      assert_equal 4, lines.match_count
+    end
     tmux.send_keys :Space
-    tmux.until { |lines| assert_equal 3, lines.match_count }
+    tmux.until do |lines|
+      assert lines.any_include?('[2] foo')
+      assert_equal 3, lines.match_count
+    end
     tmux.send_keys :Space
-    tmux.until { |lines| assert_equal 2, lines.match_count }
+    tmux.until do |lines|
+      assert lines.any_include?('[3] foo')
+      assert_equal 2, lines.match_count
+    end
     tmux.send_keys :Space
-    tmux.until { |lines| assert_equal 1, lines.match_count }
+    tmux.until do |lines|
+      assert lines.any_include?('[4] foo')
+      assert_equal 1, lines.match_count
+    end
     tmux.send_keys :Space
-    tmux.until { |lines| assert_equal 0, lines.match_count }
+    tmux.until do |lines|
+      assert lines.any_include?('[5] foo')
+      assert_equal 0, lines.match_count
+    end
     tmux.send_keys :Space
-    tmux.until { |lines| assert_equal 4, lines.match_count }
+    tmux.until do |lines|
+      assert lines.any_include?("[#{nths}] foo")
+      assert_equal 4, lines.match_count
+    end
   end
 end
 

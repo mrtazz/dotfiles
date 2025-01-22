@@ -5191,7 +5191,7 @@ function! s:DoToggleHeadHeader(value) abort
 endfunction
 
 function! s:DoToggleHelpHeader(value) abort
-  exe 'help fugitive-map'
+  exe 'help fugitive-maps'
 endfunction
 
 function! s:DoStagePushHeader(value) abort
@@ -7917,6 +7917,7 @@ function! s:MapGitOps(is_ftplugin) abort
   exe s:Map('n', 'cc', ':<C-U>Git commit<CR>', '<silent>', ft)
   exe s:Map('n', 'ce', ':<C-U>Git commit --amend --no-edit<CR>', '<silent>', ft)
   exe s:Map('n', 'cw', ':<C-U>Git commit --amend --only<CR>', '<silent>', ft)
+  exe s:Map('n', 'cW', ':<C-U>Git commit --fixup=reword:<C-R>=<SID>SquashArgument()<CR>', '', ft)
   exe s:Map('n', 'cva', ':<C-U>tab Git commit -v --amend<CR>', '<silent>', ft)
   exe s:Map('n', 'cvc', ':<C-U>tab Git commit -v<CR>', '<silent>', ft)
   exe s:Map('n', 'cRa', ':<C-U>Git commit --reset-author --amend<CR>', '<silent>', ft)
@@ -7926,7 +7927,8 @@ function! s:MapGitOps(is_ftplugin) abort
   exe s:Map('n', 'cF', ':<C-U><Bar>Git -c sequence.editor=true rebase --interactive --autosquash<C-R>=<SID>RebaseArgument()<CR><Home>Git commit --fixup=<C-R>=<SID>SquashArgument()<CR>', '', ft)
   exe s:Map('n', 'cs', ':<C-U>Git commit --no-edit --squash=<C-R>=<SID>SquashArgument()<CR>', '', ft)
   exe s:Map('n', 'cS', ':<C-U><Bar>Git -c sequence.editor=true rebase --interactive --autosquash<C-R>=<SID>RebaseArgument()<CR><Home>Git commit --no-edit --squash=<C-R>=<SID>SquashArgument()<CR>', '', ft)
-  exe s:Map('n', 'cA', ':<C-U>Git commit --edit --squash=<C-R>=<SID>SquashArgument()<CR>', '', ft)
+  exe s:Map('n', 'cn', ':<C-U>Git commit --edit --squash=<C-R>=<SID>SquashArgument()<CR>', '', ft)
+  exe s:Map('n', 'cA', ':<C-U>echoerr "Use cn"<CR>', '<silent><unique>', ft)
   exe s:Map('n', 'c?', ':<C-U>help fugitive_c<CR>', '<silent>', ft)
 
   exe s:Map('n', 'cr<Space>', ':Git revert<Space>', '', ft)
@@ -8045,8 +8047,8 @@ function! fugitive#MapJumps(...) abort
 
     call s:Map('n', '.',     ":<C-U> <C-R>=<SID>fnameescape(fugitive#Real(@%))<CR><Home>")
     call s:Map('x', '.',     ":<C-U> <C-R>=<SID>fnameescape(fugitive#Real(@%))<CR><Home>")
-    call s:Map('n', 'g?',    ":<C-U>help fugitive-map<CR>", '<silent>')
-    call s:Map('n', '<F1>',  ":<C-U>help fugitive-map<CR>", '<silent>')
+    call s:Map('n', 'g?',    ":<C-U>help fugitive-maps<CR>", '<silent>')
+    call s:Map('n', '<F1>',  ":<C-U>help fugitive-maps<CR>", '<silent>')
   endif
 
   let old_browsex = maparg('<Plug>NetrwBrowseX', 'n')

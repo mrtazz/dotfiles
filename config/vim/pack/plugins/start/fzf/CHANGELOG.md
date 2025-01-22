@@ -3,6 +3,7 @@ CHANGELOG
 
 0.58.0
 ------
+_Release highlights: https://junegunn.github.io/fzf/releases/0.58.0/_
 
 This version introduces three new border types, `--list-border`, `--input-border`, and `--header-border`, offering much greater flexibility for customizing the user interface.
 
@@ -17,7 +18,7 @@ Also, fzf now offers "style presets" for quick customization, which can be activ
 | `minimal` | <img src="https://raw.githubusercontent.com/junegunn/i/master/fzf-style-minimal.png"/> |
 
 - Style presets (#4160)
-    - `--style=full`
+    - `--style=full[:BORDER_STYLE]`
     - `--style=default`
     - `--style=minimal`
 - Border and label for the list section (#4148)
@@ -61,6 +62,15 @@ Also, fzf now offers "style presets" for quick customization, which can be activ
         - `transform-header-label`
 - Added `--preview-border[=STYLE]` as short for `--preview-window=border[-STYLE]`
 - Added new preview border style `line` which draws a single separator line between the preview window and the rest of the interface
+- fzf will now render a dashed line (`┈┈`) in each `--gap` for better visual separation.
+  ```sh
+  # All bash/zsh functions, highlighted
+  declare -f |
+    perl -0 -pe 's/^}\n/}\0/gm' |
+    bat --plain --language bash --color always |
+    fzf --read0 --ansi --layout reverse --multi --highlight-line --gap
+  ```
+    * You can customize the line using `--gap-line[=STR]`.
 - You can specify `border-native` to `--tmux` so that native tmux border is used instead of `--border`. This can be useful if you start a different program from inside the popup.
   ```sh
   fzf --tmux border-native --bind 'enter:execute:less {}'
@@ -72,10 +82,26 @@ Also, fzf now offers "style presets" for quick customization, which can be activ
   # Start with --nth 1, then 2, then 3, then back to the default, 1
   echo 'foo foobar foobarbaz' | fzf --bind 'space:change-nth(2|3|)' --nth 1 -q foo
   ```
+- `--nth` parts of each line can now be rendered in a different text style
+  ```sh
+  # nth in a different style
+  ls -al | fzf --nth -1 --color nth:italic
+  ls -al | fzf --nth -1 --color nth:reverse
+  ls -al | fzf --nth -1 --color nth:reverse:bold
+
+  # Dim the other parts
+  ls -al | fzf --nth -1 --color nth:regular,fg:dim
+
+  # With 'change-nth'. The current nth option is exported as $FZF_NTH.
+  ps -ef | fzf --reverse --header-lines 1 --header-border bottom --input-border \
+             --color nth:regular,fg:dim \
+             --bind 'ctrl-n:change-nth(8..|1|2|3|4|5|6|7|)' \
+             --bind 'result:transform-prompt:echo "${FZF_NTH}> "'
+  ```
 - A single-character delimiter is now treated as a plain string delimiter rather than a regular expression delimiter, even if it's a regular expression meta-character.
     - This means you can just write `--delimiter '|'` instead of escaping it as `--delimiter '\|'`
 - Bug fixes
-- Bug fixes in fish scripts (thanks to @bitraid)
+- Bug fixes and improvements in fish scripts (thanks to @bitraid)
 
 0.57.0
 ------

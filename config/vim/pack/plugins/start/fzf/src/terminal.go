@@ -267,6 +267,8 @@ type Terminal struct {
 	hscrollOff         int
 	scrollOff          int
 	gap                int
+	gapLine            labelPrinter
+	gapLineLen         int
 	wordRubout         string
 	wordNext           string
 	cx                 int
@@ -299,7 +301,9 @@ type Terminal struct {
 	scrollbar          string
 	previewScrollbar   string
 	ansi               bool
+	nthAttr            tui.Attr
 	nth                []Range
+	nthCurrent         []Range
 	tabstop            int
 	margin             [4]sizeSpec
 	padding            [4]sizeSpec
@@ -883,7 +887,9 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		header:             []string{},
 		header0:            opts.Header,
 		ansi:               opts.Ansi,
+		nthAttr:            opts.Theme.Nth.Attr,
 		nth:                opts.Nth,
+		nthCurrent:         opts.Nth,
 		tabstop:            opts.Tabstop,
 		hasStartActions:    false,
 		hasResultActions:   false,
@@ -947,6 +953,11 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 			bar = "-"
 		}
 		t.separator, t.separatorLen = t.ansiLabelPrinter(bar, &tui.ColSeparator, true)
+	}
+
+	// Gap line
+	if t.gap > 0 && len(*opts.GapLine) > 0 {
+		t.gapLine, t.gapLineLen = t.ansiLabelPrinter(*opts.GapLine, &tui.ColGapLine, true)
 	}
 
 	if opts.Ellipsis != nil {
@@ -1035,6 +1046,9 @@ func (t *Terminal) environImpl(forPreview bool) []string {
 	env = append(env, "FZF_PREVIEW_LABEL="+t.previewLabelOpts.label)
 	env = append(env, "FZF_BORDER_LABEL="+t.borderLabelOpts.label)
 	env = append(env, "FZF_LIST_LABEL="+t.listLabelOpts.label)
+	if len(t.nthCurrent) > 0 {
+		env = append(env, "FZF_NTH="+RangesToString(t.nthCurrent))
+	}
 	env = append(env, fmt.Sprintf("FZF_TOTAL_COUNT=%d", t.count))
 	env = append(env, fmt.Sprintf("FZF_MATCH_COUNT=%d", t.merger.Length()))
 	env = append(env, fmt.Sprintf("FZF_SELECT_COUNT=%d", len(t.selected)))
@@ -1164,7 +1178,7 @@ func (t *Terminal) ansiLabelPrinter(str string, color *tui.ColorPair, fill bool)
 	printFn := func(window tui.Window, limit int) {
 		if offsets == nil {
 			// tui.Col* are not initialized until renderer.Init()
-			offsets = result.colorOffsets(nil, t.theme, *color, *color, false)
+			offsets = result.colorOffsets(nil, nil, t.theme, *color, *color, t.nthAttr, false)
 		}
 		for limit > 0 {
 			if length > limit {
@@ -2446,15 +2460,36 @@ func (t *Terminal) canSpanMultiLines() bool {
 	return t.multiLine || t.wrap || t.gap > 0
 }
 
-func (t *Terminal) renderEmptyLine(line int, barRange [2]int) {
-	t.move(line, 0, true)
-	t.markEmptyLine(line)
+func (t *Terminal) renderBar(line int, barRange [2]int) {
 	// If the screen is not filled with the list in non-multi-line mode,
 	// scrollbar is not visible at all. But in multi-line mode, we may need
 	// to redraw the scrollbar character at the end.
 	if t.canSpanMultiLines() {
 		t.prevLines[line].hasBar = t.printBar(line, true, barRange)
 	}
+}
+
+func (t *Terminal) renderEmptyLine(line int, barRange [2]int) {
+	t.move(line, 0, true)
+	t.markEmptyLine(line)
+	t.renderBar(line, barRange)
+}
+
+func (t *Terminal) renderGapLine(line int, barRange [2]int, drawLine bool) {
+	t.move(line, 0, false)
+	t.window.CPrint(tui.ColCursorEmpty, t.pointerEmpty)
+	t.window.Print(t.markerEmpty)
+	x := t.pointerLen + t.markerLen
+
+	width := t.window.Width() - x - 1
+	if drawLine && t.gapLine != nil {
+		t.gapLine(t.window, width)
+	} else {
+		t.move(line, x, true)
+	}
+	t.markOtherLine(line)
+	t.renderBar(line, barRange)
+	t.prevLines[line].width = width
 }
 
 func (t *Terminal) printList() {
@@ -2629,7 +2664,7 @@ func (t *Terminal) printItem(result Result, line int, maxLine int, index int, cu
 	}
 	for i := 0; i < t.gap && finalLineNum < maxLine; i++ {
 		finalLineNum++
-		t.renderEmptyLine(finalLineNum, barRange)
+		t.renderGapLine(finalLineNum, barRange, i == t.gap-1)
 	}
 	return finalLineNum
 }
@@ -2689,7 +2724,41 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 		}
 		sort.Sort(ByOrder(charOffsets))
 	}
-	allOffsets := result.colorOffsets(charOffsets, t.theme, colBase, colMatch, current)
+
+	// When postTask is nil, we're printing header lines. No need to care about nth.
+	var nthOffsets []Offset
+	if postTask != nil {
+		wholeCovered := len(t.nthCurrent) == 0
+		for _, nth := range t.nthCurrent {
+			// Do we still want to apply a different style when the current nth
+			// covers the whole string? Probably not. And we can simplify the logic.
+			if nth.IsFull() {
+				wholeCovered = true
+				break
+			}
+		}
+		if wholeCovered && t.nthAttr&tui.AttrRegular > 0 {
+			// But if 'nth' is set to 'regular', it's a sign that you're applying
+			// a different style to the rest of the string. e.g. 'nth:regular,fg:dim'
+			// In this case, we still need to apply it to clear the style.
+			colBase = colBase.WithAttr(t.nthAttr)
+		}
+		if !wholeCovered && t.nthAttr > 0 {
+			var tokens []Token
+			if item.transformed != nil {
+				tokens = item.transformed.tokens
+			} else {
+				tokens = Transform(Tokenize(item.text.ToString(), t.delimiter), t.nthCurrent)
+			}
+			for _, token := range tokens {
+				start := token.prefixLength
+				end := start + int32(token.text.Length())
+				nthOffsets = append(nthOffsets, Offset{int32(start), int32(end)})
+			}
+			sort.Sort(ByOrder(nthOffsets))
+		}
+	}
+	allOffsets := result.colorOffsets(charOffsets, nthOffsets, t.theme, colBase, colMatch, t.nthAttr, current)
 
 	maxLines := 1
 	if t.canSpanMultiLines() {
@@ -4639,6 +4708,7 @@ func (t *Terminal) Loop() error {
 					// The default
 					newNth = &t.nth
 				}
+				t.nthCurrent = *newNth
 				// Cycle
 				if len(tokens) > 1 {
 					a.a = strings.Join(append(tokens[1:], tokens[0]), "|")
