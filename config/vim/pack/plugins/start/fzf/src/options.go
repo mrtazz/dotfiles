@@ -11,6 +11,7 @@ import (
 
 	"github.com/junegunn/fzf/src/algo"
 	"github.com/junegunn/fzf/src/tui"
+	"github.com/junegunn/fzf/src/util"
 
 	"github.com/junegunn/go-shellwords"
 	"github.com/rivo/uniseg"
@@ -46,8 +47,8 @@ Usage: fzf [options]
     --tail=NUM               Maximum number of items to keep in memory
     --disabled               Do not perform search
     --tiebreak=CRI[,..]      Comma-separated list of sort criteria to apply
-                             when the scores are tied [length|chunk|begin|end|index]
-                             (default: length)
+                             when the scores are tied
+                             [length|chunk|pathname|begin|end|index] (default: length)
 
   INPUT/OUTPUT
     --read0                  Read input delimited by ASCII NUL characters
@@ -68,8 +69,9 @@ Usage: fzf [options]
                              minus the given value.
                              If prefixed with '~', fzf will determine the height
                              according to the input size.
-    --min-height=HEIGHT      Minimum height for percent --height is given in percent
-                             (default: 10)
+    --min-height=HEIGHT[+]   Minimum height when --height is given as a percentage.
+                             Add '+' to automatically increase the value
+                             according to the other layout options (default: 10+).
     --tmux[=OPTS]            Start fzf in a tmux popup (requires tmux 3.3+)
                              [center|top|bottom|left|right][,SIZE[%]][,SIZE[%]]
                              [,border-native] (default: center,50%)
@@ -164,6 +166,9 @@ Usage: fzf [options]
     --header-border[=STYLE]  Draw border around the header section
                              [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
                               top|bottom|left|right|none] (default: rounded)
+    --header-lines-border[=STYLE]
+                             Display header from --header-lines with a separate border.
+                             Pass 'none' to still separate it but without a border.
     --header-label=LABEL     Label to print on the header border
     --header-label-pos=COL   Position of the header label
                              [POSITIVE_INTEGER: columns from left|
@@ -238,6 +243,7 @@ const (
 	byLength
 	byBegin
 	byEnd
+	byPathname
 )
 
 type heightSpec struct {
@@ -597,6 +603,7 @@ type Options struct {
 	ListBorderShape   tui.BorderShape
 	InputBorderShape  tui.BorderShape
 	HeaderBorderShape tui.BorderShape
+	HeaderLinesShape  tui.BorderShape
 	InputLabel        labelOpts
 	HeaderLabel       labelOpts
 	BorderLabel       labelOpts
@@ -649,7 +656,7 @@ func defaultOptions() *Options {
 		Man:          false,
 		Fuzzy:        true,
 		FuzzyAlgo:    algo.FuzzyMatchV2,
-		Scheme:       "default",
+		Scheme:       "", // Unknown
 		Extended:     true,
 		Phony:        false,
 		Case:         CaseSmart,
@@ -660,14 +667,14 @@ func defaultOptions() *Options {
 		Sort:         1000,
 		Track:        trackDisabled,
 		Tac:          false,
-		Criteria:     []criterion{byScore, byLength},
+		Criteria:     []criterion{}, // Unknown
 		Multi:        0,
 		Ansi:         false,
 		Mouse:        true,
 		Theme:        theme,
 		Black:        false,
 		Bold:         true,
-		MinHeight:    10,
+		MinHeight:    -10,
 		Layout:       layoutDefault,
 		Cycle:        false,
 		Wrap:         false,
@@ -798,16 +805,6 @@ func parseAlgo(str string) (algo.Algo, error) {
 		return algo.FuzzyMatchV2, nil
 	}
 	return nil, errors.New("invalid algorithm (expected: v1 or v2)")
-}
-
-func processScheme(opts *Options) error {
-	if !algo.Init(opts.Scheme) {
-		return errors.New("invalid scoring scheme (expected: default|path|history)")
-	}
-	if opts.Scheme == "history" {
-		opts.Criteria = []criterion{byScore}
-	}
-	return nil
 }
 
 func parseBorder(str string, optional bool, allowLine bool) (tui.BorderShape, error) {
@@ -1033,6 +1030,19 @@ func parseKeyChordsImpl(str string, message string) (map[tui.Event]string, error
 	return chords, nil
 }
 
+func parseScheme(str string) (string, []criterion, error) {
+	str = strings.ToLower(str)
+	switch str {
+	case "history":
+		return str, []criterion{byScore}, nil
+	case "path":
+		return str, []criterion{byScore, byPathname, byLength}, nil
+	case "default":
+		return str, []criterion{byScore, byLength}, nil
+	}
+	return str, nil, errors.New("invalid scoring scheme: " + str + " (expected: default|path|history)")
+}
+
 func parseTiebreak(str string) ([]criterion, error) {
 	criteria := []criterion{byScore}
 	hasIndex := false
@@ -1040,6 +1050,7 @@ func parseTiebreak(str string) ([]criterion, error) {
 	hasLength := false
 	hasBegin := false
 	hasEnd := false
+	hasPathname := false
 	check := func(notExpected *bool, name string) error {
 		if *notExpected {
 			return errors.New("duplicate sort criteria: " + name)
@@ -1061,6 +1072,11 @@ func parseTiebreak(str string) ([]criterion, error) {
 				return nil, err
 			}
 			criteria = append(criteria, byChunk)
+		case "pathname":
+			if err := check(&hasPathname, "pathname"); err != nil {
+				return nil, err
+			}
+			criteria = append(criteria, byPathname)
 		case "length":
 			if err := check(&hasLength, "length"); err != nil {
 				return nil, err
@@ -1317,7 +1333,7 @@ const (
 
 func init() {
 	executeRegexp = regexp.MustCompile(
-		`(?si)[:+](become|execute(?:-multi|-silent)?|reload(?:-sync)?|preview|(?:change|transform)-(?:query|prompt|(?:border|list|preview|input|header)-label|header)|transform|change-(?:preview-window|preview|multi|nth)|(?:re|un)bind|pos|put|print)`)
+		`(?si)[:+](become|execute(?:-multi|-silent)?|reload(?:-sync)?|preview|(?:change|transform)-(?:query|prompt|(?:border|list|preview|input|header)-label|header|search|nth)|transform|change-(?:preview-window|preview|multi)|(?:re|un)bind|pos|put|print|search)`)
 	splitRegexp = regexp.MustCompile("[,:]+")
 	actionNameRegexp = regexp.MustCompile("(?i)^[a-z-]+")
 }
@@ -1372,6 +1388,8 @@ Loop:
 		masked += strings.Repeat(" ", loc[1])
 		action = action[loc[1]:]
 	}
+	masked = strings.ReplaceAll(masked, ",,,", string([]rune{',', escapedComma, ','}))
+	masked = strings.ReplaceAll(masked, ",:,", string([]rune{',', escapedColon, ','}))
 	masked = strings.ReplaceAll(masked, "::", string([]rune{escapedColon, ':'}))
 	masked = strings.ReplaceAll(masked, ",:", string([]rune{escapedComma, ':'}))
 	masked = strings.ReplaceAll(masked, "+:", string([]rune{escapedPlus, ':'}))
@@ -1571,6 +1589,8 @@ func parseActionList(masked string, original string, prevActions []*action, putA
 			} else {
 				return nil, errors.New("unable to put non-printable character")
 			}
+		case "bell":
+			appendAction(actBell)
 		default:
 			t := isExecuteAction(specLower)
 			if t == actIgnore {
@@ -1621,33 +1641,44 @@ func parseKeymap(keymap map[tui.Event][]*action, str string) error {
 	var err error
 	masked := maskActionContents(str)
 	idx := 0
+	keys := []string{}
 	for _, pairStr := range strings.Split(masked, ",") {
 		origPairStr := str[idx : idx+len(pairStr)]
 		idx += len(pairStr) + 1
 
 		pair := strings.SplitN(pairStr, ":", 2)
-		if len(pair) < 2 {
-			return errors.New("bind action not specified: " + origPairStr)
+		if len(pair[0]) == 0 {
+			return errors.New("key name required")
 		}
-		var key tui.Event
-		if len(pair[0]) == 1 && pair[0][0] == escapedColon {
-			key = tui.Key(':')
-		} else if len(pair[0]) == 1 && pair[0][0] == escapedComma {
-			key = tui.Key(',')
-		} else if len(pair[0]) == 1 && pair[0][0] == escapedPlus {
-			key = tui.Key('+')
-		} else {
-			keys, err := parseKeyChordsImpl(pair[0], "key name required")
+		keys = append(keys, pair[0])
+		if len(pair) < 2 {
+			continue
+		}
+		for _, keyName := range keys {
+			var key tui.Event
+			if len(keyName) == 1 && keyName[0] == escapedColon {
+				key = tui.Key(':')
+			} else if len(keyName) == 1 && keyName[0] == escapedComma {
+				key = tui.Key(',')
+			} else if len(keyName) == 1 && keyName[0] == escapedPlus {
+				key = tui.Key('+')
+			} else {
+				keys, err := parseKeyChordsImpl(keyName, "key name required")
+				if err != nil {
+					return err
+				}
+				key = firstKey(keys)
+			}
+			putAllowed := key.Type == tui.Rune && unicode.IsGraphic(key.Char)
+			keymap[key], err = parseActionList(pair[1], origPairStr[len(pair[0])+1:], keymap[key], putAllowed)
 			if err != nil {
 				return err
 			}
-			key = firstKey(keys)
 		}
-		putAllowed := key.Type == tui.Rune && unicode.IsGraphic(key.Char)
-		keymap[key], err = parseActionList(pair[1], origPairStr[len(pair[0])+1:], keymap[key], putAllowed)
-		if err != nil {
-			return err
-		}
+		keys = keys[:0]
+	}
+	if len(keys) > 0 {
+		return errors.New("bind action not specified: " + strings.Join(keys, ", "))
 	}
 	return nil
 }
@@ -1723,10 +1754,16 @@ func isExecuteAction(str string) actionType {
 		return actTransformHeaderLabel
 	case "transform-header":
 		return actTransformHeader
+	case "transform-nth":
+		return actTransformNth
 	case "transform-prompt":
 		return actTransformPrompt
 	case "transform-query":
 		return actTransformQuery
+	case "transform-search":
+		return actTransformSearch
+	case "search":
+		return actSearch
 	}
 	return actIgnore
 }
@@ -2257,7 +2294,9 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 			if err != nil {
 				return err
 			}
-			opts.Scheme = strings.ToLower(str)
+			if opts.Scheme, opts.Criteria, err = parseScheme(str); err != nil {
+				return err
+			}
 		case "--expect":
 			str, err := nextString("key names required")
 			if err != nil {
@@ -2624,9 +2663,23 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--min-height":
-			if opts.MinHeight, err = nextInt("height required: HEIGHT"); err != nil {
+			expr, err := nextString("minimum height required: HEIGHT[+]")
+			if err != nil {
 				return err
 			}
+			auto := false
+			if strings.HasSuffix(expr, "+") {
+				expr = expr[:len(expr)-1]
+				auto = true
+			}
+			num, err := atoi(expr)
+			if err != nil || num < 0 {
+				return errors.New("minimum height must be a non-negative integer")
+			}
+			if auto {
+				num *= -1
+			}
+			opts.MinHeight = num
 		case "--no-height":
 			opts.Height = heightSpec{}
 		case "--no-margin":
@@ -2667,6 +2720,13 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 		case "--header-border":
 			hasArg, arg := optionalNextString()
 			if opts.HeaderBorderShape, err = parseBorder(arg, !hasArg, false); err != nil {
+				return err
+			}
+		case "--no-header-lines-border":
+			opts.HeaderLinesShape = tui.BorderNone
+		case "--header-lines-border":
+			hasArg, arg := optionalNextString()
+			if opts.HeaderLinesShape, err = parseBorder(arg, !hasArg, false); err != nil {
 				return err
 			}
 		case "--no-header-label":
@@ -2993,6 +3053,21 @@ func validateOptions(opts *Options) error {
 	return nil
 }
 
+func noSeparatorLine(style infoStyle, separator bool) bool {
+	switch style {
+	case infoInline:
+		return true
+	case infoHidden, infoInlineRight:
+		return !separator
+	}
+	return false
+}
+
+func (opts *Options) noSeparatorLine() bool {
+	sep := opts.Separator == nil && !opts.InputBorderShape.Visible() || opts.Separator != nil && len(*opts.Separator) > 0
+	return noSeparatorLine(opts.InfoStyle, sep)
+}
+
 // This function can have side-effects and alter some global states.
 // So we run it on fzf.Run and not on ParseOptions.
 func postProcessOptions(opts *Options) error {
@@ -3014,6 +3089,12 @@ func postProcessOptions(opts *Options) error {
 
 	if opts.HeaderBorderShape == tui.BorderUndefined {
 		opts.HeaderBorderShape = tui.BorderNone
+	}
+
+	if opts.HeaderLinesShape == tui.BorderNone {
+		opts.HeaderLinesShape = tui.BorderPhantom
+	} else if opts.HeaderLinesShape == tui.BorderUndefined {
+		opts.HeaderLinesShape = tui.BorderNone
 	}
 
 	if opts.Pointer == nil {
@@ -3152,11 +3233,43 @@ func postProcessOptions(opts *Options) error {
 		opts.Height = heightSpec{}
 	}
 
+	// Sets --min-height automatically
+	if opts.Height.size > 0 && opts.Height.percent && opts.MinHeight < 0 {
+		opts.MinHeight = -opts.MinHeight + 1 + borderLines(opts.BorderShape) + borderLines(opts.ListBorderShape) + borderLines(opts.InputBorderShape)
+		if len(opts.Header) > 0 {
+			opts.MinHeight += borderLines(opts.HeaderBorderShape) + len(opts.Header)
+		}
+		if opts.HeaderLines > 0 {
+			borderShape := opts.HeaderBorderShape
+			if opts.HeaderLinesShape.Visible() {
+				borderShape = opts.HeaderLinesShape
+			}
+			opts.MinHeight += borderLines(borderShape) + opts.HeaderLines
+		}
+		if !opts.noSeparatorLine() {
+			opts.MinHeight++
+		}
+		if len(opts.Preview.command) > 0 && (opts.Preview.position == posUp || opts.Preview.position == posDown) && opts.Preview.Visible() && opts.Preview.position == posUp {
+			borderShape := opts.Preview.border
+			if opts.Preview.border == tui.BorderLine {
+				borderShape = tui.BorderTop
+			}
+			opts.MinHeight += borderLines(borderShape) + 10
+		}
+		for _, s := range []sizeSpec{opts.Margin[0], opts.Margin[2], opts.Padding[0], opts.Padding[2]} {
+			if !s.percent {
+				opts.MinHeight += int(s.size)
+			}
+		}
+	}
+
 	if err := opts.initProfiling(); err != nil {
 		return errors.New("failed to start pprof profiles: " + err.Error())
 	}
 
-	return processScheme(opts)
+	algo.Init(opts.Scheme)
+
+	return nil
 }
 
 func parseShellWords(str string) ([]string, error) {
@@ -3206,12 +3319,42 @@ func ParseOptions(useDefaults bool, args []string) (*Options, error) {
 		return nil, err
 	}
 
-	// 4. Final validation of merged options
+	// 4. Change default scheme when built-in walker is used
+	if len(opts.Scheme) == 0 {
+		opts.Scheme = "default"
+		if len(opts.Criteria) == 0 {
+			// NOTE: Let's assume $FZF_DEFAULT_COMMAND generates a list of file paths.
+			// But it is possible that it is set to a command that doesn't generate
+			// file paths.
+			//
+			// In that case, you can either
+			//   1. explicitly set --scheme=default,
+			//   2. or replace $FZF_DEFAULT_COMMAND with an equivalent 'start:reload'
+			//      binding, which is the new preferred way.
+			if !opts.hasReloadOrTransformOnStart() && util.IsTty(os.Stdin) {
+				opts.Scheme = "path"
+			}
+			_, opts.Criteria, _ = parseScheme(opts.Scheme)
+		}
+	}
+
+	// 5. Final validation of merged options
 	if err := validateOptions(opts); err != nil {
 		return nil, err
 	}
 
 	return opts, nil
+}
+
+func (opts *Options) hasReloadOrTransformOnStart() bool {
+	if actions, prs := opts.Keymap[tui.Start.AsEvent()]; prs {
+		for _, action := range actions {
+			if action.t == actReload || action.t == actReloadSync || action.t == actTransform {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (opts *Options) extractReloadOnStart() string {

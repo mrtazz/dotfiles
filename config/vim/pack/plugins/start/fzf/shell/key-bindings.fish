@@ -20,7 +20,7 @@ function fzf_key_bindings
     # $1: Prepend to FZF_DEFAULT_OPTS_FILE and FZF_DEFAULT_OPTS
     # $2: Append to FZF_DEFAULT_OPTS_FILE and FZF_DEFAULT_OPTS
     test -n "$FZF_TMUX_HEIGHT"; or set FZF_TMUX_HEIGHT 40%
-    echo "--height $FZF_TMUX_HEIGHT --bind=ctrl-z:ignore" $argv[1]
+    echo "--height $FZF_TMUX_HEIGHT --min-height 20+ --bind=ctrl-z:ignore" $argv[1]
     test -r "$FZF_DEFAULT_OPTS_FILE"; and string collect -N -- <$FZF_DEFAULT_OPTS_FILE
     echo $FZF_DEFAULT_OPTS $argv[2]
   end
@@ -64,7 +64,8 @@ function fzf_key_bindings
       set -lx FZF_DEFAULT_OPTS (__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '"\t"↳ ' --highlight-line +m $FZF_CTRL_R_OPTS")
       set -lx FZF_DEFAULT_OPTS_FILE ''
       set -lx FZF_DEFAULT_COMMAND
-      string match -q -r -- '/fish$' $SHELL; or set -lx SHELL (type -p fish)
+      set -a -- FZF_DEFAULT_OPTS --with-shell=(status fish-path)\\ -c
+
       if type -q perl
         set -a FZF_DEFAULT_OPTS '--tac'
         set FZF_DEFAULT_COMMAND 'builtin history -z --reverse | command perl -0 -pe \'s/^/$.\t/g; s/\n/\n\t/gm\''
@@ -75,7 +76,7 @@ function fzf_key_bindings
           'string join0 -- $i\t(string replace -a -- \n \n\t $h[$i] | string collect);' \
           'end'
       end
-      set -l result (eval "$FZF_DEFAULT_COMMAND | $(__fzfcmd) --read0 --print0 -q (commandline) --bind='enter:become:string replace -a -- \n\t \n {2..} | string collect'")
+      set -l result (eval $FZF_DEFAULT_COMMAND \| (__fzfcmd) --read0 --print0 -q (commandline | string escape) "--bind=enter:become:'string replace -a -- \n\t \n {2..} | string collect'")
       and commandline -- $result
     end
     commandline -f repaint

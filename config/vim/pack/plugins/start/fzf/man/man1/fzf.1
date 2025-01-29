@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ..
-.TH fzf 1 "Jan 2025" "fzf 0.58.0" "fzf - a command-line fuzzy finder"
+.TH fzf 1 "Jan 2025" "fzf 0.59.0" "fzf - a command-line fuzzy finder"
 
 .SH NAME
 fzf - a command-line fuzzy finder
@@ -76,7 +76,8 @@ Generic scoring scheme designed to work well with any type of input.
 .RS
 Additional bonus point is only given to the characters after path separator.
 You might want to choose this scheme over \fBdefault\fR if you have many files
-with spaces in their paths.
+with spaces in their paths. This also sets \fB\-\-tiebreak=pathname,length\fR,
+to prioritize matches occurring in the tail element of a file path.
 .RE
 .RE
 
@@ -88,6 +89,13 @@ ordering is important. No additional bonus points are given so that we give
 more weight to the chronological ordering. This also sets
 \fB\-\-tiebreak=index\fR.
 .RE
+.RE
+
+.RS
+fzf chooses \fBpath\fR scheme when the input is a TTY device, where fzf would
+start its built-in walker or run \fB$FZF_DEFAULT_COMMAND\fR, and there is no
+\fBreload\fR or \fBtransform\fR action bound to \fBstart\fR event. Otherwise,
+it chooses \fBdefault\fR scheme.
 .RE
 
 .TP
@@ -140,15 +148,17 @@ Comma-separated list of sort criteria to apply when the scores are tied.
 .br
 
 .br
-.BR length "  Prefers line with shorter length"
+.BR length "   Prefers line with shorter length"
 .br
-.BR chunk "   Prefers line with shorter matched chunk (delimited by whitespaces)"
+.BR chunk "    Prefers line with shorter matched chunk (delimited by whitespaces)"
 .br
-.BR begin "   Prefers line with matched substring closer to the beginning"
+.BR pathname " Prefers line with matched substring in the file name of the path"
 .br
-.BR end "     Prefers line with matched substring closer to the end"
+.BR begin "    Prefers line with matched substring closer to the beginning"
 .br
-.BR index "   Prefers line that appeared earlier in the input stream"
+.BR end "      Prefers line with matched substring closer to the end"
+.br
+.BR index "    Prefers line that appeared earlier in the input stream"
 .br
 
 .br
@@ -326,9 +336,12 @@ Adaptive height has the following limitations:
 * It will not find the right size when there are multi-line items
 
 .TP
-.BI "\-\-min\-height=" "HEIGHT"
-Minimum height when \fB\-\-height\fR is given in percent (default: 10).
-Ignored when \fB\-\-height\fR is not specified.
+.BI "\-\-min\-height=" "HEIGHT[+]"
+Minimum height when \fB\-\-height\fR is given as a percentage.
+Add \fB+\fR to automatically increase the value according to the other
+layout options so that the specified number of items are visible in the list
+section (default: \fB10+\fR).
+Ignored when \fB\-\-height\fR is not specified or set as an absolute value.
 .TP
 .BI "\-\-tmux" "[=[center|top|bottom|left|right][,SIZE[%]][,SIZE[%]][,border-native]]"
 Start fzf in a tmux popup (default \fBcenter,50%\fR). Requires tmux 3.3 or
@@ -730,6 +743,8 @@ Also,
 
 * \fB{q}\fR is replaced to the current query string
 .br
+* \fB{q}\fR can contain field index expressions. e.g. \fB{q:1}\fR, \fB{q:2..}\fR, etc.
+.br
 * \fB{n}\fR is replaced to the zero-based ordinal index of the current item.
   Use \fB{+n}\fR if you want all index numbers when multiple lines are selected.
 .br
@@ -929,6 +944,12 @@ Label to print on the header border
 .BI "\-\-header\-label\-pos" [=N[:top|bottom]]
 Position of the header label
 
+.TP
+.BI "\-\-header\-lines\-border" [=STYLE]
+Display header from \fB--header\-lines\fR with a separate border. Pass
+\fBnone\fR to still separate the header lines but without a border. To combine
+two headers, use \fB\-\-no\-header\-lines\-border\fR.
+
 .SS SCRIPTING
 .TP
 .BI "\-q, \-\-query=" "STR"
@@ -1122,9 +1143,9 @@ Show man page
 .SH ENVIRONMENT VARIABLES
 .TP
 .B FZF_DEFAULT_COMMAND
-Default command to use when input is tty. On *nix systems, fzf runs the command
-with \fB$SHELL \-c\fR if \fBSHELL\fR is set, otherwise with \fBsh \-c\fR, so in
-this case make sure that the command is POSIX-compliant.
+Default command to use when input is a TTY device. On *nix systems, fzf runs
+the command with \fB$SHELL \-c\fR if \fBSHELL\fR is set, otherwise with \fBsh
+\-c\fR, so in this case make sure that the command is POSIX-compliant.
 .TP
 .B FZF_DEFAULT_OPTS
 Default options.
@@ -1275,10 +1296,15 @@ more \fBactions\fR. You can use it to customize key bindings or implement
 dynamic behaviors.
 
 \fB\-\-bind\fR takes a comma-separated list of binding expressions. Each binding
-expression is \fBKEY:ACTION\fR or \fBEVENT:ACTION\fR.
+expression is \fBKEY:ACTION\fR or \fBEVENT:ACTION\fR. You can bind actions to
+multiple keys and events by writing comma-separated list of keys and events
+before the colon. e.g. \fBKEY1,KEY2,EVENT1,EVENT2:ACTION\fR.
 
 e.g.
-     \fBfzf \-\-bind=ctrl\-j:accept,ctrl\-k:kill\-line\fR
+     \fBfzf \-\-bind=ctrl\-j:accept,ctrl\-k:kill\-line
+
+     # Load 'ps \-ef' output on start and reload it on CTRL\-R
+     fzf \-\-bind 'start,ctrl\-r:reload:ps \-ef'\fR
 
 .SS AVAILABLE KEYS:    (SYNONYMS)
 \fIctrl\-[a\-z]\fR
@@ -1503,11 +1529,21 @@ e.g.
 
 \fIclick\-header\fR
 .RS
-Triggered when a mouse click occurs within the header. Sets \fBFZF_CLICK_HEADER_LINE\fR and \fBFZF_CLICK_HEADER_COLUMN\fR environment variables starting from 1.
+Triggered when a mouse click occurs within the header. Sets
+\fBFZF_CLICK_HEADER_LINE\fR and \fBFZF_CLICK_HEADER_COLUMN\fR environment
+variables starting from 1. It optionally sets \fBFZF_CLICK_HEADER_WORD\fR and
+\fBFZF_CLICK_HEADER_NTH\fR if clicked on a word.
 
 e.g.
-     \fBprintf "head1\\nhead2" | fzf \-\-header\-lines=2 \-\-bind 'click\-header:transform\-prompt:printf ${FZF_CLICK_HEADER_LINE}x${FZF_CLICK_HEADER_COLUMN}'\fR
-
+     \fB# Click on the header line to limit search scope
+     ps \-ef | fzf \-\-style full \-\-layout reverse \-\-header\-lines 1 \\
+                  \-\-header\-lines\-border bottom \-\-no\-list\-border \\
+                  \-\-color fg:dim,nth:regular \\
+                  \-\-bind 'click\-header:transform\-nth(
+                            echo $FZF_CLICK_HEADER_NTH
+                          )+transform\-prompt(
+                            echo "$FZF_CLICK_HEADER_WORD> "
+                          )'\fR
 .RE
 
 .SS AVAILABLE ACTIONS:
@@ -1525,6 +1561,7 @@ A key or an event can be bound to one or more of the following actions.
     \fBbackward\-word\fR                \fIalt\-b   shift\-left\fR
     \fBbecome(...)\fR                  (replace fzf process with the specified command; see below for the details)
     \fBbeginning\-of\-line\fR            \fIctrl\-a  home\fR
+    \fBbell\fR                         (ring the terminal bell)
     \fBcancel\fR                       (clear query string if not empty, abort fzf otherwise)
     \fBchange\-border\-label(...)\fR     (change \fB\-\-border\-label\fR to the given string)
     \fBchange\-header(...)\fR           (change header to the given string; doesn't affect \fB\-\-header\-lines\fR)
@@ -1592,6 +1629,7 @@ A key or an event can be bound to one or more of the following actions.
     \fBreload(...)\fR                  (see below for the details)
     \fBreload\-sync(...)\fR             (see below for the details)
     \fBreplace\-query\fR                (replace query string with the current selection)
+    \fBsearch(...)\fR                  (trigger fzf search with the given string)
     \fBselect\fR
     \fBselect\-all\fR                   (select all matches)
     \fBshow\-header\fR
@@ -1619,9 +1657,11 @@ A key or an event can be bound to one or more of the following actions.
     \fBtransform\-header\-label(...)\fR  (transform header label using an external command)
     \fBtransform\-input\-label(...)\fR   (transform input label using an external command)
     \fBtransform\-list\-label(...)\fR    (transform list label using an external command)
+    \fBtransform\-nth(...)\fR           (transform nth using an external command)
     \fBtransform\-preview\-label(...)\fR (transform preview label using an external command)
     \fBtransform\-prompt(...)\fR        (transform prompt string using an external command)
     \fBtransform\-query(...)\fR         (transform query string using an external command)
+    \fBtransform\-search(...)\fR        (trigger fzf search with the output of an external command)
     \fBunbind(...)\fR                  (unbind bindings)
     \fBunix\-line\-discard\fR            \fIctrl\-u\fR
     \fBunix\-word\-rubout\fR             \fIctrl\-w\fR

@@ -37,7 +37,7 @@ bind '"\e[0n": redraw-current-line' 2> /dev/null
 __fzf_defaults() {
   # $1: Prepend to FZF_DEFAULT_OPTS_FILE and FZF_DEFAULT_OPTS
   # $2: Append to FZF_DEFAULT_OPTS_FILE and FZF_DEFAULT_OPTS
-  echo "--height ${FZF_TMUX_HEIGHT:-40%} --bind=ctrl-z:ignore $1"
+  echo "--height ${FZF_TMUX_HEIGHT:-40%} --min-height 20+ --bind=ctrl-z:ignore $1"
   command cat "${FZF_DEFAULT_OPTS_FILE-}" 2> /dev/null
   echo "${FZF_DEFAULT_OPTS-} $2"
 }
@@ -409,7 +409,33 @@ _fzf_complete_kill() {
 }
 
 _fzf_proc_completion() {
-  _fzf_complete -m --header-lines=1 --no-preview --wrap -- "$@" < <(
+  local transformer
+  transformer='
+    if [[ $FZF_KEY =~ ctrl|alt|shift ]] && [[ -n $FZF_NTH ]]; then
+      nths=( ${FZF_NTH//,/ } )
+      new_nths=()
+      found=0
+      for nth in ${nths[@]}; do
+        if [[ $nth = $FZF_CLICK_HEADER_NTH ]]; then
+          found=1
+        else
+          new_nths+=($nth)
+        fi
+      done
+      [[ $found = 0 ]] && new_nths+=($FZF_CLICK_HEADER_NTH)
+      new_nths=${new_nths[*]}
+      new_nths=${new_nths// /,}
+      echo "change-nth($new_nths)+change-prompt($new_nths> )"
+    else
+      if [[ $FZF_NTH = $FZF_CLICK_HEADER_NTH ]]; then
+        echo "change-nth()+change-prompt(> )"
+      else
+        echo "change-nth($FZF_CLICK_HEADER_NTH)+change-prompt($FZF_CLICK_HEADER_WORD> )"
+      fi
+    fi
+  '
+  _fzf_complete -m --header-lines=1 --no-preview --wrap --color fg:dim,nth:regular \
+    --bind "click-header:transform:$transformer" -- "$@" < <(
     command ps -eo user,pid,ppid,start,time,command 2> /dev/null ||
       command ps -eo user,pid,ppid,time,args 2> /dev/null || # For BusyBox
       command ps --everyone --full --windows # For cygwin
