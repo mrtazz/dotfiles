@@ -3,10 +3,14 @@ CHANGELOG
 
 0.59.0
 ------
+_Release highlights: https://junegunn.github.io/fzf/releases/0.59.0/_
+
 - Prioritizing file name matches (#4192)
     - Added a new tiebreak option `pathname` for prioritizing file name matches
     - `--scheme=path` now sets `--tiebreak=pathname,length`
-    - fzf will automatically choose `path` scheme when the input is a TTY device, where fzf would start its built-in walker or run `$FZF_DEFAULT_COMMAND` which is usually a command for listing files.
+    - fzf will automatically choose `path` scheme
+        * when the input is a TTY device, where fzf would start its built-in walker or run `$FZF_DEFAULT_COMMAND` which is usually a command for listing files,
+        * but not when `reload` or `transform` action is bound to `start` event, because in that case, fzf can't be sure of the input type.
 - Added `--header-lines-border` to display header from `--header-lines` with a separate border
   ```sh
   # Use --header-lines-border to separate two headers
@@ -28,6 +32,27 @@ CHANGELOG
   ```
     - `$FZF_KEY` was updated to expose the type of the click. e.g. `click`, `ctrl-click`, etc. You can use it to implement a more sophisticated behavior.
     - `kill` completion for bash and zsh were updated to use this feature
+- Added `--no-input` option to completely disable and hide the input section
+  ```sh
+  # Click header to trigger search
+  fzf --header '[src] [test]' --no-input --layout reverse \
+      --header-border bottom --input-border \
+      --bind 'click-header:transform-search:echo ${FZF_CLICK_HEADER_WORD:1:-1}'
+
+  # Vim-like mode switch
+  fzf --layout reverse-list --no-input \
+      --bind 'j:down,k:up,/:show-input+unbind(j,k,/)' \
+      --bind 'enter,esc,ctrl-c:transform:
+        if [[ $FZF_INPUT_STATE = enabled ]]; then
+          echo "rebind(j,k,/)+hide-input"
+        elif [[ $FZF_KEY = enter ]]; then
+          echo accept
+        else
+          echo abort
+        fi
+      '
+  ```
+    - You can later show the input section using `show-input` or `toggle-input` action, and hide it again using `hide-input`, or `toggle-input`.
 - Extended `{q}` placeholder to support ranges. e.g. `{q:1}`, `{q:2..}`, etc.
 - Added `search(...)` and `transform-search(...)` action to trigger an fzf search with an arbitrary query string. This can be used to extend the search syntax of fzf. In the following example, fzf will use the first word of the query to trigger ripgrep search, and use the rest of the query to perform fzf search within the result.
   ```sh
@@ -62,11 +87,13 @@ CHANGELOG
   fzf --style full --height 1% --min-height 3+
   ```
     - Shell integration scripts were updated to use `--min-height 20+` by default
+- `--header-lines` will be displayed at the top in `reverse-list` layout
 - Added `bell` action to ring the terminal bell
   ```sh
   # Press CTRL-Y to copy the current line to the clipboard and ring the bell
   fzf --bind 'ctrl-y:execute-silent(echo -n {} | pbcopy)+bell'
   ```
+- Added `toggle-bind` action
 - Bug fixes and improvements
 - Fixed fish script to support fish 3.1.2 or later (@bitraid)
 

@@ -324,6 +324,7 @@ type Terminal struct {
 	cleanExit          bool
 	executor           *util.Executor
 	paused             bool
+	inputless          bool
 	border             tui.Window
 	window             tui.Window
 	inputWindow        tui.Window
@@ -504,6 +505,9 @@ const (
 	actToggleMultiLine
 	actToggleHscroll
 	actTrackCurrent
+	actToggleInput
+	actHideInput
+	actShowInput
 	actUntrackCurrent
 	actDown
 	actUp
@@ -568,6 +572,7 @@ const (
 	actDeselect
 	actUnbind
 	actRebind
+	actToggleBind
 	actBecome
 	actShowHeader
 	actHideHeader
@@ -666,7 +671,7 @@ func defaultKeymap() map[tui.Event][]*action {
 	add(tui.CtrlJ, actDown)
 	add(tui.CtrlK, actUp)
 	add(tui.CtrlL, actClearScreen)
-	add(tui.CtrlM, actAccept)
+	add(tui.Enter, actAccept)
 	add(tui.CtrlN, actDown)
 	add(tui.CtrlP, actUp)
 	add(tui.CtrlU, actUnixLineDiscard)
@@ -810,6 +815,9 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 	if err != nil {
 		return nil, err
 	}
+	if opts.Inputless {
+		renderer.HideCursor()
+	}
 	wordRubout := "[^\\pL\\pN][\\pL\\pN]"
 	wordNext := "[\\pL\\pN][^\\pL\\pN]|(.$)"
 	if opts.FileWord {
@@ -887,6 +895,7 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		cleanExit:          opts.ClearOnExit,
 		executor:           executor,
 		paused:             opts.Phony,
+		inputless:          opts.Inputless,
 		cycle:              opts.Cycle,
 		highlightLine:      opts.CursorLine,
 		headerVisible:      true,
@@ -1058,6 +1067,13 @@ func (t *Terminal) environImpl(forPreview bool) []string {
 	if len(t.nthCurrent) > 0 {
 		env = append(env, "FZF_NTH="+RangesToString(t.nthCurrent))
 	}
+	inputState := "enabled"
+	if t.inputless {
+		inputState = "hidden"
+	} else if t.paused {
+		inputState = "disabled"
+	}
+	env = append(env, "FZF_INPUT_STATE="+inputState)
 	env = append(env, fmt.Sprintf("FZF_TOTAL_COUNT=%d", t.count))
 	env = append(env, fmt.Sprintf("FZF_MATCH_COUNT=%d", t.merger.Length()))
 	env = append(env, fmt.Sprintf("FZF_SELECT_COUNT=%d", len(t.selected)))
@@ -1122,11 +1138,27 @@ func (t *Terminal) visibleHeaderLinesInList() int {
 	return t.visibleHeaderLines()
 }
 
+func (t *Terminal) visibleInputLinesInList() int {
+	if t.inputWindow != nil || t.inputless {
+		return 0
+	}
+	if t.noSeparatorLine() {
+		return 1
+	}
+	return 2
+}
+
 // Extra number of lines needed to display fzf
 func (t *Terminal) extraLines() int {
-	extra := 1
-	if t.inputBorderShape.Visible() {
-		extra += borderLines(t.inputBorderShape)
+	extra := 0
+	if !t.inputless {
+		extra++
+		if !t.noSeparatorLine() {
+			extra++
+		}
+		if t.inputBorderShape.Visible() {
+			extra += borderLines(t.inputBorderShape)
+		}
 	}
 	if t.listBorderShape.Visible() {
 		extra += borderLines(t.listBorderShape)
@@ -1140,9 +1172,6 @@ func (t *Terminal) extraLines() int {
 			extra += borderLines(t.headerLinesShape)
 		}
 		extra += t.headerLines
-	}
-	if !t.noSeparatorLine() {
-		extra++
 	}
 	return extra
 }
@@ -1265,7 +1294,7 @@ func (t *Terminal) parsePrompt(prompt string) (func(), int) {
 }
 
 func (t *Terminal) noSeparatorLine() bool {
-	return noSeparatorLine(t.infoStyle, t.separatorLen > 0)
+	return t.inputless || noSeparatorLine(t.infoStyle, t.separatorLen > 0)
 }
 
 func getScrollbar(perLine int, total int, height int, offset int) (int, int) {
@@ -1350,7 +1379,10 @@ func (t *Terminal) Input() (bool, []rune) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	paused := t.paused
-	src := t.input
+	var src []rune
+	if !t.inputless {
+		src = t.input
+	}
 	if t.inputOverride != nil {
 		paused = false
 		src = *t.inputOverride
@@ -1635,8 +1667,11 @@ func (t *Terminal) adjustMarginAndPadding() (int, int, [4]int, [4]int) {
 
 	minAreaWidth := minWidth
 	minAreaHeight := minHeight
+	if t.inputless {
+		minAreaHeight--
+	}
 	if t.noSeparatorLine() {
-		minAreaHeight -= 1
+		minAreaHeight--
 	}
 	if t.needPreviewWindow() {
 		minPreviewWidth, minPreviewHeight := t.minPreviewSize(t.activePreviewOpts)
@@ -1756,7 +1791,7 @@ func (t *Terminal) resizeWindows(forcePreview bool, redrawBorder bool) {
 	shrink := 0
 	hasHeaderWindow := t.hasHeaderWindow()
 	hasHeaderLinesWindow := t.hasHeaderLinesWindow()
-	hasInputWindow := t.inputBorderShape.Visible() || hasHeaderWindow || hasHeaderLinesWindow
+	hasInputWindow := !t.inputless && (t.inputBorderShape.Visible() || hasHeaderWindow || hasHeaderLinesWindow)
 	if hasInputWindow {
 		inputWindowHeight := 2
 		if t.noSeparatorLine() {
@@ -1792,7 +1827,7 @@ func (t *Terminal) resizeWindows(forcePreview bool, redrawBorder bool) {
 	headerLinesHeight := 0
 	if hasHeaderLinesWindow {
 		headerLinesHeight = util.Min(availableLines, borderLines(t.headerLinesShape)+t.headerLines)
-		if t.layout == layoutReverse {
+		if t.layout != layoutDefault {
 			shift += headerLinesHeight
 			shrink += headerLinesHeight
 		} else {
@@ -1873,6 +1908,9 @@ func (t *Terminal) resizeWindows(forcePreview bool, redrawBorder bool) {
 			switch previewOpts.position {
 			case posUp, posDown:
 				minWindowHeight := minHeight
+				if t.inputless {
+					minWindowHeight--
+				}
 				if t.noSeparatorLine() {
 					minWindowHeight--
 				}
@@ -2050,12 +2088,16 @@ func (t *Terminal) resizeWindows(forcePreview bool, redrawBorder bool) {
 		if hasHeaderWindow && t.headerFirst {
 			if t.layout == layoutReverse {
 				btop = w.Top() - inputBorderHeight - headerLinesHeight
+			} else if t.layout == layoutReverseList {
+				btop = w.Top() + w.Height()
 			} else {
 				btop = w.Top() + w.Height() + headerLinesHeight
 			}
 		} else {
 			if t.layout == layoutReverse {
 				btop = w.Top() - shrink
+			} else if t.layout == layoutReverseList {
+				btop = w.Top() + w.Height() + headerBorderHeight
 			} else {
 				btop = w.Top() + w.Height() + headerBorderHeight + headerLinesHeight
 			}
@@ -2084,12 +2126,16 @@ func (t *Terminal) resizeWindows(forcePreview bool, redrawBorder bool) {
 		if hasInputWindow && t.headerFirst {
 			if t.layout == layoutReverse {
 				btop = w.Top() - shrink
+			} else if t.layout == layoutReverseList {
+				btop = w.Top() + w.Height() + inputBorderHeight
 			} else {
 				btop = w.Top() + w.Height() + inputBorderHeight + headerLinesHeight
 			}
 		} else {
 			if t.layout == layoutReverse {
 				btop = w.Top() - headerBorderHeight - headerLinesHeight
+			} else if t.layout == layoutReverseList {
+				btop = w.Top() + w.Height()
 			} else {
 				btop = w.Top() + w.Height() + headerLinesHeight
 			}
@@ -2105,7 +2151,7 @@ func (t *Terminal) resizeWindows(forcePreview bool, redrawBorder bool) {
 	// Set up header lines border
 	if hasHeaderLinesWindow {
 		var btop int
-		if t.layout == layoutReverse {
+		if t.layout != layoutDefault {
 			btop = w.Top() - headerLinesHeight
 		} else {
 			btop = w.Top() + w.Height()
@@ -2167,14 +2213,28 @@ func (t *Terminal) move(y int, x int, clear bool) {
 	case layoutDefault:
 		y = h - y - 1
 	case layoutReverseList:
-		n := 2 + t.visibleHeaderLinesInList()
-		if t.noSeparatorLine() {
-			n--
-		}
-		if y < n {
+		if t.window == t.inputWindow || t.window == t.headerWindow {
+			// From bottom to top
 			y = h - y - 1
 		} else {
-			y -= n
+			/*
+			 * List 1
+			 * List 2
+			 * Header 1
+			 * Header 2
+			 * Input 2
+			 * Input 1
+			 */
+			i := t.visibleInputLinesInList()
+			n := t.visibleHeaderLinesInList()
+			if i > 0 && y < i {
+				y = h - y - 1
+			} else if n > 0 && y < i+n {
+				y = h - y - 1
+			} else {
+				// Top to bottom
+				y -= n + i
+			}
 		}
 	}
 
@@ -2227,6 +2287,9 @@ func (t *Terminal) promptLine() int {
 }
 
 func (t *Terminal) placeCursor() {
+	if t.inputless {
+		return
+	}
 	if t.inputWindow != nil {
 		y := t.inputWindow.Height() - 1
 		if t.layout == layoutReverse {
@@ -2239,6 +2302,9 @@ func (t *Terminal) placeCursor() {
 }
 
 func (t *Terminal) printPrompt() {
+	if t.inputless {
+		return
+	}
 	w := t.window
 	if t.inputWindow != nil {
 		w = t.inputWindow
@@ -2266,6 +2332,9 @@ func (t *Terminal) trimMessage(message string, maxWidth int) string {
 }
 
 func (t *Terminal) printInfo() {
+	if t.inputless {
+		return
+	}
 	t.withWindow(t.inputWindow, func() { t.printInfoImpl() })
 }
 
@@ -2462,22 +2531,29 @@ func (t *Terminal) printInfoImpl() {
 	}
 }
 
-func (t *Terminal) printHeader() {
+func (t *Terminal) resizeIfNeeded() bool {
+	// Check if input border is used and input has changed
+	if t.inputBorderShape.Visible() && t.inputWindow == nil && !t.inputless || t.inputWindow != nil && t.inputless {
+		t.printAll()
+		return true
+	}
+
+	// Check if the header borders are used and header has changed
 	allHeaderLines := t.visibleHeaderLines()
 	primaryHeaderLines := allHeaderLines
 	if t.headerLinesShape.Visible() {
 		primaryHeaderLines -= t.headerLines
 	}
-	// We may need to resize header windows
 	if (t.headerBorderShape.Visible() || t.headerLinesShape.Visible()) &&
 		(t.headerWindow == nil && primaryHeaderLines > 0 || t.headerWindow != nil && primaryHeaderLines != t.headerWindow.Height()) ||
 		t.headerLinesShape.Visible() && (t.headerLinesWindow == nil && t.headerLines > 0 || t.headerLinesWindow != nil && t.headerLines != t.headerLinesWindow.Height()) {
-		t.resizeWindows(false, true)
-		t.printList()
-		t.printPrompt()
-		t.printInfo()
-		t.printPreview()
+		t.printAll()
+		return true
 	}
+	return false
+}
+
+func (t *Terminal) printHeader() {
 	if !t.headerVisible {
 		return
 	}
@@ -2509,7 +2585,7 @@ func (t *Terminal) headerIndent(borderShape tui.BorderShape) int {
 
 func (t *Terminal) printHeaderImpl(window tui.Window, borderShape tui.BorderShape, lines1 []string, lines2 []string) {
 	max := t.window.Height()
-	if t.inputWindow == nil && window == nil && t.headerFirst {
+	if !t.inputless && t.inputWindow == nil && window == nil && t.headerFirst {
 		max--
 		if !t.noSeparatorLine() {
 			max--
@@ -2539,7 +2615,7 @@ func (t *Terminal) printHeaderImpl(window tui.Window, borderShape tui.BorderShap
 		if needReverse && idx < len(lines1) {
 			line = len(lines1) - idx - 1
 		}
-		if t.inputWindow == nil && window == nil && !t.headerFirst {
+		if !t.inputless && t.inputWindow == nil && window == nil && !t.headerFirst {
 			line++
 			if !t.noSeparatorLine() {
 				line++
@@ -4098,13 +4174,13 @@ func (t *Terminal) addClickHeaderWord(env []string) []string {
 	/*
 	 * echo $'HL1\nHL2' | fzf --header-lines 3 --header $'H1\nH2' --header-lines-border --bind 'click-header:preview:env | grep FZF_CLICK'
 	 *
-	 *   REVERSE      DEFAULT
-	 *   H1      1            1
-	 *   H2      2    HL2     2
-	 *   -------      HL1     3
-	 *   HL1     3    -------
-	 *   HL2     4    H1      4
-	 *           5    H2      5
+	 *   REVERSE      DEFAULT      REVERSE-LIST
+	 *   H1      1            1    HL1     1
+	 *   H2      2    HL2     2    HL2     2
+	 *   -------      HL1     3            3
+	 *   HL1     3    -------      -------
+	 *   HL2     4    H1      4    H1      4
+	 *           5    H2      5    H2      5
 	 */
 	lineNum := t.clickHeaderLine - 1
 	if lineNum < 0 {
@@ -4112,20 +4188,20 @@ func (t *Terminal) addClickHeaderWord(env []string) []string {
 		return env
 	}
 
+	// NOTE: t.header is padded with empty strings so that its size is equal to t.headerLines
 	var line string
+	headers := [2][]string{t.header, t.header0}
 	if t.layout == layoutReverse {
-		if lineNum < len(t.header0) {
-			line = t.header0[lineNum]
-		} else if lineNum-len(t.header0) < len(t.header) {
-			line = t.header[lineNum-len(t.header0)]
+		headers[0], headers[1] = headers[1], headers[0]
+	}
+	if lineNum < len(headers[0]) {
+		index := lineNum
+		if t.layout == layoutDefault {
+			index = len(headers[0]) - index - 1
 		}
-	} else {
-		// NOTE: t.header is padded with empty strings so that its size is equal to t.headerLines
-		if lineNum < len(t.header) {
-			line = t.header[len(t.header)-lineNum-1]
-		} else if lineNum-len(t.header) < len(t.header0) {
-			line = t.header0[lineNum-len(t.header)]
-		}
+		line = headers[0][index]
+	} else if lineNum-len(headers[0]) < len(headers[1]) {
+		line = headers[1][lineNum-len(headers[0])]
 	}
 	if len(line) == 0 {
 		return env
@@ -4468,7 +4544,11 @@ func (t *Terminal) Loop() error {
 				//  U t.uiMutex                 |
 				t.uiMutex.Lock()
 				t.mutex.Lock()
-				printInfo := util.RunOnce(t.printInfo)
+				printInfo := util.RunOnce(func() {
+					if !t.resizeIfNeeded() {
+						t.printInfo()
+					}
+				})
 				for _, key := range keys {
 					req := util.EventType(key)
 					value := (*events)[req]
@@ -4510,7 +4590,9 @@ func (t *Terminal) Loop() error {
 						}
 						t.printList()
 					case reqHeader:
-						t.printHeader()
+						if !t.resizeIfNeeded() {
+							t.printHeader()
+						}
 					case reqActivate:
 						t.suppress = false
 						if t.hasPreviewer() {
@@ -4749,6 +4831,10 @@ func (t *Terminal) Loop() error {
 					if !doAction(action) {
 						return false
 					}
+					// A terminal action performed. We should stop processing more.
+					if !looping {
+						break
+					}
 				}
 
 				if onFocus, prs := t.keymap[tui.Focus.AsEvent()]; prs && iter < maxFocusEvents {
@@ -4766,6 +4852,7 @@ func (t *Terminal) Loop() error {
 			return true
 		}
 		doAction = func(a *action) bool {
+		Action:
 			switch a.t {
 			case actIgnore, actStart, actClick:
 			case actBecome:
@@ -5386,6 +5473,28 @@ func (t *Terminal) Loop() error {
 				t.forceRerenderList()
 				t.hscroll = !t.hscroll
 				req(reqList)
+			case actToggleInput, actShowInput, actHideInput:
+				switch a.t {
+				case actToggleInput:
+					t.inputless = !t.inputless
+				case actShowInput:
+					if !t.inputless {
+						break Action
+					}
+					t.inputless = false
+				case actHideInput:
+					if t.inputless {
+						break Action
+					}
+					t.inputless = true
+				}
+				t.forceRerenderList()
+				if t.inputless {
+					t.tui.HideCursor()
+				} else {
+					t.tui.ShowCursor()
+				}
+				req(reqList, reqInfo, reqPrompt, reqHeader)
 			case actTrackCurrent:
 				if t.track == trackDisabled {
 					t.track = trackCurrent
@@ -5681,7 +5790,7 @@ func (t *Terminal) Loop() error {
 					// Header
 					numLines := t.visibleHeaderLinesInList()
 					lineOffset := 0
-					if t.inputWindow == nil && !t.headerFirst {
+					if !t.inputless && t.inputWindow == nil && !t.headerFirst {
 						// offset for info line
 						if t.noSeparatorLine() {
 							lineOffset = 1
@@ -5728,6 +5837,16 @@ func (t *Terminal) Loop() error {
 				if keys, err := parseKeyChords(a.a, "PANIC"); err == nil {
 					for key := range keys {
 						if originalAction, found := t.keymapOrg[key]; found {
+							t.keymap[key] = originalAction
+						}
+					}
+				}
+			case actToggleBind:
+				if keys, err := parseKeyChords(a.a, "PANIC"); err == nil {
+					for key := range keys {
+						if _, bound := t.keymap[key]; bound {
+							delete(t.keymap, key)
+						} else if originalAction, found := t.keymapOrg[key]; found {
 							t.keymap[key] = originalAction
 						}
 					}
@@ -5829,7 +5948,14 @@ func (t *Terminal) Loop() error {
 			} else if !doActions(actions) {
 				continue
 			}
-			t.truncateQuery()
+			if t.inputless {
+				// Always just discard the change
+				t.input = previousInput
+				t.cx = len(t.input)
+				beof = false
+			} else {
+				t.truncateQuery()
+			}
 			queryChanged = string(previousInput) != string(t.input)
 			if queryChanged {
 				t.inputOverride = nil
@@ -6016,6 +6142,9 @@ func (t *Terminal) vset(o int) bool {
 
 // Number of prompt lines in the list window
 func (t *Terminal) promptLines() int {
+	if t.inputless {
+		return 0
+	}
 	if t.inputWindow != nil {
 		return 0
 	}

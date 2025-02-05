@@ -576,9 +576,9 @@ class TestCore < TestInteractive
     tmux.send_keys "seq 100 | #{fzf('--header-lines=10 -q 5 --layout=reverse-list')}", :Enter
     2.times do
       tmux.until do |lines|
-        assert_equal '> 50', lines[0]
-        assert_equal '  2', lines[-4]
-        assert_equal '  1', lines[-3]
+        assert_equal '  9', lines[8]
+        assert_equal '  10', lines[9]
+        assert_equal '> 50', lines[10]
         assert_equal '  18/90', lines[-2]
       end
       tmux.send_keys :Up
@@ -665,7 +665,7 @@ class TestCore < TestInteractive
     tmux.until do |lines|
       assert_equal '  90/90', lines[-2]
       assert_equal header.map { |line| "  #{line}".rstrip }, lines[-7...-2]
-      assert_equal ('  1'..'  10').to_a.reverse, lines[-17...-7]
+      assert_equal ('  1'..'  10').to_a, lines.take(10)
     end
   end
 
@@ -1174,8 +1174,8 @@ class TestCore < TestInteractive
     tmux.until { |lines| assert_equal 2, lines.select_count }
   end
 
-  def test_unbind_rebind
-    tmux.send_keys "seq 100 | #{FZF} --bind 'c:clear-query,d:unbind(c,d),e:rebind(c,d)'", :Enter
+  def test_unbind_rebind_toggle_bind
+    tmux.send_keys "seq 100 | #{FZF} --bind 'c:clear-query,d:unbind(c,d),e:rebind(c,d),f:toggle-bind(c)'", :Enter
     tmux.until { |lines| assert_equal 100, lines.match_count }
     tmux.send_keys 'ab'
     tmux.until { |lines| assert_equal '> ab', lines[-1] }
@@ -1185,6 +1185,10 @@ class TestCore < TestInteractive
     tmux.until { |lines| assert_equal '> abcd', lines[-1] }
     tmux.send_keys 'ecabddc'
     tmux.until { |lines| assert_equal '> abdc', lines[-1] }
+    tmux.send_keys 'fcabfc'
+    tmux.until { |lines| assert_equal '> abc', lines[-1] }
+    tmux.send_keys 'fc'
+    tmux.until { |lines| assert_equal '>', lines[-1] }
   end
 
   def test_scroll_off
@@ -1601,6 +1605,64 @@ class TestCore < TestInteractive
     tmux.until do |lines|
       assert lines.any_include?("[#{nths}] foo")
       assert_equal 4, lines.match_count
+    end
+  end
+
+  def test_env_vars
+    def to_vars(lines)
+      lines.select { it.start_with?('FZF_') }.to_h do
+        key, val = it.split('=', 2)
+        [key.to_sym, val]
+      end
+    end
+
+    tmux.send_keys %(seq 100 | #{FZF} --multi --reverse --preview-window up,99%,noborder --preview 'env | grep ^FZF_ | sort' --no-input --bind enter:show-input+refresh-preview,space:disable-search+refresh-preview), :Enter
+    expected = {
+      FZF_TOTAL_COUNT: '100',
+      FZF_MATCH_COUNT: '100',
+      FZF_SELECT_COUNT: '0',
+      FZF_ACTION: 'start',
+      FZF_KEY: '',
+      FZF_POS: '1',
+      FZF_QUERY: '',
+      FZF_PROMPT: '>',
+      FZF_INPUT_STATE: 'hidden'
+    }
+    tmux.until do |lines|
+      assert_equal expected, to_vars(lines).slice(*expected.keys)
+    end
+    tmux.send_keys :Enter
+    tmux.until do |lines|
+      expected.merge!(FZF_INPUT_STATE: 'enabled', FZF_ACTION: 'show-input', FZF_KEY: 'enter')
+      assert_equal expected, to_vars(lines).slice(*expected.keys)
+    end
+    tmux.send_keys :Tab, :Tab
+    tmux.until do |lines|
+      expected.merge!(FZF_ACTION: 'toggle-down', FZF_KEY: 'tab', FZF_POS: '3', FZF_SELECT_COUNT: '2')
+      assert_equal expected, to_vars(lines).slice(*expected.keys)
+    end
+    tmux.send_keys '99'
+    tmux.until do |lines|
+      expected.merge!(FZF_ACTION: 'char', FZF_KEY: '9', FZF_QUERY: '99', FZF_MATCH_COUNT: '1', FZF_POS: '1')
+      assert_equal expected, to_vars(lines).slice(*expected.keys)
+    end
+    tmux.send_keys :Space
+    tmux.until do |lines|
+      expected.merge!(FZF_INPUT_STATE: 'disabled', FZF_ACTION: 'disable-search', FZF_KEY: 'space')
+      assert_equal expected, to_vars(lines).slice(*expected.keys)
+    end
+  end
+
+  def test_abort_action_chain
+    tmux.send_keys %(seq 100 | #{FZF} --bind 'load:accept+up+up' > #{tempname}), :Enter
+    wait do
+      assert_path_exists tempname
+      assert_equal '1', File.read(tempname).chomp
+    end
+    tmux.send_keys %(seq 100 | #{FZF} --bind 'load:abort+become(echo {})' > #{tempname}), :Enter
+    wait do
+      assert_path_exists tempname
+      assert_equal '', File.read(tempname).chomp
     end
   end
 end

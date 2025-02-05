@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ..
-.TH fzf 1 "Jan 2025" "fzf 0.59.0" "fzf - a command-line fuzzy finder"
+.TH fzf 1 "Feb 2025" "fzf 0.59.0" "fzf - a command-line fuzzy finder"
 
 .SH NAME
 fzf - a command-line fuzzy finder
@@ -621,6 +621,13 @@ Position of the list label
 .SS INPUT SECTION
 
 .TP
+.B "\-\-no\-input"
+Disable and hide the input section. You can no longer type in queries. To
+trigger a search, use \fBsearch\fR action. You can later show the input section
+using \fBshow\-input\fR or \fBtoggle\-input\fR action, and hide it again using
+\fBhide\-input\fR, or \fBtoggle\-input\fR.
+
+.TP
 .BI "\-\-prompt=" "STR"
 Input prompt (default: '> ')
 .TP
@@ -1217,6 +1224,8 @@ fzf exports the following environment variables to its child processes.
 .br
 .BR FZF_QUERY "           Current query string"
 .br
+.BR FZF_INPUT_STATE "     Current input state (enabled, disabled, hidden)"
+.br
 .BR FZF_NTH "             Current \-\-nth option"
 .br
 .BR FZF_PROMPT "          Prompt string"
@@ -1605,6 +1614,7 @@ A key or an event can be bound to one or more of the following actions.
     \fBhalf\-page\-down\fR
     \fBhalf\-page\-up\fR
     \fBhide\-header\fR
+    \fBhide\-input\fR
     \fBhide\-preview\fR
     \fBoffset\-down\fR                  (similar to CTRL\-E of Vim)
     \fBoffset\-up\fR                    (similar to CTRL\-Y of Vim)
@@ -1633,13 +1643,16 @@ A key or an event can be bound to one or more of the following actions.
     \fBselect\fR
     \fBselect\-all\fR                   (select all matches)
     \fBshow\-header\fR
+    \fBshow\-input\fR
     \fBshow\-preview\fR
     \fBtoggle\fR                       (\fIright\-click\fR)
     \fBtoggle\-all\fR                   (toggle all matches)
     \fBtoggle\-in\fR                    (\fB\-\-layout=reverse*\fR ? \fBtoggle+up\fR : \fBtoggle+down\fR)
     \fBtoggle\-out\fR                   (\fB\-\-layout=reverse*\fR ? \fBtoggle+down\fR : \fBtoggle+up\fR)
+    \fBtoggle\-bind\fR
     \fBtoggle\-header\fR
     \fBtoggle\-hscroll\fR
+    \fBtoggle\-input\fR
     \fBtoggle\-multi\-line\fR
     \fBtoggle\-preview\fR
     \fBtoggle\-preview\-wrap\fR
