@@ -23,6 +23,12 @@
 [push]
   default = tracking
 
+[fetch]
+  prune = true
+
+[pull]
+  rebase = false
+
 [alias]
   lol = log --all --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue) %an [%Cred%G?%Creset]' --abbrev-commit
   st = status -sb
@@ -71,8 +77,6 @@
   cookiefile = ~/.config/git/cookies
 [init]
 	defaultBranch = main
-[pull]
-	rebase = false
 
 [gitget]
   root = ~/src
