@@ -154,8 +154,8 @@ function fzf_key_bindings
     # eval is used to do shell expansion on paths
     eval set commandline $commandline
 
-    # Combine multiple consecutive slashes into one
-    set commandline (string replace -r -a -- '/+' '/' $commandline)
+    # Combine multiple consecutive slashes into one, and unescape.
+    set commandline (string replace -r -a -- '/+' '/' $commandline | string unescape -n)
 
     if test -z "$commandline"
       # Default to current directory with no --query
@@ -176,9 +176,9 @@ function fzf_key_bindings
       end
     end
 
-    echo (string escape -- $dir)
-    echo (string escape -- $fzf_query)
-    echo $prefix
+    echo -- $dir
+    string escape -- $fzf_query
+    echo -- $prefix
   end
 
   function __fzf_get_dir -d 'Find the longest existing filepath from input string'
@@ -194,7 +194,7 @@ function fzf_key_bindings
       set dir (dirname -- "$dir")
     end
 
-    echo $dir
+    string escape -n -- $dir
   end
 
 end

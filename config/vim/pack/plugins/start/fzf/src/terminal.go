@@ -305,6 +305,7 @@ type Terminal struct {
 	nthAttr            tui.Attr
 	nth                []Range
 	nthCurrent         []Range
+	acceptNth          []Range
 	tabstop            int
 	margin             [4]sizeSpec
 	padding            [4]sizeSpec
@@ -390,6 +391,12 @@ type Terminal struct {
 	clickHeaderLine    int
 	clickHeaderColumn  int
 	proxyScript        string
+	numLinesCache      map[int32]numLinesCacheValue
+}
+
+type numLinesCacheValue struct {
+	atMost   int
+	numLines int
 }
 
 type selectedItem struct {
@@ -577,6 +584,8 @@ const (
 	actShowHeader
 	actHideHeader
 	actBell
+	actExclude
+	actExcludeMulti
 )
 
 func (a actionType) Name() string {
@@ -614,12 +623,14 @@ type placeholderFlags struct {
 }
 
 type searchRequest struct {
-	sort    bool
-	sync    bool
-	nth     *[]Range
-	command *commandSpec
-	environ []string
-	changed bool
+	sort     bool
+	sync     bool
+	nth      *[]Range
+	command  *commandSpec
+	environ  []string
+	changed  bool
+	denylist []int32
+	revision revision
 }
 
 type previewRequest struct {
@@ -908,6 +919,7 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		nthAttr:            opts.Theme.Nth.Attr,
 		nth:                opts.Nth,
 		nthCurrent:         opts.Nth,
+		acceptNth:          opts.AcceptNth,
 		tabstop:            opts.Tabstop,
 		hasStartActions:    false,
 		hasResultActions:   false,
@@ -947,7 +959,8 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		initFunc:           func() error { return renderer.Init() },
 		executing:          util.NewAtomicBool(false),
 		lastAction:         actStart,
-		lastFocus:          minItem.Index()}
+		lastFocus:          minItem.Index(),
+		numLinesCache:      make(map[int32]numLinesCacheValue)}
 
 	// This should be called before accessing tui.Color*
 	tui.InitTheme(opts.Theme, renderer.DefaultTheme(), opts.Black, opts.InputBorderShape.Visible(), opts.HeaderBorderShape.Visible())
@@ -1318,12 +1331,22 @@ func (t *Terminal) wrapCols() int {
 	return util.Max(t.window.Width()-(t.pointerLen+t.markerLen+1), 1)
 }
 
+func (t *Terminal) clearNumLinesCache() {
+	t.numLinesCache = make(map[int32]numLinesCacheValue)
+}
+
 // Number of lines the item takes including the gap
 func (t *Terminal) numItemLines(item *Item, atMost int) (int, bool) {
 	var numLines int
 	if !t.wrap && !t.multiLine {
 		numLines = 1 + t.gap
 		return numLines, numLines > atMost
+	}
+	if cached, prs := t.numLinesCache[item.Index()]; prs {
+		// Can we use this cache? Let's be conservative.
+		if cached.atMost >= atMost {
+			return cached.numLines, false
+		}
 	}
 	var overflow bool
 	if !t.wrap && t.multiLine {
@@ -1334,6 +1357,9 @@ func (t *Terminal) numItemLines(item *Item, atMost int) (int, bool) {
 		numLines = len(lines)
 	}
 	numLines += t.gap
+	if !overflow {
+		t.numLinesCache[item.Index()] = numLinesCacheValue{atMost, numLines}
+	}
 	return numLines, overflow || numLines > atMost
 }
 
@@ -1461,6 +1487,7 @@ func (t *Terminal) UpdateList(merger *Merger) {
 		if !t.revision.compatible(newRevision) {
 			// Reloaded: clear selection
 			t.selected = make(map[int32]selectedItem)
+			t.clearNumLinesCache()
 		} else {
 			// Trimmed by --tail: filter selection by index
 			filtered := make(map[int32]selectedItem)
@@ -1540,16 +1567,24 @@ func (t *Terminal) output() bool {
 	for _, s := range t.printQueue {
 		t.printer(s)
 	}
+	transform := func(item *Item) string {
+		return item.AsString(t.ansi)
+	}
+	if len(t.acceptNth) > 0 {
+		transform = func(item *Item) string {
+			return JoinTokens(StripLastDelimiter(Transform(Tokenize(item.AsString(t.ansi), t.delimiter), t.acceptNth), t.delimiter))
+		}
+	}
 	found := len(t.selected) > 0
 	if !found {
 		current := t.currentItem()
 		if current != nil {
-			t.printer(current.AsString(t.ansi))
+			t.printer(transform(current))
 			found = true
 		}
 	} else {
 		for _, sel := range t.sortSelected() {
-			t.printer(sel.item.AsString(t.ansi))
+			t.printer(transform(sel.item))
 		}
 	}
 	return found
@@ -1712,6 +1747,7 @@ func (t *Terminal) hasHeaderLinesWindow() bool {
 }
 
 func (t *Terminal) resizeWindows(forcePreview bool, redrawBorder bool) {
+	t.clearNumLinesCache()
 	t.forcePreview = forcePreview
 	screenWidth, screenHeight, marginInt, paddingInt := t.adjustMarginAndPadding()
 	width := screenWidth - marginInt[1] - marginInt[3]
@@ -1900,6 +1936,7 @@ func (t *Terminal) resizeWindows(forcePreview bool, redrawBorder bool) {
 					pwidth -= 1
 				}
 				t.pwindow = t.tui.NewWindow(y, x, pwidth, pheight, tui.WindowPreview, noBorder, true)
+				t.pwindow.SetWrapSign(t.wrapSign, t.wrapSignWidth)
 				if !hadPreviewWindow {
 					t.pwindow.Erase()
 				}
@@ -2932,7 +2969,7 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 		}
 		if !wholeCovered && t.nthAttr > 0 {
 			var tokens []Token
-			if item.transformed != nil {
+			if item.transformed != nil && item.transformed.revision == t.merger.revision {
 				tokens = item.transformed.tokens
 			} else {
 				tokens = Transform(Tokenize(item.text.ToString(), t.delimiter), t.nthCurrent)
@@ -3825,7 +3862,7 @@ func replacePlaceholder(params replacePlaceholderParams) (string, []string) {
 				elems, prefixLength := awkTokenizer(params.query)
 				tokens := withPrefixLengths(elems, prefixLength)
 				trans := Transform(tokens, nth)
-				result := joinTokens(trans)
+				result := JoinTokens(trans)
 				if !flags.preserveSpace {
 					result = strings.TrimSpace(result)
 				}
@@ -3875,7 +3912,7 @@ func replacePlaceholder(params replacePlaceholderParams) (string, []string) {
 			replace = func(item *Item) string {
 				tokens := Tokenize(item.AsString(params.stripAnsi), params.delimiter)
 				trans := Transform(tokens, ranges)
-				str := joinTokens(trans)
+				str := JoinTokens(trans)
 
 				// trim the last delimiter
 				if params.delimiter.str != nil {
@@ -4719,6 +4756,7 @@ func (t *Terminal) Loop() error {
 		changed := false
 		beof := false
 		queryChanged := false
+		denylist := []int32{}
 
 		// Special handling of --sync. Activate the interface on the second tick.
 		if loopIndex == 1 && t.deferActivation() {
@@ -4875,6 +4913,27 @@ func (t *Terminal) Loop() error {
 				}
 			case actBell:
 				t.tui.Bell()
+			case actExcludeMulti:
+				if len(t.selected) > 0 {
+					for _, item := range t.sortSelected() {
+						denylist = append(denylist, item.item.Index())
+					}
+					// Clear selected items
+					t.selected = make(map[int32]selectedItem)
+					t.version++
+				} else {
+					item := t.currentItem()
+					if item != nil {
+						denylist = append(denylist, item.Index())
+					}
+				}
+				changed = true
+			case actExclude:
+				if item := t.currentItem(); item != nil {
+					denylist = append(denylist, item.Index())
+					t.deselectItem(item)
+					changed = true
+				}
 			case actExecute, actExecuteSilent:
 				t.executeCommand(a.a, false, a.t == actExecuteSilent, false, false, "")
 			case actExecuteMulti:
@@ -5021,75 +5080,58 @@ func (t *Terminal) Loop() error {
 				} else {
 					req(reqHeader)
 				}
-			case actChangeHeaderLabel:
-				t.headerLabelOpts.label = a.a
-				if t.headerBorder != nil {
-					t.headerLabel, t.headerLabelLen = t.ansiLabelPrinter(a.a, &tui.ColHeaderLabel, false)
-					req(reqRedrawHeaderLabel)
+			case actChangeHeaderLabel, actTransformHeaderLabel:
+				label := a.a
+				if a.t == actTransformHeaderLabel {
+					label = t.captureLine(a.a)
 				}
-			case actChangeInputLabel:
-				t.inputLabelOpts.label = a.a
+				t.headerLabelOpts.label = label
+				t.headerLabel, t.headerLabelLen = t.ansiLabelPrinter(label, &tui.ColHeaderLabel, false)
+				req(reqRedrawHeaderLabel)
+			case actChangeInputLabel, actTransformInputLabel:
+				label := a.a
+				if a.t == actTransformInputLabel {
+					label = t.captureLine(a.a)
+				}
+				t.inputLabelOpts.label = label
 				if t.inputBorder != nil {
-					t.inputLabel, t.inputLabelLen = t.ansiLabelPrinter(a.a, &tui.ColInputLabel, false)
+					t.inputLabel, t.inputLabelLen = t.ansiLabelPrinter(label, &tui.ColInputLabel, false)
 					req(reqRedrawInputLabel)
 				}
-			case actChangeListLabel:
-				t.listLabelOpts.label = a.a
+			case actChangeListLabel, actTransformListLabel:
+				label := a.a
+				if a.t == actTransformListLabel {
+					label = t.captureLine(a.a)
+				}
+				t.listLabelOpts.label = label
 				if t.wborder != nil {
-					t.listLabel, t.listLabelLen = t.ansiLabelPrinter(a.a, &tui.ColListLabel, false)
+					t.listLabel, t.listLabelLen = t.ansiLabelPrinter(label, &tui.ColListLabel, false)
 					req(reqRedrawListLabel)
 				}
-			case actChangeBorderLabel:
-				t.borderLabelOpts.label = a.a
+			case actChangeBorderLabel, actTransformBorderLabel:
+				label := a.a
+				if a.t == actTransformBorderLabel {
+					label = t.captureLine(a.a)
+				}
+				t.borderLabelOpts.label = label
 				if t.border != nil {
-					t.borderLabel, t.borderLabelLen = t.ansiLabelPrinter(a.a, &tui.ColBorderLabel, false)
+					t.borderLabel, t.borderLabelLen = t.ansiLabelPrinter(label, &tui.ColBorderLabel, false)
 					req(reqRedrawBorderLabel)
 				}
-			case actChangePreviewLabel:
-				t.previewLabelOpts.label = a.a
+			case actChangePreviewLabel, actTransformPreviewLabel:
+				label := a.a
+				if a.t == actTransformPreviewLabel {
+					label = t.captureLine(a.a)
+				}
+				t.previewLabelOpts.label = label
 				if t.pborder != nil {
-					t.previewLabel, t.previewLabelLen = t.ansiLabelPrinter(a.a, &tui.ColPreviewLabel, false)
+					t.previewLabel, t.previewLabelLen = t.ansiLabelPrinter(label, &tui.ColPreviewLabel, false)
 					req(reqRedrawPreviewLabel)
 				}
 			case actTransform:
 				body := t.captureLines(a.a)
 				if actions, err := parseSingleActionList(strings.Trim(body, "\r\n")); err == nil {
 					return doActions(actions)
-				}
-			case actTransformHeaderLabel:
-				label := t.captureLine(a.a)
-				t.headerLabelOpts.label = label
-				if t.headerBorder != nil {
-					t.headerLabel, t.headerLabelLen = t.ansiLabelPrinter(label, &tui.ColHeaderLabel, false)
-					req(reqRedrawHeaderLabel)
-				}
-			case actTransformInputLabel:
-				label := t.captureLine(a.a)
-				t.inputLabelOpts.label = label
-				if t.inputBorder != nil {
-					t.inputLabel, t.inputLabelLen = t.ansiLabelPrinter(label, &tui.ColInputLabel, false)
-					req(reqRedrawInputLabel)
-				}
-			case actTransformListLabel:
-				label := t.captureLine(a.a)
-				t.listLabelOpts.label = label
-				if t.wborder != nil {
-					t.listLabel, t.listLabelLen = t.ansiLabelPrinter(label, &tui.ColListLabel, false)
-					req(reqRedrawListLabel)
-				}
-			case actTransformBorderLabel:
-				label := t.captureLine(a.a)
-				t.borderLabelOpts.label = label
-				if t.border != nil {
-					t.borderLabel, t.borderLabelLen = t.ansiLabelPrinter(label, &tui.ColBorderLabel, false)
-					req(reqRedrawBorderLabel)
-				}
-			case actTransformPreviewLabel:
-				label := t.captureLine(a.a)
-				t.previewLabelOpts.label = label
-				if t.pborder != nil {
-					t.previewLabel, t.previewLabelLen = t.ansiLabelPrinter(label, &tui.ColPreviewLabel, false)
-					req(reqRedrawPreviewLabel)
 				}
 			case actChangePrompt:
 				t.promptString = a.a
@@ -5464,9 +5506,11 @@ func (t *Terminal) Loop() error {
 				req(reqList, reqInfo, reqPrompt, reqHeader)
 			case actToggleWrap:
 				t.wrap = !t.wrap
+				t.clearNumLinesCache()
 				req(reqList, reqHeader)
 			case actToggleMultiLine:
 				t.multiLine = !t.multiLine
+				t.clearNumLinesCache()
 				req(reqList)
 			case actToggleHscroll:
 				// Force re-rendering of the list
@@ -5999,7 +6043,7 @@ func (t *Terminal) Loop() error {
 		reload := changed || newCommand != nil
 		var reloadRequest *searchRequest
 		if reload {
-			reloadRequest = &searchRequest{sort: t.sort, sync: reloadSync, nth: newNth, command: newCommand, environ: t.environ(), changed: changed}
+			reloadRequest = &searchRequest{sort: t.sort, sync: reloadSync, nth: newNth, command: newCommand, environ: t.environ(), changed: changed, denylist: denylist, revision: t.merger.Revision()}
 		}
 		t.mutex.Unlock() // Must be unlocked before touching reqBox
 

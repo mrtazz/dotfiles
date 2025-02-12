@@ -120,6 +120,10 @@ fields.
 .BI "\-\-with\-nth=" "N[,..]"
 Transform the presentation of each line using field index expressions
 .TP
+.BI "\-\-accept\-nth=" "N[,..]"
+Define which fields to print on accept. The last delimiter is stripped from the
+output.
+.TP
 .B "+s, \-\-no\-sort"
 Do not sort the result
 .TP
@@ -1597,6 +1601,8 @@ A key or an event can be bound to one or more of the following actions.
     \fBdown\fR                         \fIctrl\-j  ctrl\-n  down\fR
     \fBenable\-search\fR                (enable search functionality)
     \fBend\-of\-line\fR                  \fIctrl\-e  end\fR
+    \fBexclude\fR                      (exclude the current item from the result)
+    \fBexclude\-multi\fR                (exclude the current item or the selected items from the result)
     \fBexecute(...)\fR                 (see below for the details)
     \fBexecute\-silent(...)\fR          (see below for the details)
     \fBfirst\fR                        (move to the first match; same as \fBpos(1)\fR)
