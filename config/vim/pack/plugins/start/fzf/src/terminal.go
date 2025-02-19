@@ -305,7 +305,7 @@ type Terminal struct {
 	nthAttr            tui.Attr
 	nth                []Range
 	nthCurrent         []Range
-	acceptNth          []Range
+	acceptNth          func([]Token) string
 	tabstop            int
 	margin             [4]sizeSpec
 	padding            [4]sizeSpec
@@ -638,6 +638,7 @@ type previewRequest struct {
 	scrollOffset int
 	list         []*Item
 	env          []string
+	query        string
 }
 
 type previewResult struct {
@@ -919,7 +920,6 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		nthAttr:            opts.Theme.Nth.Attr,
 		nth:                opts.Nth,
 		nthCurrent:         opts.Nth,
-		acceptNth:          opts.AcceptNth,
 		tabstop:            opts.Tabstop,
 		hasStartActions:    false,
 		hasResultActions:   false,
@@ -961,6 +961,9 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		lastAction:         actStart,
 		lastFocus:          minItem.Index(),
 		numLinesCache:      make(map[int32]numLinesCacheValue)}
+	if opts.AcceptNth != nil {
+		t.acceptNth = opts.AcceptNth(t.delimiter)
+	}
 
 	// This should be called before accessing tui.Color*
 	tui.InitTheme(opts.Theme, renderer.DefaultTheme(), opts.Black, opts.InputBorderShape.Visible(), opts.HeaderBorderShape.Visible())
@@ -1570,9 +1573,11 @@ func (t *Terminal) output() bool {
 	transform := func(item *Item) string {
 		return item.AsString(t.ansi)
 	}
-	if len(t.acceptNth) > 0 {
+	if t.acceptNth != nil {
 		transform = func(item *Item) string {
-			return JoinTokens(StripLastDelimiter(Transform(Tokenize(item.AsString(t.ansi), t.delimiter), t.acceptNth), t.delimiter))
+			tokens := Tokenize(item.AsString(t.ansi), t.delimiter)
+			transformed := t.acceptNth(tokens)
+			return StripLastDelimiter(transformed, t.delimiter)
 		}
 	}
 	found := len(t.selected) > 0
@@ -3095,8 +3100,15 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 		maxWidth := t.window.Width() - (indentSize + 1)
 		wasWrapped := false
 		if wrapped {
-			maxWidth -= t.wrapSignWidth
-			t.window.CPrint(colBase.WithAttr(tui.Dim), t.wrapSign)
+			wrapSign := t.wrapSign
+			if maxWidth < t.wrapSignWidth {
+				runes, _ := util.Truncate(wrapSign, maxWidth)
+				wrapSign = string(runes)
+				maxWidth = 0
+			} else {
+				maxWidth -= t.wrapSignWidth
+			}
+			t.window.CPrint(colBase.WithAttr(tui.Dim), wrapSign)
 			wrapped = false
 			wasWrapped = true
 		}
@@ -3161,7 +3173,9 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 			displayWidth = t.displayWidthWithLimit(line, 0, displayWidth)
 		}
 
-		t.printColoredString(t.window, line, offsets, colBase)
+		if maxWidth > 0 {
+			t.printColoredString(t.window, line, offsets, colBase)
+		}
 		if postTask != nil {
 			postTask(actualLineNum, displayWidth, wasWrapped, forceRedraw)
 		} else {
@@ -4372,6 +4386,7 @@ func (t *Terminal) Loop() error {
 				var items []*Item
 				var commandTemplate string
 				var env []string
+				var query string
 				initialOffset := 0
 				t.previewBox.Wait(func(events *util.Events) {
 					for req, value := range *events {
@@ -4385,6 +4400,7 @@ func (t *Terminal) Loop() error {
 							initialOffset = request.scrollOffset
 							items = request.list
 							env = request.env
+							query = request.query
 						}
 					}
 					events.Clear()
@@ -4398,8 +4414,7 @@ func (t *Terminal) Loop() error {
 				version++
 				// We don't display preview window if no match
 				if items[0] != nil {
-					_, query := t.Input()
-					command, tempFiles := t.replacePlaceholder(commandTemplate, false, string(query), items)
+					command, tempFiles := t.replacePlaceholder(commandTemplate, false, query, items)
 					cmd := t.executor.ExecCommand(command, true)
 					cmd.Env = env
 
@@ -4527,7 +4542,7 @@ func (t *Terminal) Loop() error {
 		if len(command) > 0 && t.canPreview() {
 			_, list := t.buildPlusList(command, false)
 			t.cancelPreview()
-			t.previewBox.Set(reqPreviewEnqueue, previewRequest{command, t.evaluateScrollOffset(), list, t.environForPreview()})
+			t.previewBox.Set(reqPreviewEnqueue, previewRequest{command, t.evaluateScrollOffset(), list, t.environForPreview(), string(t.input)})
 		}
 	}
 
@@ -4959,7 +4974,7 @@ func (t *Terminal) Loop() error {
 						if valid {
 							t.cancelPreview()
 							t.previewBox.Set(reqPreviewEnqueue,
-								previewRequest{t.previewOpts.command, t.evaluateScrollOffset(), list, t.environForPreview()})
+								previewRequest{t.previewOpts.command, t.evaluateScrollOffset(), list, t.environForPreview(), string(t.input)})
 						}
 					} else {
 						// Discard the preview content so that it won't accidentally appear
