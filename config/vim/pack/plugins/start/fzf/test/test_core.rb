@@ -238,6 +238,11 @@ class TestCore < TestInteractive
     assert_equal %w[5555 55], fzf_output_lines
   end
 
+  def test_select_1_accept_nth
+    tmux.send_keys "seq 1 100 | #{fzf(:with_nth, '..,..', :print_query, :q, 5555, :'1', :accept_nth, '"{1} // {1}"')}", :Enter
+    assert_equal ['5555', '55 // 55'], fzf_output_lines
+  end
+
   def test_exit_0
     tmux.send_keys "seq 1 100 | #{fzf(:with_nth, '..,..', :print_query, :q, 555_555, :'0')}", :Enter
     assert_equal %w[555555], fzf_output_lines
@@ -825,6 +830,24 @@ class TestCore < TestInteractive
     tmux.until { |lines| assert_includes lines[-7], '5 5' }
     tmux.send_keys 'C-c'
     tmux.until { |lines| assert(lines.any? { it.include?('jump cancelled at 3') }) }
+  end
+
+  def test_jump_no_pointer
+    tmux.send_keys "seq 100 | #{FZF} --pointer= --jump-labels 12345 --bind ctrl-j:jump", :Enter
+    tmux.until { |lines| assert_equal 100, lines.match_count }
+    tmux.send_keys 'C-j'
+    tmux.until { |lines| assert_equal '5 5', lines[-7] }
+    tmux.send_keys 'C-c'
+    tmux.until { |lines| assert_equal ' 5', lines[-7] }
+  end
+
+  def test_jump_no_pointer_no_marker
+    tmux.send_keys "seq 100 | #{FZF} --pointer= --marker= --jump-labels 12345 --bind ctrl-j:jump", :Enter
+    tmux.until { |lines| assert_equal 100, lines.match_count }
+    tmux.send_keys 'C-j'
+    tmux.until { |lines| assert_equal '55', lines[-7] }
+    tmux.send_keys 'C-c'
+    tmux.until { |lines| assert_equal '5', lines[-7] }
   end
 
   def test_pointer
@@ -1773,12 +1796,21 @@ class TestCore < TestInteractive
     end
   end
 
-  def test_accept_nth_template
-    tmux.send_keys %(echo "foo  ,bar,baz" | #{FZF} -d, --accept-nth '1st: {1}, 3rd: {3}, 2nd: {2}' --sync --bind start:accept > #{tempname}), :Enter
+  def test_accept_nth_regex_delimiter_strip_last
+    tmux.send_keys %((echo "foo:,bar:,baz"; echo "foo:,bar:,baz:,qux:,") | #{FZF} --multi --delimiter='[:,]+' --accept-nth 2.. --sync --bind 'load:select-all+accept' > #{tempname}), :Enter
     wait do
       assert_path_exists tempname
       # Last delimiter and the whitespaces are removed
-      assert_equal ['1st: foo, 3rd: baz, 2nd: bar'], File.readlines(tempname, chomp: true)
+      assert_equal ['bar:,baz', 'bar:,baz:,qux'], File.readlines(tempname, chomp: true)
+    end
+  end
+
+  def test_accept_nth_template
+    tmux.send_keys %(echo "foo  ,bar,baz" | #{FZF} -d, --accept-nth '[{n}] 1st: {1}, 3rd: {3}, 2nd: {2}' --sync --bind start:accept > #{tempname}), :Enter
+    wait do
+      assert_path_exists tempname
+      # Last delimiter and the whitespaces are removed
+      assert_equal ['[0] 1st: foo, 3rd: baz, 2nd: bar'], File.readlines(tempname, chomp: true)
     end
   end
 end

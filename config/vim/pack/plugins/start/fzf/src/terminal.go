@@ -305,7 +305,7 @@ type Terminal struct {
 	nthAttr            tui.Attr
 	nth                []Range
 	nthCurrent         []Range
-	acceptNth          func([]Token) string
+	acceptNth          func([]Token, int32) string
 	tabstop            int
 	margin             [4]sizeSpec
 	padding            [4]sizeSpec
@@ -1347,7 +1347,7 @@ func (t *Terminal) numItemLines(item *Item, atMost int) (int, bool) {
 	}
 	if cached, prs := t.numLinesCache[item.Index()]; prs {
 		// Can we use this cache? Let's be conservative.
-		if cached.atMost >= atMost {
+		if cached.atMost <= atMost {
 			return cached.numLines, false
 		}
 	}
@@ -1575,9 +1575,7 @@ func (t *Terminal) output() bool {
 	}
 	if t.acceptNth != nil {
 		transform = func(item *Item) string {
-			tokens := Tokenize(item.AsString(t.ansi), t.delimiter)
-			transformed := t.acceptNth(tokens)
-			return StripLastDelimiter(transformed, t.delimiter)
+			return item.acceptNth(t.ansi, t.delimiter, t.acceptNth)
 		}
 	}
 	found := len(t.selected) > 0
@@ -2755,11 +2753,15 @@ func (t *Terminal) printItem(result Result, line int, maxLine int, index int, cu
 	item := result.item
 	_, selected := t.selected[item.Index()]
 	label := ""
+	extraWidth := 0
 	if t.jumping != jumpDisabled {
 		if index < len(t.jumpLabels) {
 			// Striped
 			current = index%2 == 0
-			label = t.jumpLabels[index:index+1] + strings.Repeat(" ", t.pointerLen-1)
+			label = t.jumpLabels[index:index+1] + strings.Repeat(" ", util.Max(0, t.pointerLen-1))
+			if t.pointerLen == 0 {
+				extraWidth = 1
+			}
 		}
 	} else if current {
 		label = t.pointer
@@ -2788,6 +2790,7 @@ func (t *Terminal) printItem(result Result, line int, maxLine int, index int, cu
 
 	maxWidth := t.window.Width() - (t.pointerLen + t.markerLen + 1)
 	postTask := func(lineNum int, width int, wrapped bool, forceRedraw bool) {
+		width += extraWidth
 		if (current || selected) && t.highlightLine {
 			color := tui.ColSelected
 			if current {
@@ -3384,8 +3387,10 @@ func (t *Terminal) renderPreviewText(height int, lines []string, lineNo int, unc
 	wiped := false
 	image := false
 	wireframe := false
+	var index int
+	var line string
 Loop:
-	for _, line := range lines {
+	for index, line = range lines {
 		var lbg tui.Color = -1
 		if ansi != nil {
 			ansi.lbg = -1
@@ -3528,6 +3533,7 @@ Loop:
 		}
 		lineNo++
 	}
+	t.previewer.scrollable = t.previewer.scrollable || index < len(lines)-1
 	t.previewed.image = image
 	t.previewed.wireframe = wireframe
 }
