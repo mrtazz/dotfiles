@@ -7,7 +7,7 @@ GIT := $(shell which git)
 DOTFILES := ${HOME}/.vim ${HOME}/.zshenv ${HOME}/.tmux.conf ${HOME}/.phoenix.js ${HOME}/.config
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
-BREW_OPTIONS := --no-lock
+BREW_OPTIONS := 
 BIN := ${HOME}/bin
 
 # bin/ is linked explicitly because we want it to not be ~/.bin
