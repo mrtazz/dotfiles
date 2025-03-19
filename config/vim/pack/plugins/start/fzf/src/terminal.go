@@ -234,6 +234,7 @@ type Terminal struct {
 	wrap               bool
 	wrapSign           string
 	wrapSignWidth      int
+	ghost              string
 	separator          labelPrinter
 	separatorLen       int
 	spinner            []string
@@ -847,6 +848,7 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		infoCommand:        opts.InfoCommand,
 		infoStyle:          opts.InfoStyle,
 		infoPrefix:         opts.InfoPrefix,
+		ghost:              opts.Ghost,
 		separator:          nil,
 		spinner:            makeSpinner(opts.Unicode),
 		promptString:       opts.Prompt,
@@ -2359,6 +2361,11 @@ func (t *Terminal) printPrompt() {
 	t.prompt()
 
 	before, after := t.updatePromptOffset()
+	if len(before) == 0 && len(after) == 0 && len(t.ghost) > 0 {
+		w.CPrint(tui.ColInput.WithAttr(tui.Dim), t.ghost)
+		return
+	}
+
 	color := tui.ColInput
 	if t.paused {
 		color = tui.ColDisabled
@@ -2478,6 +2485,10 @@ func (t *Terminal) printInfoImpl() {
 		outputPrinter, outputLen = t.ansiLabelPrinter(output, &tui.ColInfo, false)
 	}
 
+	shiftLen := t.queryLen[0] + t.queryLen[1] + 1
+	if shiftLen == 1 && len(t.ghost) > 0 {
+		shiftLen = util.StringWidth(t.ghost)
+	}
 	switch t.infoStyle {
 	case infoDefault:
 		if !move(line+1, 0, t.separatorLen == 0) {
@@ -2491,9 +2502,9 @@ func (t *Terminal) printInfoImpl() {
 			return
 		}
 	case infoInlineRight:
-		pos = t.promptLen + t.queryLen[0] + t.queryLen[1] + 1
+		pos = t.promptLen + shiftLen
 	case infoInline:
-		pos = t.promptLen + t.queryLen[0] + t.queryLen[1] + 1
+		pos = t.promptLen + shiftLen
 		printInfoPrefix()
 	}
 
