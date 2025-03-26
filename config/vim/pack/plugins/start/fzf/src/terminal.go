@@ -279,6 +279,7 @@ type Terminal struct {
 	yanked             []rune
 	input              []rune
 	inputOverride      *[]rune
+	pasting            *[]rune
 	multi              int
 	multiLine          bool
 	sort               bool
@@ -459,6 +460,8 @@ const (
 	actStart
 	actClick
 	actInvalid
+	actBracketedPasteBegin
+	actBracketedPasteEnd
 	actChar
 	actMouse
 	actBeginningOfLine
@@ -668,6 +671,8 @@ func defaultKeymap() map[tui.Event][]*action {
 
 	add(tui.Fatal, actFatal)
 	add(tui.Invalid, actInvalid)
+	add(tui.BracketedPasteBegin, actBracketedPasteBegin)
+	add(tui.BracketedPasteEnd, actBracketedPasteEnd)
 	add(tui.CtrlA, actBeginningOfLine)
 	add(tui.CtrlB, actBackwardChar)
 	add(tui.CtrlC, actAbort)
@@ -1301,8 +1306,11 @@ func (t *Terminal) parsePrompt(prompt string) (func(), int) {
 		t.wrap = false
 		t.withWindow(t.inputWindow, func() {
 			line := t.promptLine()
+			preTask := func(markerClass) int {
+				return 1
+			}
 			t.printHighlighted(
-				Result{item: item}, tui.ColPrompt, tui.ColPrompt, false, false, line, line, true, nil, nil)
+				Result{item: item}, tui.ColPrompt, tui.ColPrompt, false, false, line, line, true, preTask, nil)
 		})
 		t.wrap = wrap
 	}
@@ -1410,10 +1418,7 @@ func (t *Terminal) Input() (bool, []rune) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	paused := t.paused
-	var src []rune
-	if !t.inputless {
-		src = t.input
-	}
+	src := t.input
 	if t.inputOverride != nil {
 		paused = false
 		src = *t.inputOverride
@@ -2336,15 +2341,18 @@ func (t *Terminal) placeCursor() {
 	if t.inputless {
 		return
 	}
+	x := t.promptLen + t.queryLen[0]
 	if t.inputWindow != nil {
 		y := t.inputWindow.Height() - 1
 		if t.layout == layoutReverse {
 			y = 0
 		}
-		t.inputWindow.Move(y, t.promptLen+t.queryLen[0])
+		x = util.Min(x, t.inputWindow.Width()-1)
+		t.inputWindow.Move(y, x)
 		return
 	}
-	t.move(t.promptLine(), t.promptLen+t.queryLen[0], false)
+	x = util.Min(x, t.window.Width()-1)
+	t.move(t.promptLine(), x, false)
 }
 
 func (t *Terminal) printPrompt() {
@@ -4638,7 +4646,7 @@ func (t *Terminal) Loop() error {
 						currentIndex := t.currentIndex()
 						focusChanged := focusedIndex != currentIndex
 						info := false
-						if focusChanged && t.track == trackCurrent {
+						if focusChanged && focusedIndex >= 0 && t.track == trackCurrent {
 							t.track = trackDisabled
 							info = true
 						}
@@ -4926,6 +4934,14 @@ func (t *Terminal) Loop() error {
 			return true
 		}
 		doAction = func(a *action) bool {
+			// Keep track of the current query before the action is executed,
+			// so we can restore it when the input section is hidden (--no-input).
+			// * By doing this, we don't have to add a conditional branch to each
+			//   query modifying action.
+			// * We restore the query after each action instead of after a set of
+			//   actions to allow changing the query even when the input is hidden
+			//     e.g. fzf --no-input --bind 'space:show-input+change-query(foo)+hide-input'
+			currentInput := t.input
 		Action:
 			switch a.t {
 			case actIgnore, actStart, actClick:
@@ -4977,6 +4993,14 @@ func (t *Terminal) Loop() error {
 			case actInvalid:
 				t.mutex.Unlock()
 				return false
+			case actBracketedPasteBegin:
+				current := []rune(t.input)
+				t.pasting = &current
+			case actBracketedPasteEnd:
+				if t.pasting != nil {
+					queryChanged = string(t.input) != string(*t.pasting)
+					t.pasting = nil
+				}
 			case actTogglePreview, actShowPreview, actHidePreview:
 				var act bool
 				switch a.t {
@@ -5473,6 +5497,7 @@ func (t *Terminal) Loop() error {
 				t.scrollOff = t.window.Height()
 				t.constrain()
 				t.scrollOff = soff
+				req(reqList)
 			case actJump:
 				t.jumping = jumpEnabled
 				req(reqJump)
@@ -5847,7 +5872,7 @@ func (t *Terminal) Loop() error {
 
 				if me.Down {
 					mxCons := util.Constrain(mx-t.promptLen, 0, len(t.input))
-					if t.inputWindow == nil && my == t.promptLine() && mxCons >= 0 {
+					if !t.inputless && t.inputWindow == nil && my == t.promptLine() && mxCons >= 0 {
 						// Prompt
 						t.cx = mxCons + t.xoffset
 					} else if my >= min {
@@ -6008,6 +6033,13 @@ func (t *Terminal) Loop() error {
 			if !processExecution(a.t) {
 				t.lastAction = a.t
 			}
+
+			if t.inputless {
+				// Always just discard the change
+				t.input = currentInput
+				t.cx = len(t.input)
+				beof = false
+			}
 			return true
 		}
 
@@ -6028,15 +6060,10 @@ func (t *Terminal) Loop() error {
 			} else if !doActions(actions) {
 				continue
 			}
-			if t.inputless {
-				// Always just discard the change
-				t.input = previousInput
-				t.cx = len(t.input)
-				beof = false
-			} else {
+			if !t.inputless {
 				t.truncateQuery()
 			}
-			queryChanged = string(previousInput) != string(t.input)
+			queryChanged = queryChanged || t.pasting == nil && string(previousInput) != string(t.input)
 			if queryChanged {
 				t.inputOverride = nil
 			}

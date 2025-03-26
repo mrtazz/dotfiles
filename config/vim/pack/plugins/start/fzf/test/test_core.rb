@@ -1846,4 +1846,39 @@ class TestCore < TestInteractive
       assert_includes lines, 'X Type in query ... Y100/100'
     end
   end
+
+  def test_offset_middle
+    tmux.send_keys %(seq 1000 | #{FZF} --sync --no-input --reverse --height 5 --scroll-off 0 --bind space:offset-middle), :Enter
+    line = nil
+    tmux.until { |lines| line = lines.index('> 1') }
+    tmux.send_keys :PgDn
+    tmux.until { |lines| assert_includes lines[line + 4], "> 5" }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert_includes lines[line + 2], "> 5" }
+  end
+
+  def test_no_input_query
+    tmux.send_keys %(seq 1000 | #{FZF} --no-input --query 555 --bind space:toggle-input), :Enter
+    tmux.until { |lines| assert_includes lines, '> 555' }
+    tmux.send_keys :Space
+    tmux.until do |lines|
+      assert_equal 1, lines.match_count
+      assert_includes lines, '> 555'
+    end
+  end
+
+  def test_no_input_change_query
+    tmux.send_keys %(seq 1000 | #{FZF} --multi --query 999 --no-input --bind 'enter:show-input+change-query(555)+hide-input,space:change-query(555)+select'), :Enter
+    tmux.until { |lines| assert_includes lines, '> 999' }
+    tmux.send_keys :Space
+    tmux.until do |lines|
+      assert_includes lines, '>>999'
+      refute_includes lines, '> 555'
+    end
+    tmux.send_keys :Enter
+    tmux.until do |lines|
+      refute_includes lines, '>>999'
+      assert_includes lines, '> 555'
+    end
+  end
 end
