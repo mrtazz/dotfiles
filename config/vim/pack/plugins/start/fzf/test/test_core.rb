@@ -1815,7 +1815,7 @@ class TestCore < TestInteractive
   end
 
   def test_ghost
-    tmux.send_keys %(seq 100 | #{FZF} --prompt 'X ' --ghost 'Type in query ...'), :Enter
+    tmux.send_keys %(seq 100 | #{FZF} --prompt 'X ' --ghost 'Type in query ...' --bind 'space:change-ghost:Y Z' --bind 'enter:transform-ghost:echo Z Y'), :Enter
     tmux.until do |lines|
       assert_equal 100, lines.match_count
       assert_includes lines, 'X Type in query ...'
@@ -1830,6 +1830,10 @@ class TestCore < TestInteractive
       assert_equal 100, lines.match_count
       assert_includes lines, 'X Type in query ...'
     end
+    tmux.send_keys :Space
+    tmux.until { |lines| assert_includes lines, 'X Y Z' }
+    tmux.send_keys :Enter
+    tmux.until { |lines| assert_includes lines, 'X Z Y' }
   end
 
   def test_ghost_inline
@@ -1880,5 +1884,51 @@ class TestCore < TestInteractive
       refute_includes lines, '>>999'
       assert_includes lines, '> 555'
     end
+  end
+
+  def test_search_override_query_in_no_input_mode
+    tmux.send_keys %(seq 1000 | #{FZF} --sync --no-input --bind 'enter:show-input+change-query(555)+hide-input+search(999),space:search(111)+show-input+change-query(777)'), :Enter
+    tmux.until { |lines| assert_includes lines, '> 1' }
+    tmux.send_keys :Enter
+    tmux.until { |lines| assert_includes lines, '> 999' }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert_includes lines, '> 777' }
+  end
+
+  def test_change_pointer
+    tmux.send_keys %(seq 2 | #{FZF} --bind 'a:change-pointer(a),b:change-pointer(bb),c:change-pointer(),d:change-pointer(ddd)'), :Enter
+    tmux.until { |lines| assert_includes lines, '> 1' }
+    tmux.send_keys 'a'
+    tmux.until { |lines| assert_includes lines, 'a 1' }
+    tmux.send_keys 'b'
+    tmux.until { |lines| assert_includes lines, 'bb 1' }
+    tmux.send_keys 'c'
+    tmux.until { |lines| assert_includes lines, ' 1' }
+    tmux.send_keys 'd'
+    tmux.until { |lines| refute_includes lines, 'ddd 1' }
+    tmux.send_keys :Up
+    tmux.until { |lines| assert_includes lines, ' 2' }
+  end
+
+  def test_transform_pointer
+    tmux.send_keys %(seq 2 | #{FZF} --bind 'a:transform-pointer(echo a),b:transform-pointer(echo bb),c:transform-pointer(),d:transform-pointer(echo ddd)'), :Enter
+    tmux.until { |lines| assert_includes lines, '> 1' }
+    tmux.send_keys 'a'
+    tmux.until { |lines| assert_includes lines, 'a 1' }
+    tmux.send_keys 'b'
+    tmux.until { |lines| assert_includes lines, 'bb 1' }
+    tmux.send_keys 'c'
+    tmux.until { |lines| assert_includes lines, ' 1' }
+    tmux.send_keys 'd'
+    tmux.until { |lines| refute_includes lines, 'ddd 1' }
+    tmux.send_keys :Up
+    tmux.until { |lines| assert_includes lines, ' 2' }
+  end
+
+  def test_change_header_on_header_window
+    tmux.send_keys %(seq 100 | #{FZF} --list-border --input-border --bind 'start:change-header(foo),space:change-header(bar)'), :Enter
+    tmux.until { |lines| assert lines.any_include?('foo') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('bar') }
   end
 end
