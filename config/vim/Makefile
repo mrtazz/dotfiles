@@ -5,7 +5,7 @@ FILES := vimrc
 SOURCES := $(filter-out $(METAS),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 
-PLUGINSDIR := pack/plugins/start
+PLUGINS_BASE_DIR := pack/plugins/
 
 # general plugins
 plugin_vim-fugitive         := https://github.com/tpope/vim-fugitive/tarball/master
@@ -14,10 +14,8 @@ plugin_syntastic            := https://github.com/scrooloose/syntastic/tarball/m
 plugin_vim-colors-solarized := https://github.com/altercation/vim-colors-solarized/tarball/master
 plugin_fzf                  := https://github.com/junegunn/fzf/tarball/master
 plugin_fzf.vim              := https://github.com/junegunn/fzf.vim/tarball/master
-plugin_vim-tla              := https://github.com/florentc/vim-tla/tarball/master
-plugin_vim-lsp              := https://github.com/prabirshrestha/vim-lsp/tarball/master
-plugin_vim-lsp-settings     := https://github.com/mattn/vim-lsp-settings/tarball/master
 plugin_rust.vim             := https://github.com/rust-lang/rust.vim/tarball/master
+plugin_vim-tla              := https://github.com/florentc/vim-tla/tarball/master
 
 # these are all for note taking (mostly on macOS)
 plugin_vim-marked           := https://github.com/itspriddle/vim-marked/tarball/master
@@ -29,30 +27,47 @@ plugin_vim-nerdtree         := https://github.com/preservim/nerdtree/tarball/mas
 plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master
 plugin_vim-snipple          := https://github.com/mrtazz/vim-snipple/tarball/main
 
+# optional plugins, these are too noisy to always keep enabled
+plugin-opt_vim-lsp          := https://github.com/prabirshrestha/vim-lsp/tarball/master
+
 # this filters out all variables with a plugin_ prefix and regards them as
 # plugin definitions
 ALL_DEFINED_PLUGINS := $(filter plugin_%, $(.VARIABLES))
+ALL_DEFINED_OPT_PLUGINS := $(filter plugin-opt_%, $(.VARIABLES))
 # from the defined variables list we only extract the name
 ALL_PLUGINS := $(subst plugin_,,$(ALL_DEFINED_PLUGINS))
+ALL_OPT_PLUGINS := $(subst plugin-opt_,,$(ALL_DEFINED_OPT_PLUGINS))
+
+# generate all plugin paths
+ALL_PLUGIN_PATHS     := $(patsubst %, $(PLUGINS_BASE_DIR)/start/%, $(ALL_PLUGINS))
+ALL_PLUGIN_OPT_PATHS := $(patsubst %, $(PLUGINS_BASE_DIR)/opt/%, $(ALL_OPT_PLUGINS))
 
 # this will install all plugins via the wildcard matching target below
 .PHONY: install-plugins
-install-plugins: $(patsubst %, $(PLUGINSDIR)/%, $(ALL_PLUGINS))
+install-plugins: $(ALL_PLUGIN_PATHS) $(ALL_PLUGIN_OPT_PATHS)
 
 .PHONY: clean-plugins
 clean-plugins:
-	rm -rf ./pack/plugins/start/*
+	rm -rf ./$(PLUGINS_BASE_DIR)/*
 
 .PHONY: update-plugins
 update-plugins: clean-plugins install-plugins
 
-$(PLUGINSDIR):
+$(PLUGINS_BASE_DIR):
 	install -d $@
 
-$(PLUGINSDIR)/%: $(PLUGINSDIR)
+# I don't super like the repetitive rules here but there isn't really a good
+# way to move up the wildcard to include start/opt and still easily choose the
+# right variable that contains the plugin URL
+$(PLUGINS_BASE_DIR)/start/%: $(PLUGINS_BASE_DIR)
 	@echo "Installing $@ from $(plugin_$*)"
 	@install -d $@
 	@curl -Lfs $(plugin_$*) | tar xz -C $@ --strip-components=1
+
+$(PLUGINS_BASE_DIR)/opt/%: $(PLUGINS_BASE_DIR)
+	@echo "Installing $@ from $(plugin-opt_$*)"
+	@install -d $@
+	@curl -Lfs $(plugin-opt_$*) | tar xz -C $@ --strip-components=1
 
 $(DOTFILES): $(addprefix ${HOME}/., %) : ${PWD}/%
 	ln -s $< $@
