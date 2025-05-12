@@ -1,13 +1,24 @@
 " define some basic variables
+" base dir
 let g:PlanBaseDir = get(g:, 'PlanBaseDir', $HOME . "/.plan")
-let g:PlanTemplateDir = get(g:, 'PlanTemplatePath', "templates")
+" template related configs
+let g:PlanTemplateDir = get(g:, 'PlanTemplateDir', "templates")
+let g:PlanDailyTemplate = get(g:, 'PlanDailyTemplate', "daily.md")
+let g:PlanWeeklyTemplate = get(g:, 'PlanWeeklyTemplate', "weekly.md")
+let g:PlanNoteTemplate = get(g:, 'PlanNoteTemplate', "note.md")
+" directory definitions
 let g:PlanDailiesDir = get(g:, 'PlanDailiesDir', "dailies")
+let g:PlanWeekliesDir = get(g:, 'PlanWeekliesDir', "weeklies")
 let g:PlanNotesDir = get(g:, 'PlanNotesDir', "notes")
-let g:PlanPromptForTitle = get(g:, 'PlanPromptForTitle', 0)
+" asset directory
 let g:PlanAssetsDirectory = get(g:, 'PlanAssetsDirectory', "assets")
+
+let g:PlanPromptForTitle = get(g:, 'PlanPromptForTitle', 0)
+
 
 " command definitions
 command! PlanDaily :call plan#OpenDailyNote()
+command! PlanWeekly :call plan#OpenWeeklyNote()
 command! PlanNote :call plan#OpenNote()
 command! PlanMarkDone :call plan#MarkDone()
 command! PlanMarkCanceled :call plan#MarkCanceled()

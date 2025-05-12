@@ -5,7 +5,7 @@ FILES := vimrc
 SOURCES := $(filter-out $(METAS),$(FILES))
 DOTFILES := $(patsubst %, ${HOME}/.%, $(SOURCES))
 
-PLUGINS_BASE_DIR := pack/plugins/
+PLUGINS_BASE_DIR := pack/plugins
 
 # general plugins
 plugin_vim-fugitive         := https://github.com/tpope/vim-fugitive/tarball/master
@@ -22,6 +22,7 @@ plugin_vim-marked           := https://github.com/itspriddle/vim-marked/tarball/
 plugin_vim-checkbox         := https://github.com/jkramer/vim-checkbox/tarball/master
 plugin_vim-plan             := https://github.com/mrtazz/vim-plan/tarball/main
 plugin_vim-nerdtree         := https://github.com/preservim/nerdtree/tarball/master
+plugin_vim-goyo         		:= https://github.com/junegunn/goyo.vim/tarball/master
 
 # my plugins
 plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master
@@ -29,6 +30,7 @@ plugin_vim-snipple          := https://github.com/mrtazz/vim-snipple/tarball/mai
 
 # optional plugins, these are too noisy to always keep enabled
 plugin-opt_vim-lsp          := https://github.com/prabirshrestha/vim-lsp/tarball/master
+plugin-opt_copilot.vim      := https://github.com/github/copilot.vim/tarball/release
 
 # this filters out all variables with a plugin_ prefix and regards them as
 # plugin definitions

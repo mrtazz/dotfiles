@@ -6,10 +6,14 @@ let g:loaded_plan_vim = 1
 
 " set up some directory definitions
 let s:dailiesDirectory = g:PlanBaseDir . "/" . g:PlanDailiesDir
+let s:weekliesDirectory = g:PlanBaseDir . "/" . g:PlanWeekliesDir
+let s:dailiesTpl = g:PlanBaseDir . "/" . g:PlanTemplateDir . "/" . g:PlanDailyTemplate
+let s:weekliesTpl = g:PlanBaseDir . "/" . g:PlanTemplateDir . "/" . g:PlanWeeklyTemplate
+let s:notesTpl = g:PlanBaseDir . "/" . g:PlanTemplateDir . "/" . g:PlanNoteTemplate
 let s:notesDirectory = g:PlanBaseDir . "/" . g:PlanNotesDir
 let s:templatePath = g:PlanBaseDir . "/" . g:PlanTemplateDir
 let s:titleEnabled = g:PlanPromptForTitle
-let s:assetsDirectoryName = g:PlanAssetsDirectory
+let s:assetsDirectoryName = g:PlanBaseDir . "/" . g:PlanAssetsDirectory
 
 function! plan#OpenDailyNote()
   let today = strftime("%Y%m%d")
@@ -18,7 +22,23 @@ function! plan#OpenDailyNote()
   execute 'edit' plan
   if !filereadable(plan)
     "read in the template file if available
-    let tmplPath = s:templatePath . "/daily"
+    let tmplPath = s:dailiesTpl
+    if filereadable(tmplPath)
+      execute 'read ' . tmplPath
+      call plan#replaceTemplateVariables()
+    endif
+  endif
+  call plan#setupBuffer()
+endfunction
+
+function! plan#OpenWeeklyNote()
+  let this_week = strftime("%Y-%V")
+  call plan#EnsureDirectoryExists(s:weekliesDirectory)
+  let plan = s:weekliesDirectory . "/" . this_week . ".md"
+  execute 'edit' plan
+  if !filereadable(plan)
+    "read in the template file if available
+    let tmplPath = s:weekliesTpl
     if filereadable(tmplPath)
       execute 'read ' . tmplPath
       call plan#replaceTemplateVariables()
@@ -34,6 +54,14 @@ function! plan#OpenNote()
   call plan#EnsureDirectoryExists(s:notesDirectory)
   let plan = s:notesDirectory . "/" . dateTime . maybeTitle . ".md"
   execute 'edit' plan
+  if !filereadable(plan)
+    "read in the template file if available
+    let tmplPath = s:notesTpl
+    if filereadable(tmplPath)
+      execute 'read ' . tmplPath
+      call plan#replaceTemplateVariables()
+    endif
+  endif
   call plan#setupBuffer()
 endfunction
 

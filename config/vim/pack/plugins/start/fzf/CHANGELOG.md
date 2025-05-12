@@ -1,6 +1,38 @@
 CHANGELOG
 =========
 
+0.62.0
+------
+- Relaxed the `--color` option syntax to allow whitespace-separated entries (in addition to commas), making multi-line definitions easier to write and read
+  ```sh
+  # seoul256-light
+  fzf --style full --color='
+    fg:#616161 fg+:#616161
+    bg:#ffffff bg+:#e9e9e9 alt-bg:#f1f1f1
+    hl:#719872 hl+:#719899
+    pointer:#e12672 marker:#e17899
+    header:#719872
+    spinner:#719899 info:#727100
+    prompt:#0099bd query:#616161
+    border:#e1e1e1
+  '
+  ```
+- Added `alt-bg` color to create striped lines to visually separate rows
+  ```sh
+  fzf --color bg:237,alt-bg:238,current-bg:236 --highlight-line
+
+  declare -f | perl -0777 -pe 's/^}\n/}\0/gm' |
+    bat --plain --language bash --color always |
+    fzf --read0 --ansi --reverse --multi \
+        --color bg:237,alt-bg:238,current-bg:236 --highlight-line
+  ```
+- [fish] Improvements in CTRL-R binding (@bitraid)
+    - You can trigger CTRL-R in the middle of a command to insert the selected item
+    - You can delete history items with SHIFT-DEL
+- Bug fixes and improvements
+    - Fixed unnecessary 100ms delay after `reload` (#4364)
+    - Fixed `selected-bg` not applied to colored items (#4372)
+
 0.61.3
 ------
 - Reverted #4351 as it caused `tmux run-shell 'fzf --tmux'` to fail (#4559 #4560)

@@ -7,17 +7,18 @@ VIM plugin that supports my planning and note taking workflow.
 ## Usage
 
 This plugin provides a handful of helper functions to organize a directory of
-notes. The general setup is that there are at least 2 different directories.
-One for generic notes (by default `notes/`) and one for daily notes (by
-default `dailies/`). This workflow is heavily inspired by tools like
-[Obsidian][obsidian] and [NotePlan][noteplan] and should be in large parts
-compatible.
+notes. The general setup is that there are at least 3 different directories.
+One for generic notes (by default `notes/`), one for daily notes (by default
+`dailies/`), and one for weekly notes (by default `weeklies/`). This workflow
+is heavily inspired by tools like [Obsidian][obsidian] and
+[NotePlan][noteplan] and should be in large parts compatible.
 
 Helper functions are by default mapped to commands but not mapped to any
 keybindings to not clash with any existing mappings:
 
 ```
 command! PlanDaily :call plan#OpenDailyNote()
+command! PlanWeekly :call plan#OpenWeeklyNote()
 command! PlanNote :call plan#OpenNote()
 command! PlanMarkDone :call plan#MarkDone()
 command! PlanMarkCanceled :call plan#MarkCanceled()
@@ -73,7 +74,7 @@ insert mode) and also on leaving a buffer.
 When opening a file that doesn't exist yet, vim-plan reads a template folder
 to figure out if there is a template set for the file type. This is very
 similar to how [vim-stencil][vim_stencil] works. Valid template files are
-`daily` or `note`.
+`daily.md`, `weekly.md` or `note.md`.
 
 When reading those templates in vim-plan will replace the following template
 variables inline:
@@ -211,19 +212,20 @@ There are a couple of variables that can be set to customize mostly file
 locations:
 
 ```vimscript
-" base dor for all notes
+" base dir
 let g:PlanBaseDir = get(g:, 'PlanBaseDir', $HOME . "/.plan")
-" template dir relative to base dir
-let g:PlanTemplateDir = get(g:, 'PlanTemplatePath', "templates")
-" daily notes dir relative to base dir
-let g:PlanDailiesDir = get(g:, 'PlanTemplatePath', "dailies")
-" generic notes dir relative to base dir
-let g:PlanNotesDir = get(g:, 'PlanTemplatePath', "notes")
-" allow user to append a title to default note file name
-" set to 0 or omit to disable adding a title to notes
-let g:PlanPromptForTitle = get(g:, 'PlanPromptForTitle', 1)
-" the name of the directory relative to the current file to import assets to
+" template related configs
+let g:PlanTemplateDir = get(g:, 'PlanTemplateDir', "templates")
+let g:PlanDailyTemplate = get(g:, 'PlanDailyTemplate', "daily.md")
+let g:PlanWeeklyTemplate = get(g:, 'PlanWeeklyTemplate', "weekly.md")
+let g:PlanNoteTemplate = get(g:, 'PlanNoteTemplate', "note.md")
+" directory definitions
+let g:PlanDailiesDir = get(g:, 'PlanDailiesDir', "dailies")
+let g:PlanWeekliesDir = get(g:, 'PlanWeekliesDir', "weeklies")
+let g:PlanNotesDir = get(g:, 'PlanNotesDir', "notes")
+" asset directory
 let g:PlanAssetsDirectory = get(g:, 'PlanAssetsDirectory', "assets")
+let g:PlanPromptForTitle = get(g:, 'PlanPromptForTitle', 0)
 ```
 
 ## See also
