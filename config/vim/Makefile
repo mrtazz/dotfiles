@@ -47,6 +47,8 @@ ALL_PLUGIN_OPT_PATHS := $(patsubst %, $(PLUGINS_BASE_DIR)/opt/%, $(ALL_OPT_PLUGI
 # this will install all plugins via the wildcard matching target below
 .PHONY: install-plugins
 install-plugins: $(ALL_PLUGIN_PATHS) $(ALL_PLUGIN_OPT_PATHS)
+	# generate help tags afer all the plugins are installed
+	vim -c 'helptags ALL' -c quit
 
 .PHONY: clean-plugins
 clean-plugins:
