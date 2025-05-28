@@ -111,9 +111,9 @@ endfunction
 
 function! s:Initialize(state) abort
   try
-    let &l:filetype = 'copilot' . (empty(a:state.filetype) ? '' : '.' . a:state.filetype)
+    let &l:filetype = 'copilotpanel' . (empty(a:state.filetype) ? '' : '.' . a:state.filetype)
   catch
-    let &l:filetype = 'copilot'
+    let &l:filetype = 'copilotpanel'
   endtry
   let &l:tabstop = a:state.tabstop
   nmap <buffer><script> <CR> <Cmd>exe copilot#panel#Accept()<CR>

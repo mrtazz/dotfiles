@@ -11,7 +11,7 @@
         "url": "git+https://github.com/github/copilot-language-server-release.git"
     },
     "license": "https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features",
-    "version": "1.319.0",
+    "version": "1.324.0",
     "bin": {
         "copilot-language-server": "../dist/language-server.js"
     },
@@ -31,6 +31,6 @@
     "dependencies": {
         "vscode-languageserver-protocol": "^3.17.5"
     },
-    "build": "1559",
+    "build": "1588",
     "buildType": "prod"
 }

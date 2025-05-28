@@ -30,8 +30,7 @@ COMMANDS                                        *:Copilot*
 :Copilot panel          Open a window with up to 10 completions for the
                         current buffer.  Use <CR> to accept a completion.
                         Maps are also provided for [[ and ]] to jump from
-                        completion to completion.  This is the default command
-                        if :Copilot is called without an argument.
+                        completion to completion.
 
                                                 *:Copilot_version*
 :Copilot version        Show version information.

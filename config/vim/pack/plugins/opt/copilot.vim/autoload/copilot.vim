@@ -666,7 +666,7 @@ function! s:commands.setup(opts) abort
         call input(codemsg . "Press ENTER to open GitHub in your browser\n")
         let request = copilot#Request('workspace/executeCommand', data.command)
       endif
-      call s:Echo("Waiting for " . data.userCode . " at " . uri . " (could take up to 10 seconds)")
+      call s:Echo("Waiting for " . data.userCode . " at " . uri . " (could take up to 5 seconds)")
       call request.Wait()
     finally
       if exists('mouse')
@@ -789,7 +789,7 @@ function! copilot#Command(line1, line2, range, bang, mods, arg) abort
           if opts.status !=# 'OK' && opts.status !=# 'MaybeOK'
             let cmd = 'setup'
           else
-            let cmd = 'panel'
+            let cmd = 'status'
           endif
         catch
           call copilot#logger#Exception()
