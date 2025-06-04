@@ -179,6 +179,9 @@ func (result *Result) colorOffsets(matchOffsets []Offset, nthOffsets []Offset, t
 	var curr cellInfo = cellInfo{0, false, false, false}
 	start := 0
 	ansiToColorPair := func(ansi ansiOffset, base tui.ColorPair) tui.ColorPair {
+		if !theme.Colored {
+			return tui.NewColorPair(-1, -1, ansi.color.attr).MergeAttr(base)
+		}
 		fg := ansi.color.fg
 		bg := ansi.color.bg
 		if fg == -1 {
@@ -200,7 +203,7 @@ func (result *Result) colorOffsets(matchOffsets []Offset, nthOffsets []Offset, t
 					color = colBase.Merge(colMatch)
 				}
 				var url *url
-				if curr.color && theme.Colored {
+				if curr.color {
 					ansi := itemColors[curr.index]
 					url = ansi.color.url
 					origColor := ansiToColorPair(ansi, colMatch)
@@ -225,10 +228,11 @@ func (result *Result) colorOffsets(matchOffsets []Offset, nthOffsets []Offset, t
 					offset: [2]int32{int32(start), int32(idx)}, color: color, match: true, url: url})
 			} else if curr.color {
 				ansi := itemColors[curr.index]
-				color := ansiToColorPair(ansi, colBase)
+				base := colBase
 				if curr.nth {
-					color = color.WithAttr(attrNth)
+					base = base.WithAttr(attrNth)
 				}
+				color := ansiToColorPair(ansi, base)
 				colors = append(colors, colorOffset{
 					offset: [2]int32{int32(start), int32(idx)},
 					color:  color,
