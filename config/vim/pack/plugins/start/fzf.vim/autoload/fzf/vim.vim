@@ -1008,7 +1008,7 @@ function! fzf#vim#grep2(command_prefix, query, ...)
   let name = join(words, '-')
   let fallback = s:is_win ? '' : ' || :'
   let opts = {
-  \ 'source': s:is_win ? 'cd .' : ':',
+  \ 'source':  s:is_win ? 'cd .' : ':',
   \ 'options': ['--ansi', '--prompt', toupper(name).'> ', '--query', a:query,
   \             '--disabled',
   \             '--multi', '--bind', 'alt-a:select-all,alt-d:deselect-all',
@@ -1362,15 +1362,25 @@ function! s:mark_sink(lines)
   execute 'normal! `'.matchstr(a:lines[1], '\S').'zz'
 endfunction
 
-function! fzf#vim#marks(...)
+function! fzf#vim#marks(...) abort
+  let [initial_marks, extra] = (a:0 && type(a:1) == type('')) ?
+      \ [a:1, a:000[1:]] : ['', a:000]
+
   redir => cout
-  silent marks
+  execute 'silent! marks' initial_marks
   redir END
+
   let list = split(cout, "\n")
+
+  " If first line is not the expected header, no marks found
+  if empty(list) || list[0] =~# '^E'
+    return s:warn('No marks found')
+  endif
+
   return s:fzf('marks', {
   \ 'source':  extend(list[0:0], map(list[1:], 's:format_mark(v:val)')),
   \ 'sink*':   s:function('s:mark_sink'),
-  \ 'options': '+m -x --ansi --tiebreak=index --header-lines 1 --tiebreak=begin --prompt "Marks> "'}, a:000)
+  \ 'options': '+m -x --ansi --tiebreak=index --header-lines 1 --tiebreak=begin --prompt "Marks> "'}, extra)
 endfunction
 
 " ------------------------------------------------------------------
@@ -1420,9 +1430,9 @@ function! fzf#vim#jumps(...)
   let s:jump_current = pos
   let current = -pos-1
   return s:fzf('jumps', {
-  \ 'source'  : map(s:jumplist, 's:jump_format(v:val)'),
-  \ 'sink*'   : s:function('s:jump_sink'),
-  \ 'options' : ['+m', '-x', '--ansi', '--tiebreak=index', '--cycle', '--scroll-off=999', '--sync', '--bind', 'start:pos('.current.')+offset-middle', '--tac', '--tiebreak=begin', '--prompt', 'Jumps> ', '--preview-window', '+{3}/2', '--tabstop=2', '--delimiter', '[:\s]+'],
+  \ 'source':  map(s:jumplist, 's:jump_format(v:val)'),
+  \ 'sink*':   s:function('s:jump_sink'),
+  \ 'options': ['+m', '-x', '--ansi', '--tiebreak=index', '--cycle', '--scroll-off=999', '--sync', '--bind', 'start:pos('.current.')+offset-middle', '--tac', '--tiebreak=begin', '--prompt', 'Jumps> ', '--preview-window', '+{3}/2', '--tabstop=2', '--delimiter', '[:\s]+'],
   \ }, a:000)
 endfunction
 

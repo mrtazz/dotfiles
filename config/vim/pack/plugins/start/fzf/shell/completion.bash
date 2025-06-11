@@ -31,13 +31,31 @@ if [[ $- =~ i ]]; then
 
 ###########################################################
 
+#----BEGIN INCLUDE common.sh
+# NOTE: Do not directly edit this section, which is copied from "common.sh".
+# To modify it, one can edit "common.sh" and run "./update-common.sh" to apply
+# the changes. See code comments in "common.sh" for the implementation details.
+
 __fzf_defaults() {
-  # $1: Prepend to FZF_DEFAULT_OPTS_FILE and FZF_DEFAULT_OPTS
-  # $2: Append to FZF_DEFAULT_OPTS_FILE and FZF_DEFAULT_OPTS
-  echo "--height ${FZF_TMUX_HEIGHT:-40%} --min-height 20+ --bind=ctrl-z:ignore $1"
+  printf '%s\n' "--height ${FZF_TMUX_HEIGHT:-40%} --min-height 20+ --bind=ctrl-z:ignore $1"
   command cat "${FZF_DEFAULT_OPTS_FILE-}" 2> /dev/null
-  echo "${FZF_DEFAULT_OPTS-} $2"
+  printf '%s\n' "${FZF_DEFAULT_OPTS-} $2"
 }
+
+__fzf_exec_awk() {
+  if [[ -z ${__fzf_awk-} ]]; then
+    __fzf_awk=awk
+    if [[ $OSTYPE == solaris* && -x /usr/xpg4/bin/awk ]]; then
+      __fzf_awk=/usr/xpg4/bin/awk
+    else
+      local n x y z d
+      IFS=' .' read n x y z d <<< $(command mawk -W version 2> /dev/null)
+      [[ $n == mawk ]] && (( d >= 20230302 && (x * 1000 + y) * 1000 + z >= 1003004 )) && __fzf_awk=mawk
+    fi
+  fi
+  LC_ALL=C exec "$__fzf_awk" "$@"
+}
+#----END INCLUDE
 
 __fzf_comprun() {
   if [[ "$(type -t _fzf_comprun 2>&1)" = function ]]; then
@@ -364,7 +382,7 @@ _fzf_complete() {
   fi
 
   local cur selected trigger cmd post
-  post="$(caller 0 | command awk '{print $2}')_post"
+  post="$(caller 0 | __fzf_exec_awk '{print $2}')_post"
   type -t "$post" > /dev/null 2>&1 || post='command cat'
 
   trigger=${FZF_COMPLETION_TRIGGER-'**'}
@@ -443,7 +461,7 @@ _fzf_proc_completion() {
 }
 
 _fzf_proc_completion_post() {
-  command awk '{print $2}'
+  __fzf_exec_awk '{print $2}'
 }
 
 # To use custom hostname lists, override __fzf_list_hosts.
@@ -460,7 +478,7 @@ _fzf_proc_completion_post() {
 #   }
 if ! declare -F __fzf_list_hosts > /dev/null; then
   __fzf_list_hosts() {
-    command cat \
+    command sort -u \
       <(
         # Note: To make the pathname expansion of "~/.ssh/config.d/*" work
         # properly, we need to adjust the related shell options.  We need to
@@ -475,11 +493,39 @@ if ! declare -F __fzf_list_hosts > /dev/null; then
         shopt -u dotglob nocaseglob failglob
         shopt -s nullglob
 
-        command tail -n +1 ~/.ssh/config ~/.ssh/config.d/* /etc/ssh/ssh_config 2> /dev/null | command grep -i '^\s*host\(name\)\? ' | command awk '{for (i = 2; i <= NF; i++) print $1 " " $i}' | command grep -v '[*?%]'
+        __fzf_exec_awk '
+          # Note: mawk <= 1.3.3-20090705 does not support the POSIX brackets of
+          # the form [[:blank:]], and Ubuntu 18.04 LTS still uses this
+          # 16-year-old mawk unfortunately.  We need to use [ \t] instead.
+          match(tolower($0), /^[ \t]*host(name)?[ \t]*[ \t=]/) {
+            $0 = substr($0, RLENGTH + 1) # Remove "Host(name)?=?"
+            sub(/#.*/, "")
+            for (i = 1; i <= NF; i++)
+              if ($i !~ /[*?%]/)
+                print $i
+          }
+        ' ~/.ssh/config ~/.ssh/config.d/* /etc/ssh/ssh_config 2> /dev/null
       ) \
-      <(command grep -oE '^[[a-z0-9.,:-]+' ~/.ssh/known_hosts 2> /dev/null | command tr ',' '\n' | command tr -d '[' | command awk '{ print $1 " " $1 }') \
-      <(command grep -v '^\s*\(#\|$\)' /etc/hosts 2> /dev/null | command grep -Fv '0.0.0.0' | command sed 's/#.*//') |
-      command awk '{for (i = 2; i <= NF; i++) print $i}' | command sort -u
+      <(
+        __fzf_exec_awk -F ',' '
+          match($0, /^[][a-zA-Z0-9.,:-]+/) {
+            $0 = substr($0, 1, RLENGTH)
+            gsub(/[][]|:[^,]*/, "")
+            for (i = 1; i <= NF; i++)
+              print $i
+          }
+        ' ~/.ssh/known_hosts 2> /dev/null
+      ) \
+      <(
+        __fzf_exec_awk '
+          {
+            sub(/#.*/, "")
+            for (i = 2; i <= NF; i++)
+              if ($i != "0.0.0.0")
+                print $i
+          }
+        ' /etc/hosts 2> /dev/null 
+      )
   }
 fi
 
@@ -500,7 +546,7 @@ _fzf_complete_ssh() {
     *)
       local user=
       [[ "$2" =~ '@' ]] && user="${2%%@*}@"
-      _fzf_complete +m -- "$@" < <(__fzf_list_hosts | command awk -v user="$user" '{print user $0}')
+      _fzf_complete +m -- "$@" < <(__fzf_list_hosts | __fzf_exec_awk -v user="$user" '{print user $0}')
       ;;
   esac
 }
