@@ -1,0 +1,3 @@
+urls-source "feedbin"
+feedbin-login "d@unwiredcouch.com"
+feedbin-passwordeval "gpg --decrypt ~/.config/newsboat/password.gpg"
