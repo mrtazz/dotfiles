@@ -9,6 +9,7 @@ import (
 	"math"
 	"net"
 	"os"
+	"os/exec"
 	"os/signal"
 	"regexp"
 	"sort"
@@ -66,7 +67,7 @@ const maxFocusEvents = 10000
 const blockDuration = 1 * time.Second
 
 func init() {
-	placeholder = regexp.MustCompile(`\\?(?:{[+sfr]*[0-9,-.]*}|{q(?::s?[0-9,-.]+)?}|{fzf:(?:query|action|prompt)}|{\+?f?nf?})`)
+	placeholder = regexp.MustCompile(`\\?(?:{[+*sfr]*[0-9,-.]*}|{q(?::s?[0-9,-.]+)?}|{fzf:(?:query|action|prompt)}|{\+?f?nf?})`)
 	whiteSuffix = regexp.MustCompile(`\s*$`)
 	offsetComponentRegex = regexp.MustCompile(`([+-][0-9]+)|(-?/[1-9][0-9]*)`)
 	offsetTrimCharsRegex = regexp.MustCompile(`[^0-9/+-]`)
@@ -230,6 +231,16 @@ type Status struct {
 	Selected   []StatusItem `json:"selected"`
 }
 
+type versionedCallback struct {
+	version  int64
+	callback func()
+}
+
+type runningCmd struct {
+	cmd       *exec.Cmd
+	tempFiles []string
+}
+
 // Terminal represents terminal input/output
 type Terminal struct {
 	initDelay          time.Duration
@@ -371,6 +382,8 @@ type Terminal struct {
 	selected           map[int32]selectedItem
 	version            int64
 	revision           revision
+	bgVersion          int64
+	runningCmds        *util.ConcurrentSet[*runningCmd]
 	reqBox             *util.EventBox
 	initialPreviewOpts previewOpts
 	previewOpts        previewOpts
@@ -388,8 +401,8 @@ type Terminal struct {
 	startChan          chan fitpad
 	killChan           chan bool
 	serverInputChan    chan []*action
-	callbackChan       chan func()
-	bgQueue            map[action][]func()
+	callbackChan       chan versionedCallback
+	bgQueue            map[action][]func(bool)
 	bgSemaphore        chan struct{}
 	bgSemaphores       map[action]chan struct{}
 	keyChan            chan tui.Event
@@ -448,6 +461,7 @@ const (
 	reqReinit
 	reqFullRedraw
 	reqResize
+	reqRedraw
 	reqRedrawInputLabel
 	reqRedrawHeaderLabel
 	reqRedrawFooterLabel
@@ -600,6 +614,8 @@ const (
 	actBgTransformQuery
 	actBgTransformSearch
 
+	actBgCancel
+
 	actSearch
 	actPreview
 	actPreviewTop
@@ -692,6 +708,7 @@ func processExecution(action actionType) bool {
 
 type placeholderFlags struct {
 	plus          bool
+	asterisk      bool
 	preserveSpace bool
 	number        bool
 	forceUpdate   bool
@@ -713,7 +730,7 @@ type searchRequest struct {
 type previewRequest struct {
 	template     string
 	scrollOffset int
-	list         []*Item
+	list         [3][]*Item // current, select, and all matched items
 	env          []string
 	query        string
 }
@@ -1020,6 +1037,7 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		proxyScript:        opts.ProxyScript,
 		merger:             EmptyMerger(revision{}),
 		selected:           make(map[int32]selectedItem),
+		runningCmds:        util.NewConcurrentSet[*runningCmd](),
 		reqBox:             util.NewEventBox(),
 		initialPreviewOpts: opts.Preview,
 		previewOpts:        opts.Preview,
@@ -1036,8 +1054,8 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		startChan:          make(chan fitpad, 1),
 		killChan:           make(chan bool),
 		serverInputChan:    make(chan []*action, 100),
-		callbackChan:       make(chan func(), maxBgProcesses),
-		bgQueue:            make(map[action][]func()),
+		callbackChan:       make(chan versionedCallback, maxBgProcesses),
+		bgQueue:            make(map[action][]func(bool)),
 		bgSemaphore:        make(chan struct{}, maxBgProcesses),
 		bgSemaphores:       make(map[action]chan struct{}),
 		keyChan:            make(chan tui.Event),
@@ -1478,11 +1496,18 @@ func getScrollbar(perLine int, total int, height int, offset int) (int, int) {
 	return barLength, barStart
 }
 
+func (t *Terminal) barCol() int {
+	if len(t.scrollbar) == 0 && !t.listBorderShape.HasRight() && !t.borderShape.HasRight() && !t.hasPreviewWindowOnRight() {
+		return 0
+	}
+	return 1
+}
+
 func (t *Terminal) wrapCols() int {
 	if !t.wrap {
 		return 0 // No wrap
 	}
-	return util.Max(t.window.Width()-(t.pointerLen+t.markerLen+1), 1)
+	return util.Max(t.window.Width()-(t.pointerLen+t.markerLen+t.barCol()), 1)
 }
 
 func (t *Terminal) clearNumLinesCache() {
@@ -3069,9 +3094,11 @@ func (t *Terminal) printList() {
 func (t *Terminal) printBar(lineNum int, forceRedraw bool, barRange [2]int) bool {
 	hasBar := lineNum >= barRange[0] && lineNum < barRange[1]
 	if (hasBar != t.prevLines[lineNum].hasBar || forceRedraw) && t.window.Width() > 0 {
-		t.move(lineNum, t.window.Width()-1, true)
-		if len(t.scrollbar) > 0 && hasBar {
-			t.window.CPrint(tui.ColScrollbar, t.scrollbar)
+		if len(t.scrollbar) > 0 {
+			t.move(lineNum, t.window.Width()-1, true)
+			if hasBar {
+				t.window.CPrint(tui.ColScrollbar, t.scrollbar)
+			}
 		}
 	}
 	return hasBar
@@ -3127,12 +3154,14 @@ func (t *Terminal) printItem(result Result, line int, maxLine int, index int, cu
 		return line + numLines - 1
 	}
 
-	maxWidth := t.window.Width() - (t.pointerLen + t.markerLen + 1)
-	postTask := func(lineNum int, width int, wrapped bool, forceRedraw bool) {
+	maxWidth := t.window.Width() - (t.pointerLen + t.markerLen + t.barCol())
+	postTask := func(lineNum int, width int, wrapped bool, forceRedraw bool, lbg tui.ColorPair) {
 		width += extraWidth
-		if (current || selected || alt) && t.highlightLine {
+		if (current || selected || alt) && t.highlightLine || lbg.IsFullBgMarker() {
 			color := tui.ColSelected
-			if current {
+			if lbg.IsFullBgMarker() {
+				color = lbg
+			} else if current {
 				color = tui.ColCurrent
 			} else if alt {
 				color = color.WithBg(altBg)
@@ -3284,7 +3313,7 @@ func (t *Terminal) overflow(runes []rune, max int) bool {
 	return t.displayWidthWithLimit(runes, 0, max) > max
 }
 
-func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMatch tui.ColorPair, current bool, match bool, lineNum int, maxLineNum int, forceRedraw bool, preTask func(markerClass) int, postTask func(int, int, bool, bool)) int {
+func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMatch tui.ColorPair, current bool, match bool, lineNum int, maxLineNum int, forceRedraw bool, preTask func(markerClass) int, postTask func(int, int, bool, bool, tui.ColorPair)) int {
 	var displayWidth int
 	item := result.item
 	matchOffsets := []Offset{}
@@ -3369,9 +3398,19 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 		line := lines[lineOffset]
 		finalLineNum = lineNum
 		offsets := []colorOffset{}
-		for _, offset := range allOffsets {
-			if offset.offset[0] >= int32(from+len(line)) {
-				allOffsets = allOffsets[len(offsets):]
+		lbg := tui.NoColorPair()
+		var lineLen int
+		for idx, offset := range allOffsets {
+			lineLen = len(line)
+			if lineLen > 0 && line[lineLen-1] == '\n' {
+				lineLen--
+			}
+			lineEnd := int32(from + lineLen)
+			if offset.offset[0] >= lineEnd {
+				if offset.IsFullBgMarker(lineEnd) {
+					lbg = offset.color
+				}
+				allOffsets = allOffsets[idx:]
 				break
 			}
 
@@ -3379,23 +3418,30 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 				continue
 			}
 
-			if offset.offset[1] < int32(from+len(line)) {
+			if offset.offset[1] < lineEnd {
 				offset.offset[0] -= int32(from)
 				offset.offset[1] -= int32(from)
 				offsets = append(offsets, offset)
 			} else {
+				if idx < len(allOffsets)-1 {
+					next := allOffsets[idx+1]
+					if next.IsFullBgMarker(lineEnd) {
+						lbg = next.color
+						idx++
+					}
+				}
 				dupe := offset
-				dupe.offset[0] = int32(from + len(line))
+				dupe.offset[0] = lineEnd
 
 				offset.offset[0] -= int32(from)
-				offset.offset[1] = int32(from + len(line))
+				offset.offset[1] = lineEnd
 				offsets = append(offsets, offset)
 
-				allOffsets = append([]colorOffset{dupe}, allOffsets[len(offsets):]...)
+				allOffsets = append([]colorOffset{dupe}, allOffsets[idx+1:]...)
 				break
 			}
 		}
-		from += len(line)
+		from += lineLen
 		if lineOffset < skipLines {
 			continue
 		}
@@ -3446,7 +3492,7 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 			indentSize = preTask(marker)
 		}
 
-		maxWidth := t.window.Width() - (indentSize + 1)
+		maxWidth := t.window.Width() - (indentSize + t.barCol())
 		wasWrapped := false
 		if wrapped {
 			wrapSign := t.wrapSign
@@ -3526,7 +3572,7 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 			t.printColoredString(t.window, line, offsets, colBase)
 		}
 		if postTask != nil {
-			postTask(actualLineNum, displayWidth, wasWrapped, forceRedraw)
+			postTask(actualLineNum, displayWidth, wasWrapped, forceRedraw, lbg)
 		} else {
 			t.markOtherLine(actualLineNum)
 		}
@@ -4099,6 +4145,8 @@ func parsePlaceholder(match string) (bool, string, placeholderFlags) {
 	trimmed := ""
 	for _, char := range match[1:] {
 		switch char {
+		case '*':
+			flags.asterisk = true
 		case '+':
 			flags.plus = true
 		case 's':
@@ -4122,19 +4170,16 @@ func parsePlaceholder(match string) (bool, string, placeholderFlags) {
 	return false, matchWithoutFlags, flags
 }
 
-func hasPreviewFlags(template string) (slot bool, plus bool, forceUpdate bool) {
+func hasPreviewFlags(template string) (slot bool, plus bool, asterisk bool, forceUpdate bool) {
 	for _, match := range placeholder.FindAllString(template, -1) {
 		escaped, _, flags := parsePlaceholder(match)
 		if escaped {
 			continue
 		}
-		if flags.plus {
-			plus = true
-		}
-		if flags.forceUpdate {
-			forceUpdate = true
-		}
 		slot = true
+		plus = plus || flags.plus
+		asterisk = asterisk || flags.asterisk
+		forceUpdate = forceUpdate || flags.forceUpdate
 	}
 	return
 }
@@ -4146,17 +4191,17 @@ type replacePlaceholderParams struct {
 	printsep   string
 	forcePlus  bool
 	query      string
-	allItems   []*Item
+	allItems   [3][]*Item // current, select, and all matched items
 	lastAction actionType
 	prompt     string
 	executor   *util.Executor
 }
 
 func (t *Terminal) replacePlaceholderInInitialCommand(template string) (string, []string) {
-	return t.replacePlaceholder(template, false, string(t.input), []*Item{nil, nil})
+	return t.replacePlaceholder(template, false, string(t.input), [3][]*Item{nil, nil, nil})
 }
 
-func (t *Terminal) replacePlaceholder(template string, forcePlus bool, input string, list []*Item) (string, []string) {
+func (t *Terminal) replacePlaceholder(template string, forcePlus bool, input string, list [3][]*Item) (string, []string) {
 	return replacePlaceholder(replacePlaceholderParams{
 		template:   template,
 		stripAnsi:  t.ansi,
@@ -4177,7 +4222,11 @@ func (t *Terminal) evaluateScrollOffset() int {
 	}
 
 	// We only need the current item to calculate the scroll offset
-	replaced, tempFiles := t.replacePlaceholder(t.activePreviewOpts.scroll, false, "", []*Item{t.currentItem(), nil})
+	current := []*Item{t.currentItem()}
+	if current[0] == nil {
+		current = nil
+	}
+	replaced, tempFiles := t.replacePlaceholder(t.activePreviewOpts.scroll, false, "", [3][]*Item{current, nil, nil})
 	removeFiles(tempFiles)
 	offsetExpr := offsetTrimCharsRegex.ReplaceAllString(replaced, "")
 
@@ -4209,14 +4258,9 @@ func (t *Terminal) evaluateScrollOffset() int {
 
 func replacePlaceholder(params replacePlaceholderParams) (string, []string) {
 	tempFiles := []string{}
-	current := params.allItems[:1]
-	selected := params.allItems[1:]
-	if current[0] == nil {
-		current = []*Item{}
-	}
-	if selected[0] == nil {
-		selected = []*Item{}
-	}
+	current := params.allItems[0]
+	selected := params.allItems[1]
+	matched := params.allItems[2]
 
 	// replace placeholders one by one
 	replaced := placeholder.ReplaceAllStringFunc(params.template, func(match string) string {
@@ -4312,7 +4356,9 @@ func replacePlaceholder(params replacePlaceholderParams) (string, []string) {
 		// apply 'replace' function over proper set of items and return result
 
 		items := current
-		if flags.plus || params.forcePlus {
+		if flags.asterisk {
+			items = matched
+		} else if flags.plus || params.forcePlus {
 			items = selected
 		}
 		replacements := make([]string, len(items))
@@ -4349,30 +4395,35 @@ func (t *Terminal) captureLines(template string) string {
 func (t *Terminal) captureAsync(a action, firstLineOnly bool, callback func(string)) {
 	_, list := t.buildPlusList(a.a, false)
 	command, tempFiles := t.replacePlaceholder(a.a, false, string(t.input), list)
-	item := func() {
-		cmd := t.executor.ExecCommand(command, false)
-		cmd.Env = t.environ()
-
-		out, _ := cmd.StdoutPipe()
-		reader := bufio.NewReader(out)
-		var output string
-		if err := cmd.Start(); err == nil {
-			if firstLineOnly {
-				output, _ = reader.ReadString('\n')
-				output = strings.TrimRight(output, "\r\n")
-			} else {
-				bytes, _ := io.ReadAll(reader)
-				output = string(bytes)
+	version := t.bgVersion
+	cmd := t.executor.ExecCommand(command, true)
+	cmd.Env = t.environ()
+	item := func(proceed bool) {
+		if proceed {
+			out, _ := cmd.StdoutPipe()
+			reader := bufio.NewReader(out)
+			var output string
+			if err := cmd.Start(); err == nil {
+				runningCmd := runningCmd{cmd, tempFiles}
+				t.runningCmds.Add(&runningCmd)
+				if firstLineOnly {
+					output, _ = reader.ReadString('\n')
+					output = strings.TrimRight(output, "\r\n")
+				} else {
+					bytes, _ := io.ReadAll(reader)
+					output = string(bytes)
+				}
+				cmd.Wait()
+				t.runningCmds.Remove(&runningCmd)
 			}
-			cmd.Wait()
+			t.callbackChan <- versionedCallback{version, func() { callback(output) }}
 		}
 		removeFiles(tempFiles)
 
-		t.callbackChan <- func() { callback(output) }
 	}
 	queue, prs := t.bgQueue[a]
 	if !prs {
-		queue = []func(){}
+		queue = []func(bool){}
 	}
 	queue = append(queue, item)
 	t.bgQueue[a] = queue
@@ -4397,6 +4448,9 @@ Loop:
 			case semaphore <- struct{}{}:
 			default:
 				// Failed to acquire local semaphore, putting only the last one back to the queue
+				for _, item := range queue[:len(queue)-1] {
+					item(false)
+				}
 				t.bgQueue[a] = queue[len(queue)-1:]
 				continue Loop
 			}
@@ -4405,7 +4459,7 @@ Loop:
 				// Acquire global semaphore
 				t.bgSemaphore <- struct{}{}
 
-				todo()
+				todo(true)
 				// Release local semaphore
 				<-semaphore
 				// Release global semaphore
@@ -4538,6 +4592,10 @@ func (t *Terminal) hasPreviewWindow() bool {
 	return t.pwindow != nil
 }
 
+func (t *Terminal) hasPreviewWindowOnRight() bool {
+	return t.hasPreviewWindow() && t.activePreviewOpts.position == posRight
+}
+
 func (t *Terminal) currentItem() *Item {
 	cnt := t.merger.Length()
 	if t.cy >= 0 && cnt > 0 && cnt > t.cy {
@@ -4546,11 +4604,15 @@ func (t *Terminal) currentItem() *Item {
 	return nil
 }
 
-func (t *Terminal) buildPlusList(template string, forcePlus bool) (bool, []*Item) {
+func (t *Terminal) buildPlusList(template string, forcePlus bool) (bool, [3][]*Item) {
 	current := t.currentItem()
-	slot, plus, forceUpdate := hasPreviewFlags(template)
-	if !(!slot || forceUpdate || (forcePlus || plus) && len(t.selected) > 0) {
-		return current != nil, []*Item{current, current}
+	slot, plus, asterisk, forceUpdate := hasPreviewFlags(template)
+	if !(!slot || forceUpdate || asterisk || (forcePlus || plus) && len(t.selected) > 0) {
+		if current == nil {
+			// Invalid
+			return false, [3][]*Item{nil, nil, nil}
+		}
+		return true, [3][]*Item{{current}, {current}, nil}
 	}
 
 	// We would still want to update preview window even if there is no match if
@@ -4561,17 +4623,25 @@ func (t *Terminal) buildPlusList(template string, forcePlus bool) (bool, []*Item
 		current = &minItem
 	}
 
-	var sels []*Item
-	if len(t.selected) == 0 {
-		sels = []*Item{current, current}
-	} else {
-		sels = make([]*Item, len(t.selected)+1)
-		sels[0] = current
-		for i, sel := range t.sortSelected() {
-			sels[i+1] = sel.item
+	var all []*Item
+	if asterisk {
+		cnt := t.merger.Length()
+		all = make([]*Item, cnt)
+		for i := 0; i < cnt; i++ {
+			all[i] = t.merger.Get(i).item
 		}
 	}
-	return true, sels
+
+	var sels []*Item
+	if len(t.selected) == 0 {
+		sels = []*Item{current}
+	} else if len(t.selected) > 0 {
+		sels = make([]*Item, len(t.selected))
+		for i, sel := range t.sortSelected() {
+			sels[i] = sel.item
+		}
+	}
+	return true, [3][]*Item{{current}, sels, all}
 }
 
 func (t *Terminal) selectItem(item *Item) bool {
@@ -4831,7 +4901,8 @@ func (t *Terminal) Loop() error {
 			stop := false
 			t.previewBox.WaitFor(reqPreviewReady)
 			for {
-				var items []*Item
+				requested := false
+				var items [3][]*Item
 				var commandTemplate string
 				var env []string
 				var query string
@@ -4849,6 +4920,7 @@ func (t *Terminal) Loop() error {
 							items = request.list
 							env = request.env
 							query = request.query
+							requested = true
 						}
 					}
 					events.Clear()
@@ -4856,7 +4928,7 @@ func (t *Terminal) Loop() error {
 				if stop {
 					break
 				}
-				if items == nil {
+				if !requested {
 					continue
 				}
 				version++
@@ -5011,6 +5083,10 @@ func (t *Terminal) Loop() error {
 			if code <= ExitNoMatch && t.history != nil {
 				t.history.append(string(t.input))
 			}
+			t.runningCmds.ForEach(func(cmd *runningCmd) {
+				util.KillCommand(cmd.cmd)
+				removeFiles(cmd.tempFiles)
+			})
 			running = false
 			t.mutex.Unlock()
 		}
@@ -5109,12 +5185,16 @@ func (t *Terminal) Loop() error {
 					case reqReinit:
 						t.tui.Resume(t.fullscreen, true)
 						t.fullRedraw()
-					case reqResize, reqFullRedraw:
+					case reqResize, reqFullRedraw, reqRedraw:
 						if req == reqResize {
 							t.termSize = t.tui.Size()
 						}
 						wasHidden := t.pwindow == nil
-						t.fullRedraw()
+						if req == reqRedraw {
+							t.printAll()
+						} else {
+							t.fullRedraw()
+						}
 						if wasHidden && t.hasPreviewWindow() {
 							refreshPreview(t.previewOpts.command)
 						}
@@ -5250,7 +5330,7 @@ func (t *Terminal) Loop() error {
 
 		var event tui.Event
 		actions := []*action{}
-		callbacks := []func(){}
+		callbacks := []versionedCallback{}
 		select {
 		case event = <-t.keyChan:
 			needBarrier = true
@@ -5405,7 +5485,9 @@ func (t *Terminal) Loop() error {
 			case actIgnore, actStart, actClick:
 			case actAsync:
 				for _, callback := range callbacks {
-					callback()
+					if t.bgVersion == callback.version {
+						callback.callback()
+					}
 				}
 			case actBecome:
 				valid, list := t.buildPlusList(a.a, false)
@@ -5596,7 +5678,7 @@ func (t *Terminal) Loop() error {
 					if t.changeHeader(header) {
 						if t.headerWindow != nil {
 							// Need to resize header window
-							req(reqFullRedraw)
+							req(reqRedraw)
 						} else {
 							req(reqHeader, reqList, reqPrompt, reqInfo)
 						}
@@ -5607,7 +5689,7 @@ func (t *Terminal) Loop() error {
 			case actChangeFooter, actTransformFooter, actBgTransformFooter:
 				capture(false, func(footer string) {
 					if t.changeFooter(footer) {
-						req(reqFullRedraw)
+						req(reqRedraw)
 					} else {
 						req(reqFooter)
 					}
@@ -5662,6 +5744,11 @@ func (t *Terminal) Loop() error {
 						// NOTE: We're not properly passing the return value here
 						doActions(actions)
 					}
+				})
+			case actBgCancel:
+				t.bgVersion++
+				t.runningCmds.ForEach(func(cmd *runningCmd) {
+					util.KillCommand(cmd.cmd)
 				})
 			case actChangePrompt:
 				t.promptString = a.a
@@ -6396,7 +6483,7 @@ func (t *Terminal) Loop() error {
 					// We run the command even when there's no match
 					// 1. If the template doesn't have any slots
 					// 2. If the template has {q}
-					slot, _, forceUpdate := hasPreviewFlags(a.a)
+					slot, _, _, forceUpdate := hasPreviewFlags(a.a)
 					valid = !slot || forceUpdate
 				}
 				if valid {
@@ -6585,7 +6672,7 @@ func (t *Terminal) Loop() error {
 		}
 
 		if queryChanged && t.canPreview() && len(t.previewOpts.command) > 0 {
-			_, _, forceUpdate := hasPreviewFlags(t.previewOpts.command)
+			_, _, _, forceUpdate := hasPreviewFlags(t.previewOpts.command)
 			if forceUpdate {
 				t.version++
 			}

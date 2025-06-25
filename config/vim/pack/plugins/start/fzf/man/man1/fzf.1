@@ -262,8 +262,9 @@ color mappings. Each entry is separated by a comma and/or whitespaces.
       \fBlist\-bg             \fRList section background
         \fBselected\-bg       \fRSelected line background
       \fBpreview\-bg          \fRPreview window background
-      \fBinput\-bg            \fRInput window background (\fB\-\-input\-border\fR)
-      \fBheader\-bg           \fRHeader window background (\fB\-\-header\-border\fR)
+      \fBinput\-bg            \fRInput window background
+      \fBheader\-bg           \fRHeader window background
+      \fBfooter\-bg           \fRFooter window background
     \fBhl                    \fRHighlighted substrings
       \fBselected\-hl         \fRHighlighted substrings in the selected line
     \fBcurrent\-fg (fg+)      \fRText (current line)
@@ -284,16 +285,19 @@ color mappings. Each entry is separated by a comma and/or whitespaces.
         \fBpreview\-scrollbar \fRScrollbar
       \fBinput\-border        \fRBorder around the input window (\fB\-\-input\-border\fR)
       \fBheader\-border       \fRBorder around the header window (\fB\-\-header\-border\fR)
+      \fBfooter\-border       \fRBorder around the footer window (\fB\-\-footer\-border\fR)
     \fBlabel                 \fRBorder label (\fB\-\-border\-label\fR, \fB\-\-list\-label\fR, \fB\-\-input\-label\fR, and \fB\-\-preview\-label\fR)
       \fBlist\-label          \fRBorder label of the list section (\fB\-\-list\-label\fR)
       \fBpreview\-label       \fRBorder label of the preview window (\fB\-\-preview\-label\fR)
       \fBinput\-label         \fRBorder label of the input window (\fB\-\-input\-label\fR)
       \fBheader\-label        \fRBorder label of the header window (\fB\-\-header\-label\fR)
+      \fBfooter\-label        \fRBorder label of the footer window (\fB\-\-footer\-label\fR)
     \fBprompt                \fRPrompt
     \fBpointer               \fRPointer to the current line
     \fBmarker                \fRMulti\-select marker
     \fBspinner               \fRStreaming input indicator
     \fBheader (header\-fg)   \fRHeader
+    \fBfooter (footer\-fg)   \fRFooter
     \fBnth                   \fRParts of the line specified by \fB\-\-nth\fR (only supports attributes)
 
 .B ANSI COLORS:
@@ -789,12 +793,15 @@ fzf also exports \fB$FZF_PREVIEW_TOP\fR and \fB$FZF_PREVIEW_LEFT\fR so that
 the preview command can determine the position of the preview window.
 
 A placeholder expression starting with \fB+\fR flag will be replaced to the
-space-separated list of the selected lines (or the current line if no selection
+space-separated list of the selected items (or the current item if no selection
 was made) individually quoted.
 
 e.g.
      \fBfzf \-\-multi \-\-preview='head \-10 {+}'
      git log \-\-oneline | fzf \-\-multi \-\-preview 'git show {+1}'\fR
+
+Similarly, a placeholder expression starting with \fB*\fR flag will be replaced
+to the space-separated list of all matched items individually quoted.
 
 Each expression expands to a quoted string, so that it's safe to pass it as an
 argument to an external command. So you should not manually add quotes around
@@ -807,14 +814,13 @@ from the replacement string. To preserve the whitespace, use the \fBs\fR flag.
 
 A placeholder expression with \fBf\fR flag is replaced to the path of
 a temporary file that holds the evaluated list. This is useful when you
-multi-select a large number of items and the length of the evaluated string may
+pass a large number of items and the length of the evaluated string may
 exceed \fBARG_MAX\fR.
 
 e.g.
-     \fB# Press CTRL\-A to select 100K items and see the sum of all the numbers.
+     \fB# See the sum of all the matched numbers
      # This won't work properly without 'f' flag due to ARG_MAX limit.
-     seq 100000 | fzf \-\-multi \-\-bind ctrl\-a:select\-all \\
-                      \-\-preview "awk '{sum+=\\$1} END {print sum}' {+f}"\fR
+     seq 100000 | fzf \-\-preview "awk '{sum+=\\$1} END {print sum}' {*f}"\fR
 
 Also,
 

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/junegunn/fzf/src/tui"
 	"github.com/junegunn/fzf/src/util"
 )
 
@@ -78,6 +79,16 @@ func Run(opts *Options) (int, error) {
 			prevLineAnsiState = lineAnsiState
 			trimmed, offsets, newState := extractColor(byteString(data), lineAnsiState, nil)
 			lineAnsiState = newState
+
+			// Full line background is found. Add a special marker.
+			if !opts.ReadZero && offsets != nil && newState != nil && len(*offsets) > 0 && newState.lbg >= 0 {
+				marker := (*offsets)[len(*offsets)-1]
+				marker.offset[0] = marker.offset[1]
+				marker.color.bg = newState.lbg
+				marker.color.attr = marker.color.attr | tui.FullBg
+				newOffsets := append(*offsets, marker)
+				offsets = &newOffsets
+			}
 			return util.ToChars(stringBytes(trimmed)), offsets
 		}
 	}
@@ -126,7 +137,17 @@ func Run(opts *Options) (int, error) {
 				return false
 			}
 			item.text, item.colors = ansiProcessor(stringBytes(transformed))
-			item.text.TrimTrailingWhitespaces()
+
+			// We should not trim trailing whitespaces with background colors
+			var maxColorOffset int32
+			if item.colors != nil {
+				for _, ansi := range *item.colors {
+					if ansi.color.bg >= 0 {
+						maxColorOffset = util.Max32(maxColorOffset, ansi.offset[1])
+					}
+				}
+			}
+			item.text.TrimTrailingWhitespaces(int(maxColorOffset))
 			item.text.Index = itemIndex
 			item.origText = &data
 			itemIndex++

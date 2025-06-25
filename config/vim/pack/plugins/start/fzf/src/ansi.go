@@ -156,13 +156,13 @@ func isCtrlSeqStart(c uint8) bool {
 // nextAnsiEscapeSequence returns the ANSI escape sequence and is equivalent to
 // calling FindStringIndex() on the below regex (which was originally used):
 //
-// "(?:\x1b[\\[()][0-9;:?]*[a-zA-Z@]|\x1b][0-9]+[;:][[:print:]]+(?:\x1b\\\\|\x07)|\x1b.|[\x0e\x0f]|.\x08)"
+// "(?:\x1b[\\[()][0-9;:?]*[a-zA-Z@]|\x1b][0-9]+[;:][[:print:]]+(?:\x1b\\\\|\x07)|\x1b.|[\x0e\x0f]|.\x08|\n)"
 func nextAnsiEscapeSequence(s string) (int, int) {
 	// fast check for ANSI escape sequences
 	i := 0
 	for ; i < len(s); i++ {
 		switch s[i] {
-		case '\x0e', '\x0f', '\x1b', '\x08':
+		case '\x0e', '\x0f', '\x1b', '\x08', '\n':
 			// We ignore the fact that '\x08' cannot be the first char
 			// in the string and be an escape sequence for the sake of
 			// speed and simplicity.
@@ -174,6 +174,9 @@ func nextAnsiEscapeSequence(s string) (int, int) {
 Loop:
 	for ; i < len(s); i++ {
 		switch s[i] {
+		case '\n':
+			// match: `\n`
+			return i, i + 1
 		case '\x08':
 			// backtrack to match: `.\x08`
 			if i > 0 && s[i-1] != '\n' {
@@ -265,11 +268,25 @@ func extractColor(str string, state *ansiState, proc func(string, *ansiState) bo
 			output.WriteString(prev)
 		}
 
-		newState := interpretCode(str[start:idx], state)
-		if !newState.equals(state) {
+		code := str[start:idx]
+		newState := interpretCode(code, state)
+		if code == "\n" || !newState.equals(state) {
 			if state != nil {
 				// Update last offset
 				(&offsets[len(offsets)-1]).offset[1] = int32(runeCount)
+			}
+
+			if code == "\n" {
+				output.WriteRune('\n')
+				// Full-background marker
+				if newState.lbg >= 0 {
+					marker := newState
+					marker.attr |= tui.FullBg
+					offsets = append(offsets, ansiOffset{
+						[2]int32{int32(runeCount), int32(runeCount)},
+						marker,
+					})
+				}
 			}
 
 			if newState.colored() {
@@ -349,6 +366,13 @@ func parseAnsiCode(s string) (int, string) {
 }
 
 func interpretCode(ansiCode string, prevState *ansiState) ansiState {
+	if ansiCode == "\n" {
+		if prevState != nil {
+			return *prevState
+		}
+		return ansiState{-1, -1, 0, -1, nil}
+	}
+
 	var state ansiState
 	if prevState == nil {
 		state = ansiState{-1, -1, 0, -1, nil}
@@ -356,7 +380,7 @@ func interpretCode(ansiCode string, prevState *ansiState) ansiState {
 		state = ansiState{prevState.fg, prevState.bg, prevState.attr, prevState.lbg, prevState.url}
 	}
 	if ansiCode[0] != '\x1b' || ansiCode[1] != '[' || ansiCode[len(ansiCode)-1] != 'm' {
-		if prevState != nil && strings.HasSuffix(ansiCode, "0K") {
+		if prevState != nil && (strings.HasSuffix(ansiCode, "0K") || strings.HasSuffix(ansiCode, "[K")) {
 			state.lbg = prevState.bg
 		} else if strings.HasPrefix(ansiCode, "\x1b]8;") && (strings.HasSuffix(ansiCode, "\x1b\\") || strings.HasSuffix(ansiCode, "\a")) {
 			stLen := 2
@@ -375,10 +399,15 @@ func interpretCode(ansiCode string, prevState *ansiState) ansiState {
 		return state
 	}
 
-	if len(ansiCode) <= 3 {
+	reset := func() {
 		state.fg = -1
 		state.bg = -1
 		state.attr = 0
+		state.lbg = -1
+	}
+
+	if len(ansiCode) <= 3 {
+		reset()
 		return state
 	}
 	ansiCode = ansiCode[2 : len(ansiCode)-1]
@@ -432,9 +461,7 @@ func interpretCode(ansiCode string, prevState *ansiState) ansiState {
 				case 29:
 					state.attr = state.attr &^ tui.StrikeThrough
 				case 0:
-					state.fg = -1
-					state.bg = -1
-					state.attr = 0
+					reset()
 					state256 = 0
 				default:
 					if num >= 30 && num <= 37 {
@@ -474,9 +501,7 @@ func interpretCode(ansiCode string, prevState *ansiState) ansiState {
 
 	// Empty sequence: reset
 	if count == 0 {
-		state.fg = -1
-		state.bg = -1
-		state.attr = 0
+		reset()
 	}
 
 	if state256 > 0 {
