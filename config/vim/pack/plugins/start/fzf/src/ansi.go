@@ -278,6 +278,7 @@ func extractColor(str string, state *ansiState, proc func(string, *ansiState) bo
 
 			if code == "\n" {
 				output.WriteRune('\n')
+				runeCount++
 				// Full-background marker
 				if newState.lbg >= 0 {
 					marker := newState
@@ -286,6 +287,8 @@ func extractColor(str string, state *ansiState, proc func(string, *ansiState) bo
 						[2]int32{int32(runeCount), int32(runeCount)},
 						marker,
 					})
+					// Reset the full-line background color
+					newState.lbg = -1
 				}
 			}
 
@@ -403,7 +406,6 @@ func interpretCode(ansiCode string, prevState *ansiState) ansiState {
 		state.fg = -1
 		state.bg = -1
 		state.attr = 0
-		state.lbg = -1
 	}
 
 	if len(ansiCode) <= 3 {
