@@ -7,7 +7,7 @@ GIT := $(shell which git)
 DOTFILES := ${HOME}/.vim ${HOME}/.zshenv ${HOME}/.tmux.conf ${HOME}/.phoenix.js ${HOME}/.config
 AUTHORIZED_KEYS := ${HOME}/.ssh/authorized_keys
 BREWFILE := homebrew/Brewfile
-BREW_OPTIONS := 
+BREW_OPTIONS :=
 BIN := ${HOME}/bin
 
 # bin/ is linked explicitly because we want it to not be ~/.bin
@@ -64,6 +64,11 @@ ${HOME}/.tmux.conf:
 
 ${HOME}/.phoenix.js:
 	ln -fs $(PWD)/config/phoenix/phoenix.js $@
+
+.PHONY: offlineimap
+offlineimap: config/offlineimap/config
+config/offlineimap/config: config/dotoverrides/offlineimap.m4 config/offlineimap/config.m4
+	m4 $^ > $@
 
 ifeq ($(CODESPACES), true)
 # don't fully clone homebrew on codespaces
