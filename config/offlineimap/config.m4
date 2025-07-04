@@ -7,7 +7,7 @@ pythonfile=~/.config/offlineimap/lib.py
 socktimeout = 90
 metadata = ~/.config/offlineimap/metadata
 
-[Account unwiredcouch]
+[Account ACCOUNT]
 localrepository = `'ACCOUNT`'local
 remoterepository = `'ACCOUNT`'remote
 autorefresh = 2
