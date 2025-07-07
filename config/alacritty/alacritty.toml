@@ -1,6 +1,7 @@
 # some terminal configs
 
 # importing other configs
+[general]
 import = [
   "~/.config/alacritty/solarized_light.toml",
 ]
