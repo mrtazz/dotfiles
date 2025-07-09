@@ -79,18 +79,11 @@ set grepprg=rg\ --vimgrep\ --no-heading\ --smart-case\ --sort=path
 
 " vim-plan keybindings
 map <leader>d :PlanDaily<CR>
+map <leader>w :PlanWeekly<CR>
 map <leader>pf :PlanFindTodos<CR>
 map <leader>pn :PlanNote<CR>
 map <leader>pd :PlanMarkDone<CR>
 map <leader>pm :PlanMigrateToToday<CR>
-
-" vim-wiki config
-" only use vimwiki in configured paths
-let g:vimwiki_global_ext = 0
-" set my notes folder to be a wiki
-let g:vimwiki_list = [{'path': '/Users/mrtazz/Library/Mobile Documents/iCloud~md~obsidian/Documents/notes',
-                        \ 'syntax': 'markdown', 'ext': 'md', }]
-
 
 " states for markdown checkboxes
 let g:checkbox_states = [' ', 'x', '-', '>']
@@ -171,7 +164,7 @@ function! GitHubMDTitle()
   let current_line = getline('.')
   let gh_url = matchstr(current_line, 'https:\/\/github.com\/[a-zA-Z0-9/_p-]\+')
   if !empty(gh_url)
-    let new_url = system('gh md link -n ' . gh_url)
+    let new_url = system('PATH=$PATH:/opt/homebrew/bin gh md link -n ' . gh_url)
     call setline(line('.'), substitute(getline('.'), gh_url, new_url, ''))
   endif
 endfunction
