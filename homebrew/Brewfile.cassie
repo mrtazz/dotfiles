@@ -1,9 +1,7 @@
 # vim: set ft=ruby:
 # things I usually use on my personal laptop
 
-brew "offlineimap"
 brew "tarsnap"
-brew "mutt"
 brew "felinks"
 brew "pinentry-mac"
 brew "tree"

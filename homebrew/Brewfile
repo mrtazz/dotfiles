@@ -44,5 +44,7 @@ if macos?
   brew "go" unless ci?
   brew "gh"
 
+  # email things
   brew "mutt"
+  brew "offlineimap"
 end
