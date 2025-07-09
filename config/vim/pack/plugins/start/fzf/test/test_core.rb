@@ -1930,7 +1930,10 @@ class TestCore < TestInteractive
 
   def test_change_header_on_header_window
     tmux.send_keys %(seq 100 | #{FZF} --list-border --input-border --bind 'start:change-header(foo),space:change-header(bar)'), :Enter
-    tmux.until { |lines| assert lines.any_include?('foo') }
+    tmux.until do |lines|
+      assert lines.any_include?('100/100')
+      assert lines.any_include?('foo')
+    end
     tmux.send_keys :Space
     tmux.until { |lines| assert lines.any_include?('bar') }
   end
@@ -1979,6 +1982,57 @@ class TestCore < TestInteractive
     tmux.until do |lines|
       assert lines.any_include?('[0]')
       refute lines.any_include?('[1]')
+    end
+  end
+
+  def test_render_order
+    tmux.send_keys %(seq 100 | #{FZF} --bind='focus:preview(echo boom)+change-footer(bam)'), :Enter
+    tmux.until { assert_equal 100, it.match_count }
+    tmux.until { assert it.any_include?('boom') }
+    tmux.until { assert it.any_include?('bam') }
+  end
+
+  def test_multi_event
+    tmux.send_keys %(seq 100 | #{FZF} --multi --bind 'multi:transform-footer:(( FZF_SELECT_COUNT )) && echo "Selected $FZF_SELECT_COUNT item(s)"'), :Enter
+    tmux.until { assert_equal 100, it.match_count }
+    tmux.send_keys :Tab
+    tmux.until { assert_equal 1, it.select_count }
+    tmux.until { assert it.any_include?('Selected 1 item(s)') }
+    tmux.send_keys :Tab
+    tmux.until { assert_equal 0, it.select_count }
+    tmux.until { refute it.any_include?('Selected') }
+  end
+
+  def test_preserve_selection_on_revision_bump
+    tmux.send_keys %(seq 100 | #{FZF} --multi --sync --query "'1" --bind 'a:select-all+change-header(pressed a),b:change-header(pressed b)+change-nth(1),c:exclude'), :Enter
+    tmux.until do
+      assert_equal 20, it.match_count
+      assert_equal 0, it.select_count
+    end
+    tmux.send_keys :a
+    tmux.until do
+      assert_equal 20, it.match_count
+      assert_equal 20, it.select_count
+      assert it.any_include?('pressed a')
+    end
+    tmux.send_keys :b
+    tmux.until do
+      assert_equal 20, it.match_count
+      assert_equal 20, it.select_count
+      refute it.any_include?('pressed a')
+      assert it.any_include?('pressed b')
+    end
+    tmux.send_keys :a
+    tmux.until do
+      assert_equal 20, it.match_count
+      assert_equal 20, it.select_count
+      assert it.any_include?('pressed a')
+      refute it.any_include?('pressed b')
+    end
+    tmux.send_keys :c
+    tmux.until do
+      assert_equal 19, it.match_count
+      assert_equal 19, it.select_count
     end
   end
 end
