@@ -26,7 +26,7 @@ function! s:MapTab() abort
   endif
   let tab_map = maparg('<Tab>', 'i', 0, 1)
   if !has_key(tab_map, 'rhs')
-    imap <script><silent><nowait><expr> <Tab> empty(get(g:, 'copilot_no_tab_map')) ? copilot#Accept() : "\t"
+    imap <script><silent><nowait><expr> <Tab> empty(get(g:, 'copilot_no_tab_map')) ? copilot#Accept() : "<Bslash>t"
   elseif tab_map.rhs !~# 'copilot'
     if tab_map.expr
       let tab_fallback = '{ -> ' . tab_map.rhs . ' }'

@@ -104,8 +104,7 @@ g:copilot_proxy_strict_ssl
                                                 *g:copilot_workspace_folders*
 g:copilot_workspace_folders
                         A list of "workspace folders" or project roots that
-                        Copilot may use to improve to improve the quality of
-                        suggestions.
+                        Copilot may use to improve the quality of suggestions.
 >
                         let g:copilot_workspace_folders =
                                \ ["~/Projects/myproject"]
