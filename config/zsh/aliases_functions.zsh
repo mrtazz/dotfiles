@@ -16,3 +16,5 @@ alias mutt='MUTT_IDENTITY=~/.config/dotoverrides/identity-unwiredcouch mutt'
 alias fcd="cd \$(FZF_DEFAULT_COMMAND='fd --type directory' fzf --height 40%)"
 alias ggrep='grep -R -I -i --exclude=tags --color=auto'
 alias cssh='gh cs ssh'
+alias v=vim
+alias fv='vim $(fzf)'
