@@ -39,3 +39,5 @@ startup_mode  = "Windowed"
 command = "open"
 binding = { key = "u", mods = "Control|Shift" }
 regex = "(ipfs:|ipns:|magnet:|mailto:|gemini://|gopher://|https://|http://|news:|file:|git://|ssh:|ftp://)[^\\u{0000}-\\u{001F}\\u{007F}-\\u{009F}<>\"\\s{-}\\\\^⟨⟩`]+"
+mouse.enabled = true
+mouse.mods = "Shift"
