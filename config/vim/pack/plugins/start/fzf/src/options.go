@@ -1008,6 +1008,8 @@ func parseKeyChordsImpl(str string, message string) (map[tui.Event]string, error
 			add(tui.JumpCancel)
 		case "click-header":
 			add(tui.ClickHeader)
+		case "click-footer":
+			add(tui.ClickFooter)
 		case "multi":
 			add(tui.Multi)
 		case "alt-enter", "alt-return":
@@ -2924,7 +2926,7 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 				return err
 			}
 		case "--no-header-lines-border":
-			opts.HeaderLinesShape = tui.BorderNone
+			opts.HeaderLinesShape = tui.BorderUndefined
 		case "--header-lines-border":
 			hasArg, arg := optionalNextString()
 			if opts.HeaderLinesShape, err = parseBorder(arg, !hasArg); err != nil {
