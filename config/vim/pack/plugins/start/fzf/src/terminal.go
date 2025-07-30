@@ -604,6 +604,8 @@ const (
 	actTransformQuery
 	actTransformSearch
 
+	actTrigger
+
 	actBgTransform
 	actBgTransformBorderLabel
 	actBgTransformGhost
@@ -2291,10 +2293,17 @@ func (t *Terminal) resizeWindows(forcePreview bool, redrawBorder bool) {
 						innerMarginInt[0]+shift, innerMarginInt[3]+pwidth+m, innerWidth-pwidth-m, innerHeight-shrink, tui.WindowList, noBorder, true)
 
 					// Clear characters on the margin
-					//   fzf --bind 'space:preview(seq 100)' --preview-window left,1
+					// fzf --bind 'space:toggle-preview' --preview ':' --preview-window left,1
 					if !hasListBorder {
 						for y := 0; y < innerHeight; y++ {
 							t.window.Move(y, -1)
+							t.window.Print(" ")
+						}
+					}
+					// fzf --bind 'space:toggle-preview' --preview ':' --preview-window left,1,border-none
+					if !previewOpts.Border().HasRight() {
+						for y := 0; y < innerHeight; y++ {
+							t.window.Move(y, -2)
 							t.window.Print(" ")
 						}
 					}
@@ -5436,6 +5445,7 @@ func (t *Terminal) Loop() error {
 				return nil
 			}
 		}
+		triggering := map[tui.Event]struct{}{}
 		previousInput := t.input
 		previousCx := t.cx
 		previousVersion := t.version
@@ -6227,6 +6237,20 @@ func (t *Terminal) Loop() error {
 			case actDisableSearch:
 				t.paused = true
 				req(reqPrompt)
+			case actTrigger:
+				if _, chords, err := parseKeyChords(a.a, ""); err == nil {
+					for _, chord := range chords {
+						if _, prs := triggering[chord]; prs {
+							// Avoid recursive triggering
+							continue
+						}
+						if acts, prs := t.keymap[chord]; prs {
+							triggering[chord] = struct{}{}
+							doActions(acts)
+							delete(triggering, chord)
+						}
+					}
+				}
 			case actSigStop:
 				p, err := os.FindProcess(os.Getpid())
 				if err == nil {
@@ -6548,13 +6572,13 @@ func (t *Terminal) Loop() error {
 					t.reading = true
 				}
 			case actUnbind:
-				if keys, err := parseKeyChords(a.a, "PANIC"); err == nil {
+				if keys, _, err := parseKeyChords(a.a, "PANIC"); err == nil {
 					for key := range keys {
 						delete(t.keymap, key)
 					}
 				}
 			case actRebind:
-				if keys, err := parseKeyChords(a.a, "PANIC"); err == nil {
+				if keys, _, err := parseKeyChords(a.a, "PANIC"); err == nil {
 					for key := range keys {
 						if originalAction, found := t.keymapOrg[key]; found {
 							t.keymap[key] = originalAction
@@ -6562,7 +6586,7 @@ func (t *Terminal) Loop() error {
 					}
 				}
 			case actToggleBind:
-				if keys, err := parseKeyChords(a.a, "PANIC"); err == nil {
+				if keys, _, err := parseKeyChords(a.a, "PANIC"); err == nil {
 					for key := range keys {
 						if _, bound := t.keymap[key]; bound {
 							delete(t.keymap, key)
