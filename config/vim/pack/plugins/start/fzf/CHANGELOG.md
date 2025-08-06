@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.65.1
+------
+- Fixed incorrect `$FZF_CLICK_HEADER_WORD` and `$FZF_CLICK_FOOTER_WORD` when the header or footer contains ANSI escape sequences and tab characters.
+- Fixed a bug where you cannot unset the default `--nth` using `change-nth` action.
+- Fixed a highlighting bug when using `--color fg:dim,nth:regular` pattern over ANSI-colored items.
+
 0.65.0
 ------
 - Added `click-footer` event that is triggered when the footer section is clicked. When the event is triggered, the following environment variables are set:
