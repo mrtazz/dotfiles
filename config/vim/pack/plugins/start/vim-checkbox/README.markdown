@@ -11,12 +11,32 @@ Simple plugin that toggles text checkboxes in Vim. Works great if you're using
 a markdown file for notes and todo lists.
 
 
+Requirements
+------------
+
+The action provided by this plugin can be repeated with the native
+action `.`.
+This is provided by `tpope/vim-repeat`. Please be sure to install it
+before installing this plugin.
+
 Installation
 ------------
 
 Just copy the script into your plugin folder, e.g. `~/.vim/plugin/`. If you're
 using pathogen, just clone this repository in `~/.vim/bundle`.
 
+Custom mappings
+---------------
+
+If you do not want to use `<leader>tt` you can set it via e.g.:
+
+```text
+augroup checkbox_mappings
+    nnoremap <leader>oo <plug>ToggleCheckbox
+augroup END
+```
+
+Hint: In this case the default mapping `<leader>tt` will not be configured.
 
 Usage
 -----
