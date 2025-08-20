@@ -489,7 +489,7 @@ endfunction
 
 let s:script_name = 'copilot-language-server/dist/language-server.js'
 function! s:Command() abort
-  if !has('nvim-0.7') && v:version < 900
+  if !has('nvim-0.8') && v:version < 900
     return [[], [], 'Vim version too old']
   endif
   let script = get(g:, 'copilot_command', '')

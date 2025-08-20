@@ -42,9 +42,6 @@ copilot.lsp_start_client = function(cmd, handler_names, opts, settings)
     handlers = handlers,
     on_init = function(client, initialize_result)
       vim.call('copilot#client#LspInit', client.id, initialize_result)
-      if vim.fn.has('nvim-0.8') == 0 then
-        client.notify('workspace/didChangeConfiguration', { settings = settings })
-      end
     end,
     on_exit = function(code, signal, client_id)
       vim.schedule(function()
