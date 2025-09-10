@@ -10,13 +10,12 @@
         "type": "git",
         "url": "git+https://github.com/github/copilot-language-server-release.git"
     },
-    "license": "https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features",
-    "version": "1.356.0",
+    "license": "MIT",
+    "version": "1.367.0",
     "bin": {
         "copilot-language-server": "../dist/language-server.js"
     },
     "files": [
-        "native/*-*/copilot-language-server*",
         "dist/language-server.js*",
         "dist/main.js*",
         "dist/diffWorker.js*",
@@ -24,7 +23,7 @@
         "dist/compiled/*/*/*.node",
         "dist/bin/**/*",
         "dist/resources",
-        "dist/crypt32.node",
+        "dist/crypt32*.node",
         "dist/api/types.d.ts"
     ],
     "main": "./dist/main.js",
@@ -32,6 +31,13 @@
     "dependencies": {
         "vscode-languageserver-protocol": "^3.17.5"
     },
-    "build": "1732",
-    "buildType": "prod"
+    "optionalDependencies": {
+        "@github/copilot-language-server-win32-x64": "1.367.0",
+        "@github/copilot-language-server-linux-x64": "1.367.0",
+        "@github/copilot-language-server-linux-arm64": "1.367.0",
+        "@github/copilot-language-server-darwin-x64": "1.367.0",
+        "@github/copilot-language-server-darwin-arm64": "1.367.0"
+    },
+    "buildType": "prod",
+    "build": "1776"
 }

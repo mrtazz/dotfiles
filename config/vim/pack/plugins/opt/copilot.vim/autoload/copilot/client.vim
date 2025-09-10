@@ -630,6 +630,7 @@ let s:vim_capabilities = {
 function! copilot#client#New() abort
   let opts = {}
   let instance = {'requests': {},
+        \ 'name': 'GitHub Copilot',
         \ 'progress': {},
         \ 'workspaceFolders': {},
         \ 'after_initialized': [],
