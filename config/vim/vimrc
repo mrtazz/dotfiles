@@ -110,8 +110,8 @@ let g:SuperTabLongestHighlight = 1
 
 """ spell checking settings
 " set the spellfile for added words if it exists
-if filereadable($HOME."/.vim/vim-spell.add")
-  set spellfile=$HOME/.vim/vim-spell.add
+if filereadable($HOME."/.config/vim/vim-spell.add")
+  set spellfile=$HOME/.config/vim/vim-spell.add
 endif
 
 " Autocomplete with dictionary words when spell check is on
