@@ -109,6 +109,7 @@ Usage: fzf [options]
     --hscroll-off=COLS       Number of screen columns to keep to the right of the
                              highlighted substring (default: 10)
     --jump-labels=CHARS      Label characters for jump mode
+    --gutter=CHAR            Character used for the gutter column (default: '▌')
     --pointer=STR            Pointer to the current line (default: '▌' or '>')
     --marker=STR             Multi-select marker (default: '┃' or '>')
     --marker-multi-line=STR  Multi-select marker for multi-line entries;
@@ -590,6 +591,7 @@ type Options struct {
 	Separator         *string
 	JumpLabels        string
 	Prompt            string
+	Gutter            *string
 	Pointer           *string
 	Marker            *string
 	MarkerMulti       *[3]string
@@ -710,6 +712,7 @@ func defaultOptions() *Options {
 		Separator:    nil,
 		JumpLabels:   defaultJumpLabels,
 		Prompt:       "> ",
+		Gutter:       nil,
 		Pointer:      nil,
 		Marker:       nil,
 		MarkerMulti:  nil,
@@ -974,8 +977,6 @@ func parseKeyChords(str string, message string) (map[tui.Event]string, []tui.Eve
 			add(tui.Backspace)
 		case "ctrl-space":
 			add(tui.CtrlSpace)
-		case "ctrl-delete":
-			add(tui.CtrlDelete)
 		case "ctrl-^", "ctrl-6":
 			add(tui.CtrlCaret)
 		case "ctrl-/", "ctrl-_":
@@ -1022,6 +1023,10 @@ func parseKeyChords(str string, message string) (map[tui.Event]string, []tui.Eve
 			list = append(list, evt)
 		case "alt-bs", "alt-bspace", "alt-backspace":
 			add(tui.AltBackspace)
+		case "ctrl-bs", "ctrl-bspace", "ctrl-backspace":
+			add(tui.CtrlBackspace)
+		case "ctrl-alt-bs", "ctrl-alt-bspace", "ctrl-alt-backspace":
+			add(tui.CtrlAltBackspace)
 		case "alt-up":
 			add(tui.AltUp)
 		case "alt-down":
@@ -1030,6 +1035,16 @@ func parseKeyChords(str string, message string) (map[tui.Event]string, []tui.Eve
 			add(tui.AltLeft)
 		case "alt-right":
 			add(tui.AltRight)
+		case "alt-home":
+			add(tui.AltHome)
+		case "alt-end":
+			add(tui.AltEnd)
+		case "alt-delete":
+			add(tui.AltDelete)
+		case "alt-page-up":
+			add(tui.AltPageUp)
+		case "alt-page-down":
+			add(tui.AltPageDown)
 		case "tab":
 			add(tui.Tab)
 		case "btab", "shift-tab":
@@ -1056,6 +1071,88 @@ func parseKeyChords(str string, message string) (map[tui.Event]string, []tui.Eve
 			add(tui.AltShiftLeft)
 		case "alt-shift-right", "shift-alt-right":
 			add(tui.AltShiftRight)
+		case "alt-shift-home", "shift-alt-home":
+			add(tui.AltShiftHome)
+		case "alt-shift-end", "shift-alt-end":
+			add(tui.AltShiftEnd)
+		case "alt-shift-delete", "shift-alt-delete":
+			add(tui.AltShiftDelete)
+		case "alt-shift-page-up", "shift-alt-page-up":
+			add(tui.AltShiftPageUp)
+		case "alt-shift-page-down", "shift-alt-page-down":
+			add(tui.AltShiftPageDown)
+		case "ctrl-up":
+			add(tui.CtrlUp)
+		case "ctrl-down":
+			add(tui.CtrlDown)
+		case "ctrl-right":
+			add(tui.CtrlRight)
+		case "ctrl-left":
+			add(tui.CtrlLeft)
+		case "ctrl-home":
+			add(tui.CtrlHome)
+		case "ctrl-end":
+			add(tui.CtrlEnd)
+		case "ctrl-delete":
+			add(tui.CtrlDelete)
+		case "ctrl-page-up":
+			add(tui.CtrlPageUp)
+		case "ctrl-page-down":
+			add(tui.CtrlPageDown)
+		case "ctrl-alt-up", "alt-ctrl-up":
+			add(tui.CtrlAltUp)
+		case "ctrl-alt-down", "alt-ctrl-down":
+			add(tui.CtrlAltDown)
+		case "ctrl-alt-right", "alt-ctrl-right":
+			add(tui.CtrlAltRight)
+		case "ctrl-alt-left", "alt-ctrl-left":
+			add(tui.CtrlAltLeft)
+		case "ctrl-alt-home", "alt-ctrl-home":
+			add(tui.CtrlAltHome)
+		case "ctrl-alt-end", "alt-ctrl-end":
+			add(tui.CtrlAltEnd)
+		case "ctrl-alt-delete", "alt-ctrl-delete":
+			add(tui.CtrlAltDelete)
+		case "ctrl-alt-page-up", "alt-ctrl-page-up":
+			add(tui.CtrlAltPageUp)
+		case "ctrl-alt-page-down", "alt-ctrl-page-down":
+			add(tui.CtrlAltPageDown)
+		case "ctrl-shift-up", "shift-ctrl-up":
+			add(tui.CtrlShiftUp)
+		case "ctrl-shift-down", "shift-ctrl-down":
+			add(tui.CtrlShiftDown)
+		case "ctrl-shift-right", "shift-ctrl-right":
+			add(tui.CtrlShiftRight)
+		case "ctrl-shift-left", "shift-ctrl-left":
+			add(tui.CtrlShiftLeft)
+		case "ctrl-shift-home", "shift-ctrl-home":
+			add(tui.CtrlShiftHome)
+		case "ctrl-shift-end", "shift-ctrl-end":
+			add(tui.CtrlShiftEnd)
+		case "ctrl-shift-delete", "shift-ctrl-delete":
+			add(tui.CtrlShiftDelete)
+		case "ctrl-shift-page-up", "shift-ctrl-page-up":
+			add(tui.CtrlShiftPageUp)
+		case "ctrl-shift-page-down", "shift-ctrl-page-down":
+			add(tui.CtrlShiftPageDown)
+		case "ctrl-alt-shift-up":
+			add(tui.CtrlAltShiftUp)
+		case "ctrl-alt-shift-down":
+			add(tui.CtrlAltShiftDown)
+		case "ctrl-alt-shift-right":
+			add(tui.CtrlAltShiftRight)
+		case "ctrl-alt-shift-left":
+			add(tui.CtrlAltShiftLeft)
+		case "ctrl-alt-shift-home":
+			add(tui.CtrlAltShiftHome)
+		case "ctrl-alt-shift-end":
+			add(tui.CtrlAltShiftEnd)
+		case "ctrl-alt-shift-delete":
+			add(tui.CtrlAltShiftDelete)
+		case "ctrl-alt-shift-page-up":
+			add(tui.CtrlAltShiftPageUp)
+		case "ctrl-alt-shift-page-down":
+			add(tui.CtrlAltShiftPageDown)
 		case "shift-up":
 			add(tui.ShiftUp)
 		case "shift-down":
@@ -1064,8 +1161,16 @@ func parseKeyChords(str string, message string) (map[tui.Event]string, []tui.Eve
 			add(tui.ShiftLeft)
 		case "shift-right":
 			add(tui.ShiftRight)
+		case "shift-home":
+			add(tui.ShiftHome)
+		case "shift-end":
+			add(tui.ShiftEnd)
 		case "shift-delete":
 			add(tui.ShiftDelete)
+		case "shift-page-up":
+			add(tui.ShiftPageUp)
+		case "shift-page-down":
+			add(tui.ShiftPageDown)
 		case "left-click":
 			add(tui.LeftClick)
 		case "right-click":
@@ -1561,6 +1666,8 @@ func parseActionList(masked string, original string, prevActions []*action, putA
 			appendAction(actBackwardDeleteCharEof)
 		case "backward-word":
 			appendAction(actBackwardWord)
+		case "backward-subword":
+			appendAction(actBackwardSubWord)
 		case "clear-screen":
 			appendAction(actClearScreen)
 		case "delete-char":
@@ -1581,6 +1688,8 @@ func parseActionList(masked string, original string, prevActions []*action, putA
 			appendAction(actForwardChar)
 		case "forward-word":
 			appendAction(actForwardWord)
+		case "forward-subword":
+			appendAction(actForwardSubWord)
 		case "jump":
 			appendAction(actJump)
 		case "jump-accept":
@@ -1589,6 +1698,8 @@ func parseActionList(masked string, original string, prevActions []*action, putA
 			appendAction(actKillLine)
 		case "kill-word":
 			appendAction(actKillWord)
+		case "kill-subword":
+			appendAction(actKillSubWord)
 		case "unix-line-discard", "line-discard":
 			appendAction(actUnixLineDiscard)
 		case "unix-word-rubout", "word-rubout":
@@ -1597,6 +1708,8 @@ func parseActionList(masked string, original string, prevActions []*action, putA
 			appendAction(actYank)
 		case "backward-kill-word":
 			appendAction(actBackwardKillWord)
+		case "backward-kill-subword":
+			appendAction(actBackwardKillSubWord)
 		case "toggle-down":
 			appendAction(actToggle, actDown)
 		case "toggle-up":
@@ -2747,6 +2860,13 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 			if err != nil {
 				return err
 			}
+		case "--gutter":
+			str, err := nextString("gutter character required")
+			if err != nil {
+				return err
+			}
+			str = firstLine(str)
+			opts.Gutter = &str
 		case "--pointer":
 			str, err := nextString("pointer sign required")
 			if err != nil {
@@ -3245,22 +3365,28 @@ func applyPreset(opts *Options, preset string) error {
 	return nil
 }
 
-func validateSign(sign string, signOptName string) error {
-	if uniseg.StringWidth(sign) > 2 {
-		return fmt.Errorf("%v display width should be up to 2", signOptName)
+func validateSign(sign string, signOptName string, maxWidth int) error {
+	if uniseg.StringWidth(sign) > maxWidth {
+		return fmt.Errorf("%v display width should be up to %d", signOptName, maxWidth)
 	}
 	return nil
 }
 
 func validateOptions(opts *Options) error {
 	if opts.Pointer != nil {
-		if err := validateSign(*opts.Pointer, "pointer"); err != nil {
+		if err := validateSign(*opts.Pointer, "pointer", 2); err != nil {
 			return err
 		}
 	}
 
 	if opts.Marker != nil {
-		if err := validateSign(*opts.Marker, "marker"); err != nil {
+		if err := validateSign(*opts.Marker, "marker", 2); err != nil {
+			return err
+		}
+	}
+
+	if opts.Gutter != nil {
+		if err := validateSign(*opts.Gutter, "gutter", 1); err != nil {
 			return err
 		}
 	}

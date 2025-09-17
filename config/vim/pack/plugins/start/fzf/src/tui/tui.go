@@ -44,7 +44,6 @@ const (
 	CtrlZ
 	Esc
 	CtrlSpace
-	CtrlDelete
 
 	// https://apple.stackexchange.com/questions/24261/how-do-i-send-c-that-is-control-slash-to-the-terminal
 	CtrlBackSlash
@@ -72,6 +71,10 @@ const (
 	ShiftLeft
 	ShiftRight
 	ShiftDelete
+	ShiftHome
+	ShiftEnd
+	ShiftPageUp
+	ShiftPageDown
 
 	F1
 	F2
@@ -92,14 +95,66 @@ const (
 	AltDown
 	AltLeft
 	AltRight
+	AltDelete
+	AltHome
+	AltEnd
+	AltPageUp
+	AltPageDown
 
 	AltShiftUp
 	AltShiftDown
 	AltShiftLeft
 	AltShiftRight
+	AltShiftDelete
+	AltShiftHome
+	AltShiftEnd
+	AltShiftPageUp
+	AltShiftPageDown
+
+	CtrlUp
+	CtrlDown
+	CtrlLeft
+	CtrlRight
+	CtrlHome
+	CtrlEnd
+	CtrlBackspace
+	CtrlDelete
+	CtrlPageUp
+	CtrlPageDown
 
 	Alt
 	CtrlAlt
+
+	CtrlAltUp
+	CtrlAltDown
+	CtrlAltLeft
+	CtrlAltRight
+	CtrlAltHome
+	CtrlAltEnd
+	CtrlAltBackspace
+	CtrlAltDelete
+	CtrlAltPageUp
+	CtrlAltPageDown
+
+	CtrlShiftUp
+	CtrlShiftDown
+	CtrlShiftLeft
+	CtrlShiftRight
+	CtrlShiftHome
+	CtrlShiftEnd
+	CtrlShiftDelete
+	CtrlShiftPageUp
+	CtrlShiftPageDown
+
+	CtrlAltShiftUp
+	CtrlAltShiftDown
+	CtrlAltShiftLeft
+	CtrlAltShiftRight
+	CtrlAltShiftHome
+	CtrlAltShiftEnd
+	CtrlAltShiftDelete
+	CtrlAltShiftPageUp
+	CtrlAltShiftPageDown
 
 	Invalid
 	Fatal
@@ -721,6 +776,7 @@ var (
 	ColMatch                ColorPair
 	ColCursor               ColorPair
 	ColCursorEmpty          ColorPair
+	ColCursorEmptyChar      ColorPair
 	ColMarker               ColorPair
 	ColSelected             ColorPair
 	ColSelectedMatch        ColorPair
@@ -1113,10 +1169,11 @@ func initPalette(theme *ColorTheme) {
 	ColSelectedMatch = pair(theme.SelectedMatch, theme.SelectedBg)
 	ColCursor = pair(theme.Cursor, theme.Gutter)
 	ColCursorEmpty = pair(blank, theme.Gutter)
+	ColCursorEmptyChar = pair(theme.Gutter, theme.ListBg)
 	if theme.SelectedBg.Color != theme.ListBg.Color {
 		ColMarker = pair(theme.Marker, theme.SelectedBg)
 	} else {
-		ColMarker = pair(theme.Marker, theme.Gutter)
+		ColMarker = pair(theme.Marker, theme.ListBg)
 	}
 	ColCurrent = pair(theme.Current, theme.DarkBg)
 	ColCurrentMatch = pair(theme.CurrentMatch, theme.DarkBg)
