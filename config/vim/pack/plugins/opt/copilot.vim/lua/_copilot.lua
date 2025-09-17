@@ -9,7 +9,7 @@ local showDocument = function(err, result, ctx, _)
   end
 end
 
-copilot.lsp_start_client = function(cmd, handler_names, opts, settings)
+copilot.lsp_start_client = function(cmd, client_name, handler_names, opts, settings)
   local handlers = {['window/showDocument'] = showDocument}
   local id
   for _, name in ipairs(handler_names) do
@@ -35,7 +35,7 @@ copilot.lsp_start_client = function(cmd, handler_names, opts, settings)
   id = start_client({
     cmd = cmd,
     cmd_cwd = vim.call('copilot#job#Cwd'),
-    name = opts.name,
+    name = client_name,
     init_options = opts.initializationOptions,
     workspace_folders = workspace_folders,
     settings = settings,

@@ -687,7 +687,7 @@ function! copilot#client#New() abort
           \ 'Attach': function('s:NvimAttach'),
           \ 'IsAttached': function('s:NvimIsAttached'),
           \ })
-    let instance.client_id = eval("v:lua.require'_copilot'.lsp_start_client(command, keys(instance.methods), opts, settings)")
+    let instance.client_id = eval("v:lua.require'_copilot'.lsp_start_client(command, instance.name, keys(instance.methods), opts, settings)")
     let instance.id = instance.client_id
   else
     call extend(instance, {

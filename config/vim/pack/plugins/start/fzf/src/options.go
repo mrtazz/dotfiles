@@ -109,6 +109,7 @@ Usage: fzf [options]
     --hscroll-off=COLS       Number of screen columns to keep to the right of the
                              highlighted substring (default: 10)
     --jump-labels=CHARS      Label characters for jump mode
+    --gutter=CHAR            Character used for the gutter column (default: '▌')
     --pointer=STR            Pointer to the current line (default: '▌' or '>')
     --marker=STR             Multi-select marker (default: '┃' or '>')
     --marker-multi-line=STR  Multi-select marker for multi-line entries;
@@ -590,6 +591,7 @@ type Options struct {
 	Separator         *string
 	JumpLabels        string
 	Prompt            string
+	Gutter            *string
 	Pointer           *string
 	Marker            *string
 	MarkerMulti       *[3]string
@@ -710,6 +712,7 @@ func defaultOptions() *Options {
 		Separator:    nil,
 		JumpLabels:   defaultJumpLabels,
 		Prompt:       "> ",
+		Gutter:       nil,
 		Pointer:      nil,
 		Marker:       nil,
 		MarkerMulti:  nil,
@@ -2857,6 +2860,13 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 			if err != nil {
 				return err
 			}
+		case "--gutter":
+			str, err := nextString("gutter character required")
+			if err != nil {
+				return err
+			}
+			str = firstLine(str)
+			opts.Gutter = &str
 		case "--pointer":
 			str, err := nextString("pointer sign required")
 			if err != nil {
@@ -3355,22 +3365,28 @@ func applyPreset(opts *Options, preset string) error {
 	return nil
 }
 
-func validateSign(sign string, signOptName string) error {
-	if uniseg.StringWidth(sign) > 2 {
-		return fmt.Errorf("%v display width should be up to 2", signOptName)
+func validateSign(sign string, signOptName string, maxWidth int) error {
+	if uniseg.StringWidth(sign) > maxWidth {
+		return fmt.Errorf("%v display width should be up to %d", signOptName, maxWidth)
 	}
 	return nil
 }
 
 func validateOptions(opts *Options) error {
 	if opts.Pointer != nil {
-		if err := validateSign(*opts.Pointer, "pointer"); err != nil {
+		if err := validateSign(*opts.Pointer, "pointer", 2); err != nil {
 			return err
 		}
 	}
 
 	if opts.Marker != nil {
-		if err := validateSign(*opts.Marker, "marker"); err != nil {
+		if err := validateSign(*opts.Marker, "marker", 2); err != nil {
+			return err
+		}
+	}
+
+	if opts.Gutter != nil {
+		if err := validateSign(*opts.Gutter, "gutter", 1); err != nil {
 			return err
 		}
 	}
