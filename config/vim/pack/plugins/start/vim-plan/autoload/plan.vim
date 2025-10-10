@@ -133,10 +133,20 @@ endfunction
 
 function! plan#ImportAsset(full_file_path)
   let full_file_path = trim(a:full_file_path)
-  let current_dir = expand("%:h")
+  " replace any escaped spaces (this is basically to make it work with MacVim
+  " which does its own escaping on command line drag and drop)
+  let full_file_path = substitute(full_file_path, "\\\\", "", "g")
+
   let filename = fnamemodify(full_file_path, ":t")
-  call plan#EnsureDirectoryExists(s:assetsDirectoryName)
-  let cmd = 'cp -p ' . shellescape(full_file_path) . ' ' . s:assetsDirectoryName
-  let _ = system(cmd)
-  execute "normal! A" . '![](' . s:assetsDirectoryName . '/' . filename . ')'
+  let filename = substitute(filename, " ", "_", "g")
+  let today = strftime("%Y%m%d")
+  let screenshotDestination = s:assetsDirectoryName . '/' . today
+  call plan#EnsureDirectoryExists(screenshotDestination)
+  let cmd = 'cp -p ' . fnamemodify(full_file_path, ":S") . ' ' . screenshotDestination . '/' . filename
+  let out = system(cmd)
+  if len(out) > 0
+    echoerr out
+  endif
+  execute "normal! A" . '![](' . screenshotDestination . '/' . filename . ')'
 endfunction
+
