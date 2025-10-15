@@ -43,7 +43,7 @@ const (
 	CtrlE
 	CtrlF
 	CtrlG
-	CtrlH
+	CtrlBackspace
 	Tab
 	CtrlJ
 	CtrlK
@@ -137,7 +137,6 @@ const (
 	CtrlRight
 	CtrlHome
 	CtrlEnd
-	CtrlBackspace
 	CtrlDelete
 	CtrlPageUp
 	CtrlPageDown
@@ -1117,6 +1116,22 @@ func InitTheme(theme *ColorTheme, baseTheme *ColorTheme, boldify bool, forceBlac
 		theme.Bg = ColorAttr{colBlack, AttrUndefined}
 	}
 
+	if boldify {
+		boldify := func(c ColorAttr) ColorAttr {
+			dup := c
+			if (c.Attr & AttrRegular) == 0 {
+				dup.Attr |= BoldForce
+			}
+			return dup
+		}
+		theme.Current = boldify(theme.Current)
+		theme.CurrentMatch = boldify(theme.CurrentMatch)
+		theme.Prompt = boldify(theme.Prompt)
+		theme.Input = boldify(theme.Input)
+		theme.Cursor = boldify(theme.Cursor)
+		theme.Spinner = boldify(theme.Spinner)
+	}
+
 	o := func(a ColorAttr, b ColorAttr) ColorAttr {
 		c := a
 		if b.Color != colUndefined {
@@ -1231,22 +1246,6 @@ func InitTheme(theme *ColorTheme, baseTheme *ColorTheme, boldify bool, forceBlac
 	theme.FooterBg = o(theme.Bg, theme.FooterBg)
 	theme.FooterBorder = o(theme.Border, theme.FooterBorder)
 	theme.FooterLabel = o(theme.BorderLabel, theme.FooterLabel)
-
-	if boldify {
-		boldify := func(c ColorAttr) ColorAttr {
-			dup := c
-			if (c.Attr & AttrRegular) == 0 {
-				dup.Attr |= BoldForce
-			}
-			return dup
-		}
-		theme.Current = boldify(theme.Current)
-		theme.CurrentMatch = boldify(theme.CurrentMatch)
-		theme.Prompt = boldify(theme.Prompt)
-		theme.Input = boldify(theme.Input)
-		theme.Cursor = boldify(theme.Cursor)
-		theme.Spinner = boldify(theme.Spinner)
-	}
 
 	if theme.Nomatch.IsUndefined() {
 		theme.Nomatch.Attr = Dim
