@@ -168,17 +168,23 @@ function! GitHubMDTitle()
     call setline(line('.'), substitute(getline('.'), gh_url, new_url, ''))
   endif
 endfunction
+map <silent> <leader>gt :call GitHubMDTitle()<cr>
 
-command! GHMDTitle :call GitHubMDTitle()
-map <silent> <leader>g :call GitHubMDTitle()<cr>
+
+function! GitHubCreateIssue()
+  if empty(g:GitHubIssuesDefaultRepo)
+    echoerr 'Variable g:GitHubIssuesDefaultRepo not set'
+    return
+  endif
+  let current_line = getline('.')
+  let title = trim(matchstr(current_line, '[a-zA-Z0-9 ]\+'))
+  let new_issue = system('PATH=$PATH:/opt/homebrew/bin gh issue create --repo ' . g:GitHubIssuesDefaultRepo . ' --assignee "@me" --body "" --title "' . title .'"')
+  if !empty(new_issue)
+    let new_url = system('PATH=$PATH:/opt/homebrew/bin gh md link -n ' . new_issue)
+    call setline(line('.'), substitute(getline('.'), title, new_url, ''))
+  endif
+endfunction
+map <silent> <leader>gci :call GitHubCreateIssue()<cr>
 
 command! ChangeDirectoryToCurrentFile :cd %:p:h
 
-" helper function to close all buffers that point to files that don't exist
-function! CloseBuffersForUnreadableFiles()
-  for buf in getbufinfo()
-    if buf.listed && !filereadable(buf.name)
-      exec ":bdelete! " . buf.bufnr
-    endif
-  endfor
-endfunction
