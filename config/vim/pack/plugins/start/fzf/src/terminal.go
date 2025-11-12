@@ -496,6 +496,14 @@ const (
 	reqFatal
 )
 
+func isTerminalEvent(et util.EventType) bool {
+	switch et {
+	case reqClose, reqPrintQuery, reqBecome, reqQuit, reqFatal:
+		return true
+	}
+	return false
+}
+
 type action struct {
 	t actionType
 	a string
@@ -2980,6 +2988,11 @@ func (t *Terminal) printInfoImpl() {
 		t.window.CPrint(tui.ColInfo, output)
 	} else {
 		outputPrinter(t.window, maxWidth)
+	}
+	if t.infoStyle == infoInline && outputLen < maxWidth-1 && t.reading {
+		t.window.Print(" ")
+		printSpinner()
+		outputLen += 2
 	}
 
 	if t.infoStyle == infoInlineRight {
@@ -5523,7 +5536,7 @@ func (t *Terminal) Loop() error {
 	req := func(evts ...util.EventType) {
 		for _, event := range evts {
 			events = append(events, event)
-			if event == reqClose || event == reqQuit {
+			if isTerminalEvent(event) {
 				looping = false
 			}
 		}
