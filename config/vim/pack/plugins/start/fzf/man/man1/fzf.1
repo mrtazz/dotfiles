@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ..
-.TH fzf 1 "Oct 2025" "fzf 0.66.1" "fzf - a command-line fuzzy finder"
+.TH fzf 1 "Nov 2025" "fzf 0.67.0" "fzf - a command-line fuzzy finder"
 
 .SH NAME
 fzf - a command-line fuzzy finder
@@ -629,9 +629,16 @@ Render empty lines between each item
 The given string will be repeated to draw a horizontal line on each gap
 (default: '┈' or '\-' depending on \fB\-\-no\-unicode\fR).
 .TP
+.BI "\-\-freeze\-left=" "N"
+Number of fields to freeze on the left.
+.TP
+.BI "\-\-freeze\-right=" "N"
+Number of fields to freeze on the right.
+.TP
 .B "\-\-keep\-right"
 Keep the right end of the line visible when it's too long. Effective only when
-the query string is empty.
+the query string is empty. Use \fB\-\-freeze\-right=1\fR instead if you want
+the last field to be always visible even with a non-empty query.
 .TP
 .BI "\-\-scroll\-off=" "LINES"
 Number of screen lines to keep above or below when scrolling to the top or to
@@ -1488,7 +1495,7 @@ e.g.
 .br
 \fIctrl\-/\fR         (\fIctrl\-_\fR)
 .br
-\fIctrl\-alt\-[a\-z]\fR
+\fIctrl\-alt\-[a\-z]\fR (\fIctrl\-alt\-h\fR is \fIctrl\-alt\-backspace\fR on non-Windows)
 .br
 \fIalt\-[*]\fR        (Any case-sensitive single character is allowed)
 .br
@@ -1618,7 +1625,7 @@ e.g.
 .br
 \fIctrl\-alt\-end\fR
 .br
-\fIctrl\-alt\-backspace\fR  (\fIctrl\-alt\-bspace\fR \fIctrl\-alt\-bs\fR)
+\fIctrl\-alt\-backspace\fR  (\fIctrl\-alt\-bspace\fR \fIctrl\-alt\-bs\fR) (\fIctrl\-alt\-h\fR (non-Windows))
 .br
 \fIctrl\-alt\-delete\fR
 .br

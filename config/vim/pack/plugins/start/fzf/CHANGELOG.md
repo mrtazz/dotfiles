@@ -1,6 +1,32 @@
 CHANGELOG
 =========
 
+0.67.0
+------
+- Added `--freeze-left=N` option to keep the leftmost N columns always visible.
+  ```sh
+  # Keep the file name column fixed and always visible
+  git grep --line-number --color=always -- '' |
+      fzf --ansi --delimiter : --freeze-left 1
+
+  # Can be used with --keep-right
+  git grep --line-number --color=always -- '' |
+      fzf --ansi --delimiter : --freeze-left 1 --keep-right
+  ```
+- Also added `--freeze-right=N` option to keep the rightmost N columns always visible.
+  ```sh
+  # Stronger version of --keep-right that always keeps the right-end visible
+  fd | fzf --freeze-right 1
+
+  # Keep the base name always visible
+  fd | fzf --freeze-right 1 --delimiter /
+
+  # Keep both leftmost and rightmost components visible
+  fd | fzf --freeze-left 1 --freeze-right 1 --delimiter /
+  ```
+- Updated `--info=inline` to print the spinner (load indicator).
+- Bug fixes
+
 0.66.1
 ------
 - Bug fixes

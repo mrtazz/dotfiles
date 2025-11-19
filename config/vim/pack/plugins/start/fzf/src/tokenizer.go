@@ -206,8 +206,9 @@ func Tokenize(text string, delimiter Delimiter) []Token {
 	if delimiter.regex != nil {
 		locs := delimiter.regex.FindAllStringIndex(text, -1)
 		begin := 0
-		for _, loc := range locs {
-			tokens = append(tokens, text[begin:loc[1]])
+		tokens = make([]string, len(locs))
+		for i, loc := range locs {
+			tokens[i] = text[begin:loc[1]]
 			begin = loc[1]
 		}
 		if begin < len(text) {
@@ -231,6 +232,23 @@ func StripLastDelimiter(str string, delimiter Delimiter) string {
 		}
 	}
 	return strings.TrimRightFunc(str, unicode.IsSpace)
+}
+
+func GetLastDelimiter(str string, delimiter Delimiter) string {
+	if delimiter.str != nil {
+		if strings.HasSuffix(str, *delimiter.str) {
+			return *delimiter.str
+		}
+	} else if delimiter.regex != nil {
+		locs := delimiter.regex.FindAllStringIndex(str, -1)
+		if len(locs) > 0 {
+			lastLoc := locs[len(locs)-1]
+			if lastLoc[1] == len(str) {
+				return str[lastLoc[0]:]
+			}
+		}
+	}
+	return ""
 }
 
 // JoinTokens concatenates the tokens into a single string

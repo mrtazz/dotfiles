@@ -331,6 +331,8 @@ type Terminal struct {
 	scrollbar          string
 	previewScrollbar   string
 	ansi               bool
+	freezeLeft         int
+	freezeRight        int
 	nthAttr            tui.Attr
 	nth                []Range
 	nthCurrent         []Range
@@ -1058,6 +1060,8 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		footer:             opts.Footer,
 		header0:            opts.Header,
 		ansi:               opts.Ansi,
+		freezeLeft:         opts.FreezeLeft,
+		freezeRight:        opts.FreezeRight,
 		nthAttr:            opts.Theme.Nth.Attr,
 		nth:                opts.Nth,
 		nthCurrent:         opts.Nth,
@@ -2486,6 +2490,8 @@ func (t *Terminal) resizeWindows(forcePreview bool, redrawBorder bool) {
 		if shape.HasRight() {
 			width++
 		}
+		// Make sure that the width does not exceed the list width
+		width = util.Min(t.window.Width()+t.headerIndentImpl(0, shape), width)
 		height := b.Height() - borderLines(shape)
 		return t.tui.NewWindow(top, left, width, height, windowType, noBorder, true)
 	}
@@ -3103,7 +3109,11 @@ func (t *Terminal) printFooter() {
 }
 
 func (t *Terminal) headerIndent(borderShape tui.BorderShape) int {
-	indentSize := t.pointerLen + t.markerLen
+	return t.headerIndentImpl(t.pointerLen+t.markerLen, borderShape)
+}
+
+func (t *Terminal) headerIndentImpl(base int, borderShape tui.BorderShape) int {
+	indentSize := base
 	if t.listBorderShape.HasLeft() {
 		indentSize += 1 + t.borderWidth
 	}
@@ -3522,16 +3532,47 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 			} else {
 				tokens = Transform(Tokenize(item.text.ToString(), t.delimiter), t.nthCurrent)
 			}
-			for _, token := range tokens {
+			nthOffsets = make([]Offset, len(tokens))
+			for i, token := range tokens {
 				start := token.prefixLength
 				length := token.text.Length() - token.text.TrailingWhitespaces()
 				end := start + int32(length)
-				nthOffsets = append(nthOffsets, Offset{int32(start), int32(end)})
+				nthOffsets[i] = Offset{int32(start), int32(end)}
 			}
 			sort.Sort(ByOrder(nthOffsets))
 		}
 	}
 	allOffsets := result.colorOffsets(charOffsets, nthOffsets, t.theme, colBase, colMatch, t.nthAttr, hidden)
+
+	// Determine split offset for horizontal scrolling with freeze
+	splitOffset1 := -1
+	splitOffset2 := -1
+	if t.hscroll && !t.wrap {
+		var tokens []Token
+		if t.freezeLeft > 0 || t.freezeRight > 0 {
+			tokens = Tokenize(item.text.ToString(), t.delimiter)
+		}
+
+		// 0 | 1 | 2 | 3 | 4 | 5
+		// ------>       <------
+		if t.freezeLeft > 0 {
+			if len(tokens) > 0 {
+				token := tokens[util.Min(t.freezeLeft, len(tokens))-1]
+				splitOffset1 = int(token.prefixLength) + token.text.Length() - token.text.TrailingWhitespaces()
+			}
+		}
+		if t.freezeRight > 0 {
+			index := util.Max(t.freezeLeft-1, len(tokens)-t.freezeRight-1)
+			if index < 0 {
+				splitOffset2 = 0
+			} else if index >= t.freezeLeft {
+				token := tokens[index]
+				delimiter := strings.TrimLeftFunc(GetLastDelimiter(token.text.ToString(), t.delimiter), unicode.IsSpace)
+				splitOffset2 = int(token.prefixLength) + token.text.Length() - len([]rune(delimiter))
+			}
+			splitOffset2 = util.Max(splitOffset2, splitOffset1)
+		}
+	}
 
 	maxLines := 1
 	if t.canSpanMultiLines() {
@@ -3602,16 +3643,24 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 				break
 			}
 		}
+		splitOffsetLeft := 0
+		if splitOffset1 >= 0 && splitOffset1 > from && splitOffset1 < from+len(line) {
+			splitOffsetLeft = splitOffset1 - from
+		}
+		splitOffsetRight := -1
+		if splitOffset2 >= 0 && splitOffset2 >= from && splitOffset2 < from+len(line) {
+			splitOffsetRight = splitOffset2 - from
+		}
 		from += len(line)
 		if lineOffset < skipLines {
 			continue
 		}
 		actualLineOffset := lineOffset - skipLines
 
-		var maxe int
+		var maxEnd int
 		for _, offset := range offsets {
 			if offset.match {
-				maxe = util.Max(maxe, int(offset.offset[1]))
+				maxEnd = util.Max(maxEnd, int(offset.offset[1]))
 			}
 		}
 
@@ -3675,69 +3724,117 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 			wrapped = true
 		}
 
-		displayWidth = t.displayWidthWithLimit(line, 0, maxWidth)
-		if !t.wrap && displayWidth > maxWidth {
-			ellipsis, ellipsisWidth := util.Truncate(t.ellipsis, maxWidth/2)
-			maxe = util.Constrain(maxe+util.Min(maxWidth/2-ellipsisWidth, t.hscrollOff), 0, len(line))
-			transformOffsets := func(diff int32, rightTrim bool) {
-				for idx, offset := range offsets {
-					b, e := offset.offset[0], offset.offset[1]
-					el := int32(len(ellipsis))
-					b += el - diff
-					e += el - diff
-					b = util.Max32(b, el)
-					if rightTrim {
-						e = util.Min32(e, int32(maxWidth-ellipsisWidth))
-					}
-					offsets[idx].offset[0] = b
-					offsets[idx].offset[1] = util.Max32(b, e)
-				}
+		frozenLeft := line[:splitOffsetLeft]
+		middle := line[splitOffsetLeft:]
+		frozenRight := []rune{}
+		if splitOffsetRight >= splitOffsetLeft {
+			middle = line[splitOffsetLeft:splitOffsetRight]
+			frozenRight = line[splitOffsetRight:]
+		}
+		displayWidthSum := 0
+		todo := [3]func(){}
+		for fidx, runes := range [][]rune{frozenLeft, frozenRight, middle} {
+			if len(runes) == 0 {
+				continue
 			}
-			if t.hscroll {
-				if t.keepRight && pos == nil {
-					trimmed, diff := t.trimLeft(line, maxWidth, ellipsisWidth)
-					transformOffsets(diff, false)
-					line = append(ellipsis, trimmed...)
-				} else if !t.overflow(line[:maxe], maxWidth-ellipsisWidth) {
-					// Stri..
-					line, _ = t.trimRight(line, maxWidth-ellipsisWidth)
-					line = append(line, ellipsis...)
-				} else {
-					// Stri..
-					rightTrim := false
-					if t.overflow(line[maxe:], ellipsisWidth) {
-						line = append(line[:maxe], ellipsis...)
-						rightTrim = true
+			shift := 0
+			maxe := maxEnd
+			offs := make([]colorOffset, len(offsets))
+			for idx := range offsets {
+				offs[idx] = offsets[idx]
+				if fidx == 1 && splitOffsetRight > 0 {
+					shift = splitOffsetRight
+				} else if fidx == 2 && splitOffsetLeft > 0 {
+					shift = splitOffsetLeft
+				}
+				offs[idx].offset[0] -= int32(shift)
+				offs[idx].offset[1] -= int32(shift)
+			}
+			maxe -= shift
+			ellipsis, ellipsisWidth := util.Truncate(t.ellipsis, maxWidth)
+			adjustedMaxWidth := maxWidth
+			if fidx < 2 {
+				// For frozen parts, reserve space for the ellipsis in the middle part
+				adjustedMaxWidth -= ellipsisWidth
+			}
+			displayWidth = t.displayWidthWithLimit(runes, 0, adjustedMaxWidth)
+			if !t.wrap && displayWidth > adjustedMaxWidth {
+				maxe = util.Constrain(maxe+util.Min(maxWidth/2-ellipsisWidth, t.hscrollOff), 0, len(runes))
+				transformOffsets := func(diff int32, rightTrim bool) {
+					for idx, offset := range offs {
+						b, e := offset.offset[0], offset.offset[1]
+						el := int32(len(ellipsis))
+						b += el - diff
+						e += el - diff
+						b = util.Max32(b, el)
+						if rightTrim {
+							e = util.Min32(e, int32(maxWidth-ellipsisWidth))
+						}
+						offs[idx].offset[0] = b
+						offs[idx].offset[1] = util.Max32(b, e)
 					}
-					// ..ri..
-					var diff int32
-					line, diff = t.trimLeft(line, maxWidth, ellipsisWidth)
+				}
+				if t.hscroll {
+					if fidx == 1 || fidx == 2 && t.keepRight && pos == nil {
+						trimmed, diff := t.trimLeft(runes, maxWidth, ellipsisWidth)
+						transformOffsets(diff, false)
+						runes = append(ellipsis, trimmed...)
+					} else if fidx == 0 || !t.overflow(runes[:maxe], maxWidth-ellipsisWidth) {
+						// Stri..
+						runes, _ = t.trimRight(runes, maxWidth-ellipsisWidth)
+						runes = append(runes, ellipsis...)
+					} else {
+						// Stri..
+						rightTrim := false
+						if t.overflow(runes[maxe:], ellipsisWidth) {
+							runes = append(runes[:maxe], ellipsis...)
+							rightTrim = true
+						}
+						// ..ri..
+						var diff int32
+						runes, diff = t.trimLeft(runes, maxWidth, ellipsisWidth)
 
-					// Transform offsets
-					transformOffsets(diff, rightTrim)
-					line = append(ellipsis, line...)
+						// Transform offsets
+						transformOffsets(diff, rightTrim)
+						runes = append(ellipsis, runes...)
+					}
+				} else {
+					runes, _ = t.trimRight(runes, maxWidth-ellipsisWidth)
+					runes = append(runes, ellipsis...)
+
+					for idx, offset := range offs {
+						offs[idx].offset[0] = util.Min32(offset.offset[0], int32(maxWidth-len(ellipsis)))
+						offs[idx].offset[1] = util.Min32(offset.offset[1], int32(maxWidth))
+					}
+				}
+				displayWidth = t.displayWidthWithLimit(runes, 0, displayWidth)
+			}
+			displayWidthSum += displayWidth
+
+			if maxWidth > 0 {
+				color := colBase
+				if hidden {
+					color = color.WithFg(t.theme.Nomatch)
+				}
+				todo[fidx] = func() {
+					t.printColoredString(t.window, runes, offs, color)
 				}
 			} else {
-				line, _ = t.trimRight(line, maxWidth-ellipsisWidth)
-				line = append(line, ellipsis...)
-
-				for idx, offset := range offsets {
-					offsets[idx].offset[0] = util.Min32(offset.offset[0], int32(maxWidth-len(ellipsis)))
-					offsets[idx].offset[1] = util.Min32(offset.offset[1], int32(maxWidth))
-				}
+				break
 			}
-			displayWidth = t.displayWidthWithLimit(line, 0, displayWidth)
+			maxWidth -= displayWidth
 		}
-
-		if maxWidth > 0 {
-			color := colBase
-			if hidden {
-				color = color.WithFg(t.theme.Nomatch)
-			}
-			t.printColoredString(t.window, line, offsets, color)
+		if todo[0] != nil {
+			todo[0]()
+		}
+		if todo[2] != nil {
+			todo[2]()
+		}
+		if todo[1] != nil {
+			todo[1]()
 		}
 		if postTask != nil {
-			postTask(actualLineNum, displayWidth, wasWrapped, forceRedraw, lbg)
+			postTask(actualLineNum, displayWidthSum, wasWrapped, forceRedraw, lbg)
 		} else {
 			t.markOtherLine(actualLineNum)
 		}
@@ -4819,7 +4916,7 @@ func (t *Terminal) buildPlusList(template string, forcePlus bool) (bool, [3][]*I
 	if asterisk {
 		cnt := t.merger.Length()
 		all = make([]*Item, cnt)
-		for i := 0; i < cnt; i++ {
+		for i := range cnt {
 			all[i] = t.merger.Get(i).item
 		}
 	}
@@ -7071,7 +7168,7 @@ func (t *Terminal) constrain() {
 
 	// May need to try again after adjusting the offset
 	t.offset = util.Constrain(t.offset, 0, count)
-	for tries := 0; tries < maxLines; tries++ {
+	for range maxLines {
 		numItems := maxLines
 		// How many items can be fit on screen including the current item?
 		if t.canSpanMultiLines() && t.merger.Length() > 0 {
@@ -7125,7 +7222,7 @@ func (t *Terminal) constrain() {
 			scrollOff := util.Min(maxLines/2, t.scrollOff)
 			newOffset := t.offset
 			// 2-phase adjustment to avoid infinite loop of alternating between moving up and down
-			for phase := 0; phase < 2; phase++ {
+			for phase := range 2 {
 				for {
 					prevOffset := newOffset
 					numItems := t.merger.Length()

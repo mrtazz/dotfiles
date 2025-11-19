@@ -1190,6 +1190,51 @@ class TestCore < TestInteractive
     tmux.until { |lines| assert lines.any_include?('9999␊10000') }
   end
 
+  def test_freeze_left_keep_right
+    tmux.send_keys %[seq 10000 | #{FZF} --read0 --delimiter "\n" --freeze-left 3 --keep-right --ellipsis XX --no-multi-line --bind space:toggle-multi-line], :Enter
+    tmux.until { |lines| assert_match(/^> 1␊2␊3XX.*10000␊$/, lines[-3]) }
+    tmux.send_keys '5'
+    tmux.until { |lines| assert_match(/^> 1␊2␊3␊4␊5␊.*XX$/, lines[-3]) }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('> 1') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('1␊2␊3␊4␊5␊') }
+  end
+
+  def test_freeze_left_and_right
+    tmux.send_keys %[seq 10000 | tr "\n" ' ' | #{FZF} --freeze-left 3 --freeze-right 3 --ellipsis XX], :Enter
+    tmux.until { |lines| assert_match(/XX9998 9999 10000$/, lines[-3]) }
+    tmux.send_keys "'1000"
+    tmux.until { |lines| assert_match(/^> 1 2 3XX.*XX9998 9999 10000$/,lines[-3]) }
+  end
+
+  def test_freeze_left_and_right_delimiter
+    tmux.send_keys %[seq 10000 | tr "\n" ' ' | sed 's/ / , /g' | #{FZF} --freeze-left 3 --freeze-right 3 --ellipsis XX --delimiter ' , '], :Enter
+    tmux.until { |lines| assert_match(/XX, 9999 , 10000 ,$/, lines[-3]) }
+    tmux.send_keys "'1000"
+    tmux.until { |lines| assert_match(/^> 1 , 2 , 3 ,XX.*XX, 9999 , 10000 ,$/,lines[-3]) }
+  end
+
+  def test_freeze_right_exceed_range
+    tmux.send_keys %[seq 10000 | tr "\n" ' ' | #{FZF} --freeze-right 100000 --ellipsis XX], :Enter
+    ['', "'1000"].each do |query|
+      tmux.send_keys query
+      tmux.until { |lines| assert lines.any_include?("> #{query}".strip) }
+      tmux.until do |lines|
+        assert_match(/ 9998 9999 10000$/, lines[-3])
+        assert_equal(1, lines[-3].scan('XX').size)
+      end
+    end
+  end
+
+  def test_freeze_right_exceed_range_with_freeze_left
+    tmux.send_keys %[seq 10000 | tr "\n" ' ' | #{FZF} --freeze-left 3  --freeze-right 100000 --ellipsis XX], :Enter
+    tmux.until do |lines|
+      assert_match(/^> 1 2 3XX.*9998 9999 10000$/, lines[-3])
+      assert_equal(1, lines[-3].scan('XX').size)
+    end
+  end
+
   def test_backward_eof
     tmux.send_keys "echo foo | #{FZF} --bind 'backward-eof:reload(seq 100)'", :Enter
     tmux.until { |lines| lines.item_count == 1 && lines.match_count == 1 }
