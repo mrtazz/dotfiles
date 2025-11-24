@@ -127,8 +127,6 @@ autocmd FileType mail setlocal spell
 map <leader>pi :LspPeekImplementation<CR>
 map <leader>pd :LspPeekDefinition<CR>
 map <leader>pt :LspPeekTypeDefinition<CR>
-" replace ctags definition with LSP if possible
-map <C-]> :LspDefinition<CR>
 " Splits horizontally and opens a window to the above.
 map <C-\> :leftabove LspDefinition<CR>
 " Splits vertically and opens a window to the right.
@@ -162,7 +160,7 @@ endif
 
 function! GitHubMDTitle()
   let current_line = getline('.')
-  let gh_url = matchstr(current_line, 'https:\/\/github.com\/[a-zA-Z0-9/_p-]\+')
+  let gh_url = matchstr(current_line, 'https:\/\/github.com\/[a-zA-Z0-9/_#-]\+')
   if !empty(gh_url)
     let new_url = system('PATH=$PATH:/opt/homebrew/bin gh md link -n ' . gh_url)
     call setline(line('.'), substitute(getline('.'), gh_url, new_url, ''))
