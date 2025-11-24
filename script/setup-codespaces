@@ -32,7 +32,7 @@ if [[ "$GITHUB_REPOSITORY" =~ .*"github".* ]]; then
 fi
 
 # install linuxbrew suggested and other packages
-sudo apt-get update && sudo apt-get install --assume-yes build-essential kitty-terminfo
+sudo apt-get update && sudo apt-get install --assume-yes build-essential
 
 # make sure ~/.config doesn't exist on codespaces so I can install my own
 if [ -d "${USER_HOME}/.config" ]; then
