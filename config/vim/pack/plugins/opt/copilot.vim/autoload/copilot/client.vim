@@ -487,22 +487,45 @@ function! copilot#client#LspHandle(id, request) abort
   return s:OnMessage(s:instances[a:id], a:request)
 endfunction
 
+function! s:PackageVersion() abort
+  return json_decode(join(readfile(s:root . '/copilot-language-server/package.json'))).version
+endfunction
+
 let s:script_name = 'copilot-language-server/dist/language-server.js'
+let s:pkg_name = '@github/copilot-language-server'
 function! s:Command() abort
   if !has('nvim-0.8') && v:version < 900
     return [[], [], 'Vim version too old']
   endif
-  let script = get(g:, 'copilot_command', '')
+  let script = get(g:, 'copilot_command', [])
   if type(script) == type('')
-    let script = [expand(script)]
+    let script = empty(script) ? [] : [expand(script)]
   endif
-  if empty(script) || !filereadable(script[0])
-    let script = [s:root . '/' . s:script_name]
-    if !filereadable(script[0])
-      return [[], [], 'Could not find ' . s:script_name . ' (bad install?)']
+  let npx = get(g:, 'copilot_npx', v:false)
+  if type(npx) == v:t_string
+    if empty(npx)
+      let npx = '^'
     endif
-  elseif script[0] !~# '\.js$'
-    return [[], script + ['--stdio'], '']
+    if npx =~# '^\%([~<>=^]\|\d\+\.\|latest$\)'
+      let npx = '@' . npx
+    endif
+    if npx =~# '^@[^/]*$'
+      let npx = s:pkg_name . npx
+    endif
+    if npx =~# '@[~<>=^]\+$'
+      let npx .= s:PackageVersion()
+    endif
+    let script = ['npx', npx]
+  elseif !empty(npx)
+    let script = ['npx', s:pkg_name . '@^' . s:PackageVersion()]
+  endif
+  if empty(script)
+    let script = [s:root . '/' . s:script_name]
+  endif
+  if script[0] !~# '\.[cm]\=[jt]s$' && executable(script[0])
+    return [[], script, '']
+  elseif !filereadable(script[0])
+    return [[], [], 'Could not find ' . script[0]]
   endif
   let node = get(g:, 'copilot_node_command', '')
   if empty(node)
@@ -517,7 +540,7 @@ function! s:Command() abort
       return [[], [], 'Node.js executable `' . get(node, 0, '') . "' not found"]
     endif
   endif
-  return [node, script + ['--stdio'], '']
+  return [node, script, '']
 endfunction
 
 function! s:UrlDecode(str) abort
@@ -654,7 +677,7 @@ function! copilot#client#New() abort
     return instance
   endif
   let instance.node = node
-  let command = node + argv
+  let command = node + argv + ['--stdio']
   let opts.initializationOptions = {
         \ 'editorInfo': copilot#client#EditorInfo(),
         \ 'editorPluginInfo': copilot#client#EditorPluginInfo(),
@@ -679,6 +702,7 @@ function! copilot#client#New() abort
   for folder in opts.workspaceFolders
     let instance.workspaceFolders[folder.uri] = v:true
   endfor
+  call copilot#logger#Debug('Spawning ' . join(command, ' '))
   if has('nvim')
     call extend(instance, {
           \ 'Close': function('s:NvimClose'),
