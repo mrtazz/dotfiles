@@ -16,6 +16,7 @@ plugin_fzf                  := https://github.com/junegunn/fzf/tarball/master
 plugin_fzf.vim              := https://github.com/junegunn/fzf.vim/tarball/master
 plugin_rust.vim             := https://github.com/rust-lang/rust.vim/tarball/master
 plugin_vim-tla              := https://github.com/florentc/vim-tla/tarball/master
+plugin_obsession            := https://github.com/tpope/vim-obsession/tarball/master
 
 # these are all for note taking (mostly on macOS)
 plugin_vim-marked           := https://github.com/itspriddle/vim-marked/tarball/master
@@ -23,7 +24,6 @@ plugin_vim-checkbox         := https://github.com/jkramer/vim-checkbox/tarball/m
 plugin_vim-plan             := https://github.com/mrtazz/vim-plan/tarball/main
 plugin_vim-nerdtree         := https://github.com/preservim/nerdtree/tarball/master
 plugin_vim-goyo         		:= https://github.com/junegunn/goyo.vim/tarball/master
-plugin_calendar-vim      		:= https://github.com/mattn/calendar-vim/tarball/master
 plugin_tabular-vim      		:= https://github.com/godlygeek/tabular/tarball/master
 
 # my plugins
