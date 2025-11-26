@@ -42,6 +42,20 @@ COMMANDS                                        *:Copilot*
 
 OPTIONS                                         *copilot-options*
 
+g:copilot_npx           Use `npx` to dynamically retrieve and run the Copilot
+                        Language Server.  This can enable using a newer
+                        version than the one embedded in the plugin
+                        repository, and also bypasses the Node.js version
+                        requirement by using a precompiled binary.
+>
+                        let g:copilot_npx = v:true
+<
+                        You can also use a string to specify an NPM version
+                        constraint.  One useful value is "latest" to always
+                        use the most recent release.
+>
+                        let g:copilot_npx = 'latest'
+<
                                                 *g:copilot_filetypes*
 g:copilot_filetypes     A dictionary mapping file types to their enabled
                         status.  Most file types are enabled by default, so
