@@ -4,7 +4,7 @@ accounts = ACCOUNT
 maxsyncaccounts = 1
 ui = ttyui
 pythonfile=~/.config/offlineimap/lib.py
-socktimeout = 90
+socktimeout = 30
 metadata = ~/.config/offlineimap/metadata
 
 [Account ACCOUNT]
@@ -26,3 +26,5 @@ remotepasseval = get_keychain_item("REMOTEPASSITEM")
 ssl = yes
 sslcacertfile = /opt/homebrew/etc/gnutls/cert.pem
 foldersort=mycmp
+usecompression = no
+maxconnections = 1

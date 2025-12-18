@@ -18,8 +18,10 @@ def get_timestamp_age():
             data = json.load(f)
 
         print(int(time.time()) - data["timestamp"], end="")
-    except Exception as e:
-        print(f"Error: {e}")
+    except Exception:
+        # we just return -1 here as a signal that something went wrong so it
+        # doesn't blow up the tmux bar with error messages
+        print(-1)
 
 
 if __name__ == "__main__":
