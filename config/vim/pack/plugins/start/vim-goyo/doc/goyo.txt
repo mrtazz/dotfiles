@@ -1,4 +1,4 @@
-*goyo.txt*	goyo	Last change: April 2 2017
+*goyo.txt*	goyo	Last change: Dec 21 2025
 GOYO - TABLE OF CONTENTS                                         *goyo* *goyo-toc*
 ==============================================================================
 
@@ -12,7 +12,7 @@ GOYO - TABLE OF CONTENTS                                         *goyo* *goyo-to
     Pros.
     License
 
-GOYO.VIM (고요)                                                         *goyo-vim*
+GOYO.VIM (고요)                                                       *goyo-vim*
 ==============================================================================
 
 Distraction-free writing in Vim.
@@ -82,10 +82,13 @@ CONFIGURATION                                               *goyo-configuration*
 ==============================================================================
 
                                       *g:goyo_width* *g:goyo_height* *g:goyo_linenr*
+                          *g:goyo_decoration_elements* *g:goyo_decoration_density*
 
  - `g:goyo_width` (default: 80)
  - `g:goyo_height` (default: 85%)
  - `g:goyo_linenr` (default: 0)
+ - `g:goyo_decoration_elements` (default: ['~'])
+ - `g:goyo_decoration_density` (default: 0.00, range 0.00-1.00)
 
 
 < Callbacks >_________________________________________________________________~

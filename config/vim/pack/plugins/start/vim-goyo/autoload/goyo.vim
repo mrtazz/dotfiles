@@ -47,6 +47,50 @@ function! s:blank(repel)
   execute 'noautocmd wincmd' a:repel
 endfunction
 
+function! s:decorate()
+  let save_scroll = getcurpos()[1]
+
+  setlocal nowrap
+
+  let win_width = winwidth(0)
+  let win_height = winheight(0)
+
+  let elements = get(g:, 'goyo_decoration_elements', ['~'])
+  " Normalise our grid to the length of the longest element
+  let elements = map(copy(elements), {_, element -> printf('%1s', element)})
+  let grid_width = max(map(copy(elements), {_, element -> len(element)}))
+  let elements_count = len(elements)
+  let blank = ''
+  for i in range(0, grid_width - 1)
+    let blank = blank . ' '
+  endfor
+  let density = get(g:, 'goyo_decoration_density', 0.0)
+
+  for line_num in range(win_height)
+    let random_line = ''
+    for i in range(win_width / grid_width + 1)
+      if (rand() % 10000) < (density * 10000)
+        let element = elements[rand() % elements_count]
+        " Normalise the element width by padding it with spaces to place it
+        " somewhere random in the cell
+        let length_diff = grid_width - len(element)
+        if length_diff > 0
+          let left = (rand() % length_diff)
+          let right = length_diff - left
+          let element = repeat(' ', left) . element . repeat(' ', right)
+        endif
+        let random_line .= element
+      else
+        let random_line .= blank
+      endif
+    endfor
+    let random_line = random_line[0:win_width - 3]
+    call append(line_num, random_line)
+  endfor
+
+  execute save_scroll . 'normal! zz'
+endfunction
+
 function! s:init_pad(command)
   execute a:command
 
@@ -81,6 +125,14 @@ function! s:setup_pad(bufnr, vert, size, repel)
     normal! gg
     setlocal nomodifiable
   endif
+
+  if get(g:, 'goyo_decoration_density') > 0.0
+    setlocal modifiable
+    call s:decorate()
+    normal! gg
+    setlocal nomodifiable
+  endif
+
   execute winnr('#') . 'wincmd w'
 endfunction
 
