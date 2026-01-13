@@ -14,6 +14,7 @@ let g:PlanNotesDir = get(g:, 'PlanNotesDir', "notes")
 let g:PlanAssetsDirectory = get(g:, 'PlanAssetsDirectory', "assets")
 
 let g:PlanPromptForTitle = get(g:, 'PlanPromptForTitle', 0)
+let g:PlanNoteTimestampPrefix = get(g:, 'PlanNoteTimestampPrefix', "%Y%m%d-%H%M%S")
 
 
 " command definitions

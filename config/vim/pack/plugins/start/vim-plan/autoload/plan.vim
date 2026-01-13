@@ -14,6 +14,8 @@ let s:notesDirectory = g:PlanBaseDir . "/" . g:PlanNotesDir
 let s:templatePath = g:PlanBaseDir . "/" . g:PlanTemplateDir
 let s:titleEnabled = g:PlanPromptForTitle
 let s:assetsDirectoryName = g:PlanBaseDir . "/" . g:PlanAssetsDirectory
+let s:noteTimestampPrefix = g:PlanNoteTimestampPrefix
+
 
 function! plan#OpenDailyNote()
   let today = strftime("%Y%m%d")
@@ -49,8 +51,9 @@ endfunction
 
 function! plan#OpenNote()
   let msg = s:titleEnabled ? input('Enter note file title: ') : ''
+  let msg = substitute(msg, ' ', '-', 'g')
   let maybeTitle = msg ==  '' ? msg : "-" . msg
-  let dateTime = strftime("%Y%m%d-%H%M%S")
+  let dateTime = strftime(s:noteTimestampPrefix)
   call plan#EnsureDirectoryExists(s:notesDirectory)
   let plan = s:notesDirectory . "/" . dateTime . maybeTitle . ".md"
   execute 'edit' plan

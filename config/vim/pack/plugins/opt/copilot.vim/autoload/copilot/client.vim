@@ -485,7 +485,7 @@ function! s:NvimNotify(method, params) dict abort
 endfunction
 
 function! s:NvimDoNotify(client, method, params) abort
-  return eval("v:lua.require'_copilot'.rpc_notify(a:client.client_id, a:method, a:params)")
+  return eval("v:lua.require'_copilot'.rpc_notify(a:client.id, a:method, a:params)")
 endfunction
 
 function! copilot#client#LspHandle(id, request) abort
