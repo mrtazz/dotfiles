@@ -69,9 +69,10 @@ map <leader>b :buffer
 
 " replace ctrlp with FZF
 nmap <C-P> :FZF<CR>
-
 " rg search from vim with fzf preview
 map <Leader>s :Rg<CR>
+" use fzf for file completion
+imap <c-x><c-f> <plug>(fzf-complete-path)
 
 
 """ vim-plan related settings
