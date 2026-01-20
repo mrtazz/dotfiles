@@ -51,13 +51,16 @@ endfunction
 
 function! plan#OpenNote()
   let msg = s:titleEnabled ? input('Enter note file title: ') : ''
-  let msg = substitute(msg, ' ', '-', 'g')
-  let maybeTitle = msg ==  '' ? msg : "-" . msg
+  " generate a timestamp based title if we haven't given one
+  let maybeTitle = msg ==  '' ? strftime('%H%M%S') : "" . msg
   let dateTime = strftime(s:noteTimestampPrefix)
+  let fullNoteName = dateTime . ' ' . maybeTitle
   call plan#EnsureDirectoryExists(s:notesDirectory)
-  let plan = s:notesDirectory . "/" . dateTime . maybeTitle . ".md"
+  let plan = s:notesDirectory . "/" . substitute(fullNoteName, ' ', '-', 'g') . ".md"
   execute 'edit' plan
   if !filereadable(plan)
+    " add a title if this is a new file
+    execute "normal! i" . "# " . fullNoteName
     "read in the template file if available
     let tmplPath = s:notesTpl
     if filereadable(tmplPath)
