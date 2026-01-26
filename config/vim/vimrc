@@ -28,71 +28,6 @@ set switchbuf=useopen
 " allow buffers to be hidden
 set hidden
 
-" use solarized palette incase it's used
-set background=light
-let g:solarized_contrast="high"
-let g:solarized_visibility="high"
-
-"" GUI related things
-" set guifont for the few times I use a GUI vim
-set guifont=Bitstream\ Vera\ Sans\ Mono:h14
-set guioptions+=k
-
-" mouse options, only set when not in codespace
-if empty($CODESPACES)
-  set ttymouse=xterm2
-  set mouse=a
-endif
-
-syntax on
-colorscheme solarized
-
-" some information in the statusline
-set statusline=[%n]\ %t\ %y\ (%l,%c)\ %m\ %P
-set statusline+=%#warningmsg#
-set statusline+=%{SyntasticStatuslineFlag()}
-set statusline+=%*
-set statusline+=\ %{ObsessionStatus()}
-let g:syntastic_auto_loc_list=1
-let g:syntastic_loc_list_height=5
-set laststatus=2
-
-" tab completion for file opening
-set wildmode=longest,list,full
-set wildmenu
-set wildignorecase
-
-" command shortcuts
-let mapleader=","
-
-map <leader>b :buffer
-
-" replace ctrlp with FZF
-nmap <C-P> :FZF<CR>
-" rg search from vim with fzf preview
-map <Leader>s :Rg<CR>
-" use fzf for file completion
-imap <c-x><c-f> <plug>(fzf-complete-path)
-
-
-""" vim-plan related settings
-" set rg as grep program
-set grepprg=rg\ --vimgrep\ --no-heading\ --smart-case\ --sort=path
-
-" vim-plan keybindings
-map <leader>d :PlanDaily<CR>
-map <leader>w :PlanWeekly<CR>
-map <leader>pf :PlanFindTodos<CR>
-map <leader>pn :PlanNote<CR>
-map <leader>pd :PlanMarkDone<CR>
-map <leader>pm :PlanMigrateToToday<CR>
-
-" states for markdown checkboxes
-let g:checkbox_states = [' ', 'x', '-', '>']
-
-" nerdtree bindings
-map <leader>t :NERDTreeToggle<CR>
-
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
 " open ctags definition in horizontal split
@@ -100,15 +35,11 @@ map <C-\> :sp <CR>:exec("tag ".expand("<cword>"))<CR>
 " open ctags in vertical split
 map <leader>] :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 
-" remove unneeded spaces for a good whitespace carbon footprint
-autocmd BufWritePre * :%s/\s\+$//e
-
-" Supertab settings
-let g:SuperTabDefaultCompletionTypeDiscovery = [
-\ "&completefunc:<c-x><c-u>",
-\ "&omnifunc:<c-x><c-o>",
-\ ]
-let g:SuperTabLongestHighlight = 1
+augroup space_cleaning
+  autocmd!
+  " remove unneeded spaces for a good whitespace carbon footprint
+  autocmd BufWritePre * :%s/\s\+$//e
+augroup END
 
 """ spell checking settings
 " set the spellfile for added words if it exists
@@ -116,41 +47,8 @@ if filereadable($HOME."/.config/vim/vim-spell.add")
   set spellfile=$HOME/.config/vim/vim-spell.add
 endif
 
-" Autocomplete with dictionary words when spell check is on
-set complete+=kspell
-
-" activate spell checker in insert mode
-autocmd InsertEnter *.tex setlocal spell
-autocmd InsertLeave *.tex setlocal nospell
-autocmd FileType markdown setlocal spell
-autocmd FileType mail setlocal spell
-
-" some LSP settings
-map <leader>pi :LspPeekImplementation<CR>
-map <leader>pd :LspPeekDefinition<CR>
-map <leader>pt :LspPeekTypeDefinition<CR>
-" Splits horizontally and opens a window to the above.
-map <C-\> :leftabove LspDefinition<CR>
-" Splits vertically and opens a window to the right.
-map <leader>] :rightbelow vertical LspDefinition<CR>
-" show diagnostics in status line for line under cursor
-let g:lsp_diagnostics_echo_cursor = 1
-" don't add virtual text into the file for diagnostics
-let g:lsp_diagnostics_virtual_text_enabled = 0
-
-
 " rust.vim options
 let g:rustfmt_autosave = 1
-
-" let's see if we can work without arrow keys
-inoremap  <Up>     <NOP>
-inoremap  <Down>   <NOP>
-inoremap  <Left>   <NOP>
-inoremap  <Right>  <NOP>
-noremap   <Up>     <NOP>
-noremap   <Down>   <NOP>
-noremap   <Left>   <NOP>
-noremap   <Right>  <NOP>
 
 " set snipple dir
 let g:SnippleBaseDir = $HOME . "/.config/snipple/snippets"
@@ -166,31 +64,4 @@ if argc() == 0 && filereadable("Session.vim")
   exec "silent :source Session.vim"
 endif
 
-function! GitHubMDTitle()
-  let current_line = getline('.')
-  let gh_url = matchstr(current_line, 'https:\/\/github.com\/[a-zA-Z0-9/_#-]\+')
-  if !empty(gh_url)
-    let new_url = system('PATH=$PATH:/opt/homebrew/bin gh md link -n ' . gh_url)
-    call setline(line('.'), substitute(getline('.'), gh_url, new_url, ''))
-  endif
-endfunction
-map <silent> <leader>gt :call GitHubMDTitle()<cr>
-
-
-function! GitHubCreateIssue()
-  if empty(g:GitHubIssuesDefaultRepo)
-    echoerr 'Variable g:GitHubIssuesDefaultRepo not set'
-    return
-  endif
-  let current_line = trim(getline('.'))
-  let title = trim(matchstr(current_line, '[\@a-zA-Z0-9 ]\+'))
-  let new_issue = system('PATH=$PATH:/opt/homebrew/bin gh issue create --repo ' . g:GitHubIssuesDefaultRepo . ' --assignee "@me" --body "" --title "' . title .'"')
-  if !empty(new_issue)
-    let new_url = system('PATH=$PATH:/opt/homebrew/bin gh md link -n ' . new_issue)
-    call setline(line('.'), substitute(getline('.'), title, new_url, ''))
-  endif
-endfunction
-map <silent> <leader>gci :call GitHubCreateIssue()<cr>
-
-command! ChangeDirectoryToCurrentFile :cd %:p:h
 
