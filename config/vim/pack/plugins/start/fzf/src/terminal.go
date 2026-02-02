@@ -411,6 +411,7 @@ type Terminal struct {
 	suppress           bool
 	startChan          chan fitpad
 	killChan           chan bool
+	killedChan         chan bool
 	serverInputChan    chan []*action
 	callbackChan       chan versionedCallback
 	bgQueue            map[action][]func(bool)
@@ -1101,6 +1102,7 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		theme:              opts.Theme,
 		startChan:          make(chan fitpad, 1),
 		killChan:           make(chan bool),
+		killedChan:         make(chan bool),
 		serverInputChan:    make(chan []*action, 100),
 		callbackChan:       make(chan versionedCallback, maxBgProcesses),
 		bgQueue:            make(map[action][]func(bool)),
@@ -1816,7 +1818,7 @@ func (t *Terminal) UpdateList(result MatchResult) {
 		if i >= 0 {
 			t.cy = i
 			t.offset = t.cy - pos
-		} else if t.track == trackCurrent {
+		} else if t.track.Current() {
 			t.track = trackDisabled
 			t.cy = pos
 			t.offset = 0
@@ -2886,10 +2888,9 @@ func (t *Terminal) printInfoImpl() {
 			output += " -S"
 		}
 	}
-	switch t.track {
-	case trackEnabled:
+	if t.track.Global() {
 		output += " +T"
-	case trackCurrent:
+	} else if t.track.Current() {
 		output += " +t"
 	}
 	if t.multi > 0 {
@@ -3476,20 +3477,74 @@ func (t *Terminal) displayWidthWithLimit(runes []rune, prefixWidth int, limit in
 func (t *Terminal) trimLeft(runes []rune, width int, ellipsisWidth int) ([]rune, int32) {
 	width = max(0, width)
 	var trimmed int32
-	// Assume that each rune takes at least one column on screen
-	if len(runes) > width {
-		diff := len(runes) - width
-		trimmed = int32(diff)
-		runes = runes[diff:]
+
+	str := string(runes)
+	runningSum := 0
+	runningSumAdjusted := 0
+	// We can't just subtract the width on each segment because there might be
+	// a tab character afterwards. For example, with the tabstop = 8:
+	//   1234____5678
+	//   234_____5678
+	//   34______5678
+	//   4_______5678
+	//   ________5678
+	//   5678
+	//   678
+	//   78
+	//   8
+	// We need to look ahead, but not to the end to avoid performance hit.
+	type queuedSegment struct {
+		rs []rune
+		w  int
+	}
+	allQueue := []queuedSegment{}
+	queuedWidth := 0
+	limit := width - ellipsisWidth
+	processQueue := func() {
+		for idx, item := range allQueue {
+			if runningSumAdjusted <= limit {
+				allQueue = allQueue[idx:]
+				return
+			}
+			runningSumAdjusted -= item.w
+			runes = runes[len(item.rs):]
+			trimmed += int32(len(item.rs))
+		}
+		allQueue = []queuedSegment{}
 	}
 
-	currentWidth := t.displayWidth(runes)
+	gr := uniseg.NewGraphemes(str)
+	queue := []queuedSegment{}
+	for gr.Next() {
+		s := gr.Str()
+		rs := gr.Runes()
 
-	for currentWidth > width-ellipsisWidth && len(runes) > 0 {
-		runes = runes[1:]
-		trimmed++
-		currentWidth = t.displayWidthWithLimit(runes, ellipsisWidth, width)
+		var w int
+		if len(rs) == 1 && rs[0] == '\t' {
+			w = t.tabstop - runningSum%t.tabstop
+		} else {
+			w = util.StringWidth(string(rs))
+		}
+		runningSum += w
+		runningSumAdjusted += w
+		queue = append(queue, queuedSegment{rs: rs, w: w})
+		queuedWidth += w
+		if queuedWidth >= t.tabstop || s == "\t" {
+			queuedWidth = 0
+
+			if s == "\t" {
+				queue[len(queue)-1].w = t.tabstop
+				for idx := range queue[:len(queue)-1] {
+					queue[idx].w = 0
+				}
+			}
+			allQueue = append(allQueue, queue...)
+			queue = []queuedSegment{}
+			processQueue()
+		}
 	}
+	allQueue = append(allQueue, queue...)
+	processQueue()
 	return runes, trimmed
 }
 
@@ -3507,9 +3562,16 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 	}
 	charOffsets := matchOffsets
 	if pos != nil {
+		runes := item.text.ToRunes()
 		charOffsets = make([]Offset, len(*pos))
 		for idx, p := range *pos {
-			offset := Offset{int32(p), int32(p + 1)}
+			gr := uniseg.NewGraphemes(string(runes[p:]))
+			w := 1
+			for gr.Next() {
+				w = len(gr.Runes())
+				break
+			}
+			offset := Offset{int32(p), int32(p + w)}
 			charOffsets[idx] = offset
 		}
 		sort.Sort(ByOrder(charOffsets))
@@ -3768,24 +3830,16 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 			displayWidth = t.displayWidthWithLimit(runes, 0, adjustedMaxWidth)
 			if !t.wrap && displayWidth > adjustedMaxWidth {
 				maxe = util.Constrain(maxe+min(maxWidth/2-ellipsisWidth, t.hscrollOff), 0, len(runes))
-				transformOffsets := func(diff int32, rightTrim bool) {
-					for idx, offset := range offs {
-						b, e := offset.offset[0], offset.offset[1]
-						el := int32(len(ellipsis))
-						b += el - diff
-						e += el - diff
-						b = max(b, el)
-						if rightTrim {
-							e = min(e, int32(maxWidth-ellipsisWidth))
-						}
-						offs[idx].offset[0] = b
-						offs[idx].offset[1] = max(b, e)
+				transformOffsets := func(diff int32) {
+					for idx := range offs {
+						offs[idx].offset[0] -= diff
+						offs[idx].offset[1] -= diff
 					}
 				}
 				if t.hscroll {
 					if fidx == 1 || fidx == 2 && t.keepRight && pos == nil {
 						trimmed, diff := t.trimLeft(runes, maxWidth, ellipsisWidth)
-						transformOffsets(diff, false)
+						transformOffsets(diff - int32(len(ellipsis)))
 						runes = append(ellipsis, trimmed...)
 					} else if fidx == 0 || !t.overflow(runes[:maxe], maxWidth-ellipsisWidth) {
 						// Stri..
@@ -3793,27 +3847,20 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 						runes = append(runes, ellipsis...)
 					} else {
 						// Stri..
-						rightTrim := false
 						if t.overflow(runes[maxe:], ellipsisWidth) {
 							runes = append(runes[:maxe], ellipsis...)
-							rightTrim = true
 						}
 						// ..ri..
 						var diff int32
 						runes, diff = t.trimLeft(runes, maxWidth, ellipsisWidth)
 
 						// Transform offsets
-						transformOffsets(diff, rightTrim)
+						transformOffsets(diff - int32(len(ellipsis)))
 						runes = append(ellipsis, runes...)
 					}
 				} else {
 					runes, _ = t.trimRight(runes, maxWidth-ellipsisWidth)
 					runes = append(runes, ellipsis...)
-
-					for idx, offset := range offs {
-						offs[idx].offset[0] = min(offset.offset[0], int32(maxWidth-len(ellipsis)))
-						offs[idx].offset[1] = min(offset.offset[1], int32(maxWidth))
-					}
 				}
 				displayWidth = t.displayWidthWithLimit(runes, 0, maxWidth)
 			}
@@ -4986,6 +5033,7 @@ func (t *Terminal) toggleItem(item *Item) bool {
 func (t *Terminal) killPreview() {
 	select {
 	case t.killChan <- true:
+		<-t.killedChan
 	default:
 	}
 }
@@ -5161,7 +5209,7 @@ func (t *Terminal) Loop() error {
 
 	{ // Late initialization
 		intChan := make(chan os.Signal, 1)
-		signal.Notify(intChan, os.Interrupt, syscall.SIGTERM)
+		signal.Notify(intChan, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 		go func() {
 			for {
 				select {
@@ -5351,6 +5399,7 @@ func (t *Terminal) Loop() error {
 								case immediately := <-t.killChan:
 									if immediately {
 										util.KillCommand(cmd)
+										t.killedChan <- true
 									} else {
 										// We can immediately kill a long-running preview program
 										// once we started rendering its partial output
@@ -5471,11 +5520,11 @@ func (t *Terminal) Loop() error {
 					case reqList:
 						t.printList()
 						currentIndex := t.currentIndex()
-						focusChanged := focusedIndex != currentIndex
-						if focusChanged && focusedIndex >= 0 && t.track == trackCurrent {
+						if t.track.Current() && t.track.index != currentIndex {
 							t.track = trackDisabled
 							info = true
 						}
+						focusChanged := focusedIndex != currentIndex
 						if (t.hasFocusActions || t.infoCommand != "") && focusChanged && currentIndex != t.lastFocus {
 							t.lastFocus = currentIndex
 							t.eventChan <- tui.Focus.AsEvent()
@@ -5597,10 +5646,10 @@ func (t *Terminal) Loop() error {
 			})
 		}
 
-		t.eventBox.Set(EvtQuit, quitSignal{code, nil})
 		t.running.Set(false)
 		t.killPreview()
 		cancel()
+		t.eventBox.Set(EvtQuit, quitSignal{code, nil})
 	}()
 
 	looping := true
@@ -6550,11 +6599,10 @@ func (t *Terminal) Loop() error {
 				}
 				req(reqInfo)
 			case actToggleTrackCurrent:
-				switch t.track {
-				case trackCurrent:
+				if t.track.Current() {
 					t.track = trackDisabled
-				case trackDisabled:
-					t.track = trackCurrent
+				} else if t.track.Disabled() {
+					t.track = trackCurrent(t.currentIndex())
 				}
 				req(reqInfo)
 			case actShowHeader:
@@ -6602,12 +6650,13 @@ func (t *Terminal) Loop() error {
 				}
 				req(reqList, reqInfo, reqPrompt, reqHeader)
 			case actTrackCurrent:
-				if t.track == trackDisabled {
-					t.track = trackCurrent
+				// Global tracking has higher priority
+				if !t.track.Global() {
+					t.track = trackCurrent(t.currentIndex())
 				}
 				req(reqInfo)
 			case actUntrackCurrent:
-				if t.track == trackCurrent {
+				if t.track.Current() {
 					t.track = trackDisabled
 				}
 				req(reqInfo)

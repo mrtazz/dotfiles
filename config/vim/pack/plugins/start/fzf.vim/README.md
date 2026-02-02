@@ -1,17 +1,3 @@
-<div align="center" markdown="1">
-  <sup>Special thanks to:</sup>
-  <br>
-  <a href="https://tuple.app/fzf.vim">
-    <img alt="Tuple's sponsorship image" src="https://raw.githubusercontent.com/junegunn/i/master/tuple.png" width="400">
-  </a>
-
-### [Tuple, the premier screen sharing app for developers](https://tuple.app/fzf.vim)
-[Available for MacOS & Windows](https://tuple.app/fzf.vim)<br>
-
-</div>
-
----
-
 fzf :heart: vim
 ===============
 

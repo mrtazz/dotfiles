@@ -20,7 +20,7 @@ let g:PlanNoteTimestampPrefix = get(g:, 'PlanNoteTimestampPrefix', "%Y%m%d-%H%M%
 " command definitions
 command! PlanDaily :call plan#OpenDailyNote()
 command! PlanWeekly :call plan#OpenWeeklyNote()
-command! PlanNote :call plan#OpenNote()
+command! -nargs=? PlanNote :call plan#OpenNote(<q-args>)
 command! PlanMarkDone :call plan#MarkDone()
 command! PlanMarkCanceled :call plan#MarkCanceled()
 command! PlanMigrateToToday :call plan#MigrateToToday()
