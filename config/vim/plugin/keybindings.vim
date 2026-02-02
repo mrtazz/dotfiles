@@ -1,17 +1,10 @@
-" command shortcuts
-let mapleader=","
-
 map <leader>b :buffer
 
 " replace ctrlp with FZF
 nmap <C-P> :FZF<CR>
 " rg search from vim with fzf preview
 map <Leader>s :Rg<CR>
-" use fzf for file completion and allow for relative completion
-inoremap <expr> <c-x><c-f> fzf#vim#complete#path(
-    \ "find . -path '*/\.*' -prune -o -print \| sed '1d;s:^..::'",
-        \ fzf#wrap({'dir': expand('%:p:h')}))
-" imap <c-x><c-f> <plug>(fzf-complete-path)
+imap <c-x><c-f> <plug>(fzf-complete-path)
 
 
 " nerdtree bindings

@@ -28,6 +28,10 @@ set switchbuf=useopen
 " allow buffers to be hidden
 set hidden
 
+" command shortcuts
+let mapleader=","
+
+
 " open ctags definition in new tab
 "map <C-\> :tab split<CR>:exec("tag \".expand("<cword>"))<CR>
 " open ctags definition in horizontal split
