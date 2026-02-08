@@ -9,11 +9,11 @@ let s:dailiesDirectory = g:PlanBaseDir . "/" . g:PlanDailiesDir
 let s:weekliesDirectory = g:PlanBaseDir . "/" . g:PlanWeekliesDir
 let s:dailiesTpl = g:PlanBaseDir . "/" . g:PlanTemplateDir . "/" . g:PlanDailyTemplate
 let s:weekliesTpl = g:PlanBaseDir . "/" . g:PlanTemplateDir . "/" . g:PlanWeeklyTemplate
-let s:notesTpl = g:PlanBaseDir . "/" . g:PlanTemplateDir . "/" . g:PlanNoteTemplate
+let s:notesTpl = g:PlanNoteTemplate
 let s:notesDirectory = g:PlanBaseDir . "/" . g:PlanNotesDir
 let s:templatePath = g:PlanBaseDir . "/" . g:PlanTemplateDir
 let s:titleEnabled = g:PlanPromptForTitle
-let s:assetsDirectoryName = g:PlanBaseDir . "/" . g:PlanAssetsDirectory
+let s:assetsDirectoryName = g:PlanAssetsDirectory
 let s:noteTimestampPrefix = g:PlanNoteTimestampPrefix
 
 
@@ -49,23 +49,25 @@ function! plan#OpenWeeklyNote()
   call plan#setupBuffer()
 endfunction
 
-function! plan#OpenNote()
+function! plan#OpenNote(template='')
   let msg = s:titleEnabled ? input('Enter note file title: ') : ''
   " generate a timestamp based title if we haven't given one
   let maybeTitle = msg ==  '' ? strftime('%H%M%S') : "" . msg
+  let tpl = a:template ==  '' ? s:notesTpl : a:template
+  let fullTplPath = g:PlanBaseDir . "/" . g:PlanTemplateDir . "/" . tpl
   let dateTime = strftime(s:noteTimestampPrefix)
   let fullNoteName = dateTime . ' ' . maybeTitle
   call plan#EnsureDirectoryExists(s:notesDirectory)
   let plan = s:notesDirectory . "/" . substitute(fullNoteName, ' ', '-', 'g') . ".md"
   execute 'edit' plan
   if !filereadable(plan)
-    " add a title if this is a new file
-    execute "normal! i" . "# " . fullNoteName
     "read in the template file if available
-    let tmplPath = s:notesTpl
-    if filereadable(tmplPath)
-      execute 'read ' . tmplPath
-      call plan#replaceTemplateVariables()
+    if filereadable(fullTplPath)
+      execute '0read ' . fullTplPath
+      call plan#replaceTemplateVariables(fullNoteName)
+    else
+      " add a title if this is a new file and we don't have a template
+      execute "normal! i" . "# " . fullNoteName
     endif
   endif
   call plan#setupBuffer()
@@ -89,7 +91,12 @@ function! plan#MigrateToToday()
   execute "normal! A" . ' >[[' . today . ']]'
 endfunction
 
-function! plan#replaceTemplateVariables()
+function! plan#replaceTemplateVariables(title='')
+
+  if a:title != ''
+    " insert title if provided
+    silent exe "1,$g/%%TITLE%%/s/%%TITLE%%/" . a:title
+  endif
   " replace occurrences of DATE with the actual date
   let thedate = strftime("%m\\/%d\\/%Y")
   silent exe "1,$g/%%DATE%%/s/%%DATE%%/" . thedate
@@ -145,14 +152,14 @@ function! plan#ImportAsset(full_file_path)
 
   let filename = fnamemodify(full_file_path, ":t")
   let filename = substitute(filename, " ", "_", "g")
-  let today = strftime("%Y%m%d")
-  let screenshotDestination = s:assetsDirectoryName . '/' . today
+  let current_dir = expand("%:h")
+  let screenshotDestination = current_dir . '/' . s:assetsDirectoryName
   call plan#EnsureDirectoryExists(screenshotDestination)
   let cmd = 'cp -p ' . fnamemodify(full_file_path, ":S") . ' ' . screenshotDestination . '/' . filename
   let out = system(cmd)
   if len(out) > 0
     echoerr out
   endif
-  execute "normal! A" . '![](' . screenshotDestination . '/' . filename . ')'
+  execute "normal! A" . '![](' . s:assetsDirectoryName . '/' . filename . ')'
 endfunction
 

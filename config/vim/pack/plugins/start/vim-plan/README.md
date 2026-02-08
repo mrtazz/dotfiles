@@ -85,6 +85,7 @@ variables inline:
 - `%%WEEKNUMBER%%` with the number of the week
 - `%%YEAR%%` with the current year yyyy
 - `%%MONTH%%` with the name of the current month
+- `%%TITLE%%` with the note title if provided
 
 ### Useful shell commands
 
