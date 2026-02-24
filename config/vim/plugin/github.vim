@@ -8,18 +8,27 @@ function! GitHubMDTitle()
 endfunction
 map <silent> <leader>gt :call GitHubMDTitle()<cr>
 
-
-function! GitHubCreateIssue()
+function! GitHubCreateIssue(title='')
   if empty(g:GitHubIssuesDefaultRepo)
     echoerr 'Variable g:GitHubIssuesDefaultRepo not set'
     return
   endif
-  let current_line = trim(getline('.'))
-  let title = trim(matchstr(current_line, '[\@a-zA-Z0-9: ]\+'))
+  if a:title == ''
+    let current_line = trim(getline('.'))
+    let title = trim(matchstr(current_line, '[\@a-zA-Z0-9: ]\+'))
+  else
+    let title = a:title
+  endif
   let new_issue = system('PATH=$PATH:/opt/homebrew/bin gh issue create --repo ' . g:GitHubIssuesDefaultRepo . ' --assignee "@me" --body "" --title "' . title .'"')
   if !empty(new_issue)
     let new_url = system('PATH=$PATH:/opt/homebrew/bin gh md link -n ' . new_issue)
-    call setline(line('.'), substitute(getline('.'), title, new_url, ''))
+    if a:title == ''
+      call setline(line('.'), substitute(getline('.'), title, new_url, ''))
+    else
+      echom 'Created issue at: ' . new_issue
+    endif
   endif
 endfunction
 map <silent> <leader>gci :call GitHubCreateIssue()<cr>
+command! -nargs=? GitHubCreateIssue :call GitHubCreateIssue(<q-args>)
+
