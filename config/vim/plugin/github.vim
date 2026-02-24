@@ -15,7 +15,7 @@ function! GitHubCreateIssue()
     return
   endif
   let current_line = trim(getline('.'))
-  let title = trim(matchstr(current_line, '[\@a-zA-Z0-9 ]\+'))
+  let title = trim(matchstr(current_line, '[\@a-zA-Z0-9: ]\+'))
   let new_issue = system('PATH=$PATH:/opt/homebrew/bin gh issue create --repo ' . g:GitHubIssuesDefaultRepo . ' --assignee "@me" --body "" --title "' . title .'"')
   if !empty(new_issue)
     let new_url = system('PATH=$PATH:/opt/homebrew/bin gh md link -n ' . new_issue)
