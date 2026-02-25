@@ -448,6 +448,64 @@ func TestPreviewOpts(t *testing.T) {
 		opts.Preview.size.size == 70) {
 		t.Error(opts.Preview)
 	}
+
+	// wrap-word tests
+	opts = optsFor("--preview-window=wrap-word")
+	if !(opts.Preview.wrap == true && opts.Preview.wrapWord == true) {
+		t.Errorf("wrap-word: wrap=%v, wrapWord=%v", opts.Preview.wrap, opts.Preview.wrapWord)
+	}
+	opts = optsFor("--preview-window=wrap-word,nowrap")
+	if !(opts.Preview.wrap == false && opts.Preview.wrapWord == false) {
+		t.Errorf("wrap-word,nowrap: wrap=%v, wrapWord=%v", opts.Preview.wrap, opts.Preview.wrapWord)
+	}
+	opts = optsFor("--preview-window=wrap-word,wrap")
+	if !(opts.Preview.wrap == true && opts.Preview.wrapWord == false) {
+		t.Errorf("wrap-word,wrap: wrap=%v, wrapWord=%v", opts.Preview.wrap, opts.Preview.wrapWord)
+	}
+}
+
+func TestPreviewWrapSign(t *testing.T) {
+	// Default: no preview wrap sign override
+	opts := optsFor()
+	if opts.PreviewWrapSign != nil {
+		t.Errorf("expected nil PreviewWrapSign, got %v", *opts.PreviewWrapSign)
+	}
+
+	// --preview-wrap-sign sets PreviewWrapSign
+	opts = optsFor("--preview-wrap-sign", ">> ")
+	if opts.PreviewWrapSign == nil || *opts.PreviewWrapSign != ">> " {
+		t.Errorf("expected '>> ', got %v", opts.PreviewWrapSign)
+	}
+
+	// --preview-wrap-sign is independent of --wrap-sign
+	opts = optsFor("--wrap-sign", "| ", "--preview-wrap-sign", ">> ")
+	if opts.WrapSign == nil || *opts.WrapSign != "| " {
+		t.Errorf("expected WrapSign '| ', got %v", opts.WrapSign)
+	}
+	if opts.PreviewWrapSign == nil || *opts.PreviewWrapSign != ">> " {
+		t.Errorf("expected PreviewWrapSign '>> ', got %v", opts.PreviewWrapSign)
+	}
+
+	// --preview-wrap-sign without --wrap-sign
+	opts = optsFor("--preview-wrap-sign", "→ ")
+	if opts.WrapSign != nil {
+		t.Errorf("expected nil WrapSign, got %v", *opts.WrapSign)
+	}
+	if opts.PreviewWrapSign == nil || *opts.PreviewWrapSign != "→ " {
+		t.Errorf("expected PreviewWrapSign '→ ', got %v", opts.PreviewWrapSign)
+	}
+
+	// Last --preview-wrap-sign wins
+	opts = optsFor("--preview-wrap-sign", "A ", "--preview-wrap-sign", "B ")
+	if opts.PreviewWrapSign == nil || *opts.PreviewWrapSign != "B " {
+		t.Errorf("expected PreviewWrapSign 'B ', got %v", opts.PreviewWrapSign)
+	}
+
+	// Empty string is allowed
+	opts = optsFor("--preview-wrap-sign", "")
+	if opts.PreviewWrapSign == nil || *opts.PreviewWrapSign != "" {
+		t.Errorf("expected empty PreviewWrapSign, got %v", opts.PreviewWrapSign)
+	}
 }
 
 func TestAdditiveExpect(t *testing.T) {

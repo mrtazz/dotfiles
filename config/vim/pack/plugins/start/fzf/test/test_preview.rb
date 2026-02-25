@@ -383,6 +383,16 @@ class TestPreview < TestInteractive
     end
   end
 
+  def test_preview_follow_wrap
+    tmux.send_keys "seq 1 | #{FZF} --preview 'seq 1000' --preview-window right,2,follow,wrap", :Enter
+    tmux.until { |lines| assert_equal 1, lines.match_count }
+    tmux.until do |lines|
+      idx = lines.rindex { it.include?('│ 10 │') }
+      assert_includes lines[idx + 1], '│ ↳  │'
+      assert_includes lines[idx + 2], '│ ↳  │'
+    end
+  end
+
   def test_close
     tmux.send_keys "seq 100 | #{FZF} --preview 'echo foo' --bind ctrl-c:close", :Enter
     tmux.until { |lines| assert_equal 100, lines.match_count }
@@ -541,7 +551,7 @@ class TestPreview < TestInteractive
     tmux.send_keys "seq 10 | #{FZF} --preview-border rounded --preview-window '~5,2,+0,<100000(~0,+100,wrap,noinfo)' --preview 'seq 1000'", :Enter
     tmux.until { |lines| assert_equal 10, lines.match_count }
     tmux.until do |lines|
-      assert_equal ['╭────╮', '│ 10 │', '│ ↳ 0│', '│ 10 │', '│ ↳ 1│'], lines.take(5).map(&:strip)
+      assert_equal ['╭────╮', '│ 10 │', '│ ↳  │', '│ 10 │', '│ ↳  │'], lines.take(5).map(&:strip)
     end
   end
 
@@ -570,6 +580,33 @@ class TestPreview < TestInteractive
     tmux.until do |lines|
       assert lines.any_include?('[1 2/1]')
       assert_equal 1, lines.match_count
+    end
+  end
+
+  def test_preview_wrap_sign_between_ansi_fragments
+    tmux.send_keys %(seq 1 | #{FZF} --preview 'echo -e "\\x1b[33m1234567890 \\x1b[mhello"; echo -e "\\x1b[33m1234567890 \\x1b[mhello"' --preview-window 10,wrap-word), :Enter
+    tmux.until do |lines|
+      assert_equal 1, lines.match_count
+      assert_equal(2, lines.count { |line| line.include?('│ 1234567890 │') })
+      assert_equal(2, lines.count { |line| line.include?('│ ↳ hello    │') })
+    end
+  end
+
+  def test_preview_wrap_sign_between_ansi_fragments_overflow
+    tmux.send_keys %(seq 1 | #{FZF} --preview 'echo -e "\\x1b[33m1234567890 \\x1b[mhello"; echo -e "\\x1b[33m1234567890 \\x1b[mhello"' --preview-window 2,wrap-word), :Enter
+    tmux.until do |lines|
+      assert_equal 1, lines.match_count
+      assert_equal(2, lines.count { |line| line.include?('│ 12 │') })
+      assert_equal(0, lines.count { |line| line.include?('│ h') })
+    end
+  end
+
+  def test_preview_wrap_sign_between_ansi_fragments_overflow2
+    tmux.send_keys %(seq 1 | #{FZF} --preview 'echo -e "\\x1b[33m1234567890 \\x1b[mhello"; echo -e "\\x1b[33m1234567890 \\x1b[mhello"' --preview-window 1,wrap-word), :Enter
+    tmux.until do |lines|
+      assert_equal 1, lines.match_count
+      assert_equal(2, lines.count { |line| line.include?('│ 1 │') })
+      assert_equal(0, lines.count { |line| line.include?('│ h') })
     end
   end
 end
