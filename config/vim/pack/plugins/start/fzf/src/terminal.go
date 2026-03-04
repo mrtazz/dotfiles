@@ -340,6 +340,9 @@ type Terminal struct {
 	nthAttr              tui.Attr
 	nth                  []Range
 	nthCurrent           []Range
+	withNthDefault       string
+	withNthExpr          string
+	withNthEnabled       bool
 	acceptNth            func([]Token, int32) string
 	tabstop              int
 	margin               [4]sizeSpec
@@ -384,6 +387,7 @@ type Terminal struct {
 	hasLoadActions       bool
 	hasResizeActions     bool
 	triggerLoad          bool
+	filterSelection      bool
 	reading              bool
 	running              *util.AtomicBool
 	failed               *string
@@ -551,6 +555,7 @@ const (
 	actChangeListLabel
 	actChangeMulti
 	actChangeNth
+	actChangeWithNth
 	actChangePointer
 	actChangePreview
 	actChangePreviewLabel
@@ -636,6 +641,7 @@ const (
 	actTransformInputLabel
 	actTransformListLabel
 	actTransformNth
+	actTransformWithNth
 	actTransformPointer
 	actTransformPreviewLabel
 	actTransformPrompt
@@ -655,6 +661,7 @@ const (
 	actBgTransformInputLabel
 	actBgTransformListLabel
 	actBgTransformNth
+	actBgTransformWithNth
 	actBgTransformPointer
 	actBgTransformPreviewLabel
 	actBgTransformPrompt
@@ -721,6 +728,7 @@ func processExecution(action actionType) bool {
 		actTransformInputLabel,
 		actTransformListLabel,
 		actTransformNth,
+		actTransformWithNth,
 		actTransformPointer,
 		actTransformPreviewLabel,
 		actTransformPrompt,
@@ -737,6 +745,7 @@ func processExecution(action actionType) bool {
 		actBgTransformInputLabel,
 		actBgTransformListLabel,
 		actBgTransformNth,
+		actBgTransformWithNth,
 		actBgTransformPointer,
 		actBgTransformPreviewLabel,
 		actBgTransformPrompt,
@@ -766,10 +775,15 @@ type placeholderFlags struct {
 	raw           bool
 }
 
+type withNthSpec struct {
+	fn func([]Token, int32) string // nil = clear (restore original)
+}
+
 type searchRequest struct {
 	sort        bool
 	sync        bool
 	nth         *[]Range
+	withNth     *withNthSpec
 	headerLines *int
 	command     *commandSpec
 	environ     []string
@@ -1080,6 +1094,9 @@ func NewTerminal(opts *Options, eventBox *util.EventBox, executor *util.Executor
 		nthAttr:            opts.Theme.Nth.Attr,
 		nth:                opts.Nth,
 		nthCurrent:         opts.Nth,
+		withNthDefault:     opts.WithNthExpr,
+		withNthExpr:        opts.WithNthExpr,
+		withNthEnabled:     opts.WithNth != nil,
 		tabstop:            opts.Tabstop,
 		raw:                opts.Raw,
 		hasStartActions:    false,
@@ -1351,6 +1368,9 @@ func (t *Terminal) environImpl(forPreview bool) []string {
 	if len(t.nthCurrent) > 0 {
 		env = append(env, "FZF_NTH="+RangesToString(t.nthCurrent))
 	}
+	if len(t.withNthExpr) > 0 {
+		env = append(env, "FZF_WITH_NTH="+t.withNthExpr)
+	}
 	if t.raw {
 		val := "0"
 		if t.isCurrentItemMatch() {
@@ -1534,7 +1554,7 @@ func (t *Terminal) ansiLabelPrinter(str string, color *tui.ColorPair, fill bool)
 	printFn := func(window tui.Window, limit int) {
 		if offsets == nil {
 			// tui.Col* are not initialized until renderer.Init()
-			offsets = result.colorOffsets(nil, nil, t.theme, *color, *color, t.nthAttr, false)
+			offsets = result.colorOffsets(nil, nil, t.theme, *color, *color, t.nthAttr, 0, false)
 		}
 		for limit > 0 {
 			if length > limit {
@@ -1597,7 +1617,7 @@ func (t *Terminal) parsePrompt(prompt string) (func(), int) {
 				return 1
 			}
 			t.printHighlighted(
-				Result{item: item}, tui.ColPrompt, tui.ColPrompt, false, false, false, line, line, true, preTask, nil)
+				Result{item: item}, tui.ColPrompt, tui.ColPrompt, false, false, false, line, line, true, preTask, nil, 0)
 		})
 		t.wrap = wrap
 	}
@@ -1718,6 +1738,17 @@ func (t *Terminal) Input() (bool, []rune) {
 		src = *t.inputOverride
 	}
 	return paused, copySlice(src)
+}
+
+// PauseRendering blocks the terminal from reading items.
+// Must be paired with ResumeRendering.
+func (t *Terminal) PauseRendering() {
+	t.mutex.Lock()
+}
+
+// ResumeRendering releases the lock acquired by PauseRendering.
+func (t *Terminal) ResumeRendering() {
+	t.mutex.Unlock()
 }
 
 // UpdateCount updates the count information
@@ -1842,6 +1873,21 @@ func (t *Terminal) UpdateList(result MatchResult) {
 		}
 		t.revision = newRevision
 		t.version++
+
+		// Filter out selections that no longer match after with-nth change.
+		// Must be inside the revision check so we don't consume the flag
+		// on a stale EvtSearchFin from a previous search.
+		if t.filterSelection && t.multi > 0 && len(t.selected) > 0 {
+			matchMap := t.resultMerger.ToMap()
+			filtered := make(map[int32]selectedItem)
+			for k, v := range t.selected {
+				if _, matched := matchMap[k]; matched {
+					filtered[k] = v
+				}
+			}
+			t.selected = filtered
+		}
+		t.filterSelection = false
 	}
 	if t.triggerLoad {
 		t.triggerLoad = false
@@ -3139,7 +3185,7 @@ func (t *Terminal) printFooter() {
 				func(markerClass) int {
 					t.footerWindow.Print(indent)
 					return indentSize
-				}, nil)
+				}, nil, 0)
 		}
 	})
 	t.wrap = wrap
@@ -3223,7 +3269,7 @@ func (t *Terminal) printHeaderImpl(window tui.Window, borderShape tui.BorderShap
 			func(markerClass) int {
 				t.window.Print(indent)
 				return indentSize
-			}, nil)
+			}, nil, 0)
 	}
 	t.wrap = wrap
 }
@@ -3461,7 +3507,14 @@ func (t *Terminal) printItem(result Result, line int, maxLine int, index int, cu
 			}
 			return indentSize
 		}
-		finalLineNum = t.printHighlighted(result, tui.ColCurrent, tui.ColCurrentMatch, true, true, !matched, line, maxLine, forceRedraw, preTask, postTask)
+		colCurrent := tui.ColCurrent
+		nthOverlay := t.theme.NthCurrentAttr
+		if selected {
+			nthOverlay = t.theme.NthSelectedAttr.Merge(t.theme.NthCurrentAttr)
+			baseAttr := tui.ColNormal.Attr().Merge(t.theme.NthSelectedAttr).Merge(t.theme.NthCurrentAttr)
+			colCurrent = colCurrent.WithNewAttr(baseAttr)
+		}
+		finalLineNum = t.printHighlighted(result, colCurrent, tui.ColCurrentMatch, true, true, !matched, line, maxLine, forceRedraw, preTask, postTask, nthOverlay)
 	} else {
 		preTask := func(marker markerClass) int {
 			w := t.window.Width() - t.pointerLen
@@ -3495,7 +3548,11 @@ func (t *Terminal) printItem(result Result, line int, maxLine int, index int, cu
 			base = base.WithBg(altBg)
 			match = match.WithBg(altBg)
 		}
-		finalLineNum = t.printHighlighted(result, base, match, false, true, !matched, line, maxLine, forceRedraw, preTask, postTask)
+		var nthOverlay tui.Attr
+		if selected {
+			nthOverlay = t.theme.NthSelectedAttr
+		}
+		finalLineNum = t.printHighlighted(result, base, match, false, true, !matched, line, maxLine, forceRedraw, preTask, postTask, nthOverlay)
 	}
 	for i := 0; i < t.gap && finalLineNum < maxLine; i++ {
 		finalLineNum++
@@ -3596,7 +3653,7 @@ func (t *Terminal) overflow(runes []rune, max int) bool {
 	return t.displayWidthWithLimit(runes, 0, max) > max
 }
 
-func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMatch tui.ColorPair, current bool, match bool, hidden bool, lineNum int, maxLineNum int, forceRedraw bool, preTask func(markerClass) int, postTask func(int, int, bool, bool, tui.ColorPair)) int {
+func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMatch tui.ColorPair, current bool, match bool, hidden bool, lineNum int, maxLineNum int, forceRedraw bool, preTask func(markerClass) int, postTask func(int, int, bool, bool, tui.ColorPair), nthOverlay tui.Attr) int {
 	var displayWidth int
 	item := result.item
 	matchOffsets := []Offset{}
@@ -3637,7 +3694,9 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 			// But if 'nth' is set to 'regular', it's a sign that you're applying
 			// a different style to the rest of the string. e.g. 'nth:regular,fg:dim'
 			// In this case, we still need to apply it to clear the style.
-			colBase = colBase.WithAttr(t.nthAttr)
+			fgAttr := tui.ColNormal.Attr()
+			nthAttrFinal := fgAttr.Merge(t.nthAttr).Merge(nthOverlay)
+			colBase = colBase.WithNewAttr(nthAttrFinal)
 		}
 		if !wholeCovered && t.nthAttr > 0 {
 			var tokens []Token
@@ -3656,7 +3715,7 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 			sort.Sort(ByOrder(nthOffsets))
 		}
 	}
-	allOffsets := result.colorOffsets(charOffsets, nthOffsets, t.theme, colBase, colMatch, t.nthAttr, hidden)
+	allOffsets := result.colorOffsets(charOffsets, nthOffsets, t.theme, colBase, colMatch, t.nthAttr, nthOverlay, hidden)
 
 	// Determine split offset for horizontal scrolling with freeze
 	splitOffset1 := -1
@@ -5922,6 +5981,7 @@ func (t *Terminal) Loop() error {
 	events := []util.EventType{}
 	changed := false
 	var newNth *[]Range
+	var newWithNth *withNthSpec
 	var newHeaderLines *int
 	req := func(evts ...util.EventType) {
 		for _, event := range evts {
@@ -5939,6 +5999,7 @@ func (t *Terminal) Loop() error {
 		events = []util.EventType{}
 		changed = false
 		newNth = nil
+		newWithNth = nil
 		newHeaderLines = nil
 		beof := false
 		queryChanged := false
@@ -6327,6 +6388,33 @@ func (t *Terminal) Loop() error {
 					if !compareRanges(t.nthCurrent, *newNth) {
 						changed = true
 						t.nthCurrent = *newNth
+						t.forceRerenderList()
+					}
+				})
+			case actChangeWithNth, actTransformWithNth, actBgTransformWithNth:
+				if !t.withNthEnabled {
+					break Action
+				}
+				capture(true, func(expr string) {
+					tokens := strings.Split(expr, "|")
+					withNthExpr := tokens[0]
+					if len(tokens) > 1 {
+						a.a = strings.Join(append(tokens[1:], tokens[0]), "|")
+					}
+					// Empty value restores the default --with-nth
+					if len(withNthExpr) == 0 {
+						withNthExpr = t.withNthDefault
+					}
+					if withNthExpr != t.withNthExpr {
+						if factory, err := nthTransformer(withNthExpr); err == nil {
+							newWithNth = &withNthSpec{fn: factory(t.delimiter)}
+						} else {
+							return
+						}
+						t.withNthExpr = withNthExpr
+						t.filterSelection = true
+						changed = true
+						t.clearNumLinesCache()
 						t.forceRerenderList()
 					}
 				})
@@ -7477,7 +7565,7 @@ func (t *Terminal) Loop() error {
 		reload := changed || newCommand != nil
 		var reloadRequest *searchRequest
 		if reload {
-			reloadRequest = &searchRequest{sort: t.sort, sync: reloadSync, nth: newNth, headerLines: newHeaderLines, command: newCommand, environ: t.environ(), changed: changed, denylist: denylist, revision: t.resultMerger.Revision()}
+			reloadRequest = &searchRequest{sort: t.sort, sync: reloadSync, nth: newNth, withNth: newWithNth, headerLines: newHeaderLines, command: newCommand, environ: t.environ(), changed: changed, denylist: denylist, revision: t.resultMerger.Revision()}
 		}
 
 		// Dispatch queued background requests

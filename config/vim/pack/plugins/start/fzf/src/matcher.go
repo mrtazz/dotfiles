@@ -3,7 +3,6 @@ package fzf
 import (
 	"fmt"
 	"runtime"
-	"sort"
 	"sync"
 	"time"
 
@@ -43,8 +42,11 @@ type Matcher struct {
 	reqBox         *util.EventBox
 	partitions     int
 	slab           []*util.Slab
+	sortBuf        [][]Result
 	mergerCache    map[string]MatchResult
 	revision       revision
+	scanMutex      sync.Mutex
+	cancelScan     *util.AtomicBool
 }
 
 const (
@@ -54,8 +56,11 @@ const (
 
 // NewMatcher returns a new Matcher
 func NewMatcher(cache *ChunkCache, patternBuilder func([]rune) *Pattern,
-	sort bool, tac bool, eventBox *util.EventBox, revision revision) *Matcher {
+	sort bool, tac bool, eventBox *util.EventBox, revision revision, threads int) *Matcher {
 	partitions := min(numPartitionsMultiplier*runtime.NumCPU(), maxPartitions)
+	if threads > 0 {
+		partitions = threads
+	}
 	return &Matcher{
 		cache:          cache,
 		patternBuilder: patternBuilder,
@@ -65,8 +70,10 @@ func NewMatcher(cache *ChunkCache, patternBuilder func([]rune) *Pattern,
 		reqBox:         util.NewEventBox(),
 		partitions:     partitions,
 		slab:           make([]*util.Slab, partitions),
+		sortBuf:        make([][]Result, partitions),
 		mergerCache:    make(map[string]MatchResult),
-		revision:       revision}
+		revision:       revision,
+		cancelScan:     util.NewAtomicBool(false)}
 }
 
 // Loop puts Matcher in action
@@ -126,7 +133,9 @@ func (m *Matcher) Loop() {
 		}
 
 		if result.merger == nil {
+			m.scanMutex.Lock()
 			result = m.scan(request)
+			m.scanMutex.Unlock()
 		}
 
 		if !result.cancelled {
@@ -212,11 +221,7 @@ func (m *Matcher) scan(request MatchRequest) MatchResult {
 				sliceMatches = append(sliceMatches, matches...)
 			}
 			if m.sort && request.pattern.sortable {
-				if m.tac {
-					sort.Sort(ByRelevanceTac(sliceMatches))
-				} else {
-					sort.Sort(ByRelevance(sliceMatches))
-				}
+				m.sortBuf[idx] = radixSortResults(sliceMatches, m.tac, m.sortBuf[idx])
 			}
 			resultChan <- partialResult{idx, sliceMatches}
 		}(idx, m.slab[idx], chunks)
@@ -238,7 +243,7 @@ func (m *Matcher) scan(request MatchRequest) MatchResult {
 			break
 		}
 
-		if m.reqBox.Peek(reqReset) {
+		if m.cancelScan.Get() || m.reqBox.Peek(reqReset) {
 			return MatchResult{nil, nil, wait()}
 		}
 
@@ -267,6 +272,20 @@ func (m *Matcher) Reset(chunks []*Chunk, patternRunes []rune, cancel bool, final
 		event = reqRetry
 	}
 	m.reqBox.Set(event, MatchRequest{chunks, pattern, final, sort, revision})
+}
+
+// CancelScan cancels any in-flight scan, waits for it to finish,
+// and prevents new scans from starting until ResumeScan is called.
+// This is used to safely mutate shared items (e.g., during with-nth changes).
+func (m *Matcher) CancelScan() {
+	m.cancelScan.Set(true)
+	m.scanMutex.Lock()
+	m.cancelScan.Set(false)
+}
+
+// ResumeScan allows scans to proceed again after CancelScan.
+func (m *Matcher) ResumeScan() {
+	m.scanMutex.Unlock()
 }
 
 func (m *Matcher) Stop() {

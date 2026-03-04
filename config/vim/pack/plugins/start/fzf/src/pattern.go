@@ -65,6 +65,8 @@ type Pattern struct {
 	cache         *ChunkCache
 	denylist      map[int32]struct{}
 	startIndex    int32
+	directAlgo    algo.Algo
+	directTerm    *term
 }
 
 var _splitRegex *regexp.Regexp
@@ -151,6 +153,7 @@ func BuildPattern(cache *ChunkCache, patternCache map[string]*Pattern, fuzzy boo
 		procFun:       make(map[termType]algo.Algo)}
 
 	ptr.cacheKey = ptr.buildCacheKey()
+	ptr.directAlgo, ptr.directTerm = ptr.buildDirectAlgo(fuzzyAlgo)
 	ptr.procFun[termFuzzy] = fuzzyAlgo
 	ptr.procFun[termEqual] = algo.EqualMatch
 	ptr.procFun[termExact] = algo.ExactMatchNaive
@@ -274,6 +277,22 @@ func (p *Pattern) buildCacheKey() string {
 	return strings.Join(cacheableTerms, "\t")
 }
 
+// buildDirectAlgo returns the algo function and term for the direct fast path
+// in matchChunk. Returns (nil, nil) if the pattern is not suitable.
+// Requirements: extended mode, single term set with single non-inverse fuzzy term, no nth.
+func (p *Pattern) buildDirectAlgo(fuzzyAlgo algo.Algo) (algo.Algo, *term) {
+	if !p.extended || len(p.nth) > 0 {
+		return nil, nil
+	}
+	if len(p.termSets) == 1 && len(p.termSets[0]) == 1 {
+		t := &p.termSets[0][0]
+		if !t.inv && t.typ == termFuzzy {
+			return fuzzyAlgo, t
+		}
+	}
+	return nil, nil
+}
+
 // CacheKey is used to build string to be used as the key of result cache
 func (p *Pattern) CacheKey() string {
 	return p.cacheKey
@@ -312,18 +331,47 @@ func (p *Pattern) matchChunk(chunk *Chunk, space []Result, slab *util.Slab) []Re
 		}
 	}
 
-	if len(p.denylist) == 0 {
-		// Huge code duplication for minimizing unnecessary map lookups
+	// Fast path: single fuzzy term, no nth, no denylist.
+	// Calls the algo function directly, bypassing MatchItem/extendedMatch/iter
+	// and avoiding per-match []Offset heap allocation.
+	if p.directAlgo != nil && len(p.denylist) == 0 {
+		t := p.directTerm
 		if space == nil {
 			for idx := startIdx; idx < chunk.count; idx++ {
-				if match, _, _ := p.MatchItem(&chunk.items[idx], p.withPos, slab); match != nil {
-					matches = append(matches, *match)
+				res, _ := p.directAlgo(t.caseSensitive, t.normalize, p.forward,
+					&chunk.items[idx].text, t.text, p.withPos, slab)
+				if res.Start >= 0 {
+					matches = append(matches, buildResultFromBounds(
+						&chunk.items[idx], res.Score,
+						int(res.Start), int(res.End), int(res.End), true))
 				}
 			}
 		} else {
 			for _, result := range space {
-				if match, _, _ := p.MatchItem(result.item, p.withPos, slab); match != nil {
-					matches = append(matches, *match)
+				res, _ := p.directAlgo(t.caseSensitive, t.normalize, p.forward,
+					&result.item.text, t.text, p.withPos, slab)
+				if res.Start >= 0 {
+					matches = append(matches, buildResultFromBounds(
+						result.item, res.Score,
+						int(res.Start), int(res.End), int(res.End), true))
+				}
+			}
+		}
+		return matches
+	}
+
+	if len(p.denylist) == 0 {
+		// Huge code duplication for minimizing unnecessary map lookups
+		if space == nil {
+			for idx := startIdx; idx < chunk.count; idx++ {
+				if match, _, _ := p.MatchItem(&chunk.items[idx], p.withPos, slab); match.item != nil {
+					matches = append(matches, match)
+				}
+			}
+		} else {
+			for _, result := range space {
+				if match, _, _ := p.MatchItem(result.item, p.withPos, slab); match.item != nil {
+					matches = append(matches, match)
 				}
 			}
 		}
@@ -335,8 +383,8 @@ func (p *Pattern) matchChunk(chunk *Chunk, space []Result, slab *util.Slab) []Re
 			if _, prs := p.denylist[chunk.items[idx].Index()]; prs {
 				continue
 			}
-			if match, _, _ := p.MatchItem(&chunk.items[idx], p.withPos, slab); match != nil {
-				matches = append(matches, *match)
+			if match, _, _ := p.MatchItem(&chunk.items[idx], p.withPos, slab); match.item != nil {
+				matches = append(matches, match)
 			}
 		}
 	} else {
@@ -344,30 +392,29 @@ func (p *Pattern) matchChunk(chunk *Chunk, space []Result, slab *util.Slab) []Re
 			if _, prs := p.denylist[result.item.Index()]; prs {
 				continue
 			}
-			if match, _, _ := p.MatchItem(result.item, p.withPos, slab); match != nil {
-				matches = append(matches, *match)
+			if match, _, _ := p.MatchItem(result.item, p.withPos, slab); match.item != nil {
+				matches = append(matches, match)
 			}
 		}
 	}
 	return matches
 }
 
-// MatchItem returns true if the Item is a match
-func (p *Pattern) MatchItem(item *Item, withPos bool, slab *util.Slab) (*Result, []Offset, *[]int) {
+// MatchItem returns the match result if the Item is a match.
+// A zero-value Result (with item == nil) indicates no match.
+func (p *Pattern) MatchItem(item *Item, withPos bool, slab *util.Slab) (Result, []Offset, *[]int) {
 	if p.extended {
 		if offsets, bonus, pos := p.extendedMatch(item, withPos, slab); len(offsets) == len(p.termSets) {
-			result := buildResult(item, offsets, bonus)
-			return &result, offsets, pos
+			return buildResult(item, offsets, bonus), offsets, pos
 		}
-		return nil, nil, nil
+		return Result{}, nil, nil
 	}
 	offset, bonus, pos := p.basicMatch(item, withPos, slab)
 	if sidx := offset[0]; sidx >= 0 {
 		offsets := []Offset{offset}
-		result := buildResult(item, offsets, bonus)
-		return &result, offsets, pos
+		return buildResult(item, offsets, bonus), offsets, pos
 	}
-	return nil, nil, nil
+	return Result{}, nil, nil
 }
 
 func (p *Pattern) basicMatch(item *Item, withPos bool, slab *util.Slab) (Offset, int, *[]int) {
