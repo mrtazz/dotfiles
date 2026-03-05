@@ -1,0 +1,19 @@
+# analysis tasks
+# This install some data analysis related python libs in a venv
+# and then runs the provided file(s) or by default finds all `analyze.py`
+# files and runs those
+
+ANALYZE_FILES ?= $(shell find ./ -name analyze.py)
+PYTHON ?= python3
+
+.PHONY: analyze-deps
+analyze-deps:
+	$(PYTHON) --version
+	$(PYTHON) -m venv env
+	. env/bin/activate
+	LANG=en_US.UTF-8 ./env/bin/pip install pip --upgrade
+	LANG=en_US.UTF-8 ./env/bin/pip install pandas matplotlib seaborn scikit-learn #jupyterlab
+
+.PHONY: run-analysis
+run-analysis: analyze-deps
+	for f in $(ANALYZE_FILES); do ./env/bin/python $$f ; done

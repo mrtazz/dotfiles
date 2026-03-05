@@ -15,18 +15,18 @@ TERM = "xterm-256color"
 size = 14.0
 
 [font.normal]
-family = "Menlo"
+#family = "Bitstream Vera Sans Mono"
 
 [font.bold]
-family = "Menlo"
+#family = "Bitstream Vera Sans Mono"
 style  = "Bold"
 
 [font.bold_italic]
-family = "Menlo"
+#family = "Bitstream Vera Sans Mono"
 style  = "Bold Italic"
 
 [font.italic]
-family = "Menlo"
+#family = "Bitstream Vera Sans Mono"
 style  = "Italic"
 
 [window]
