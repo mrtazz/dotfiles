@@ -1190,6 +1190,16 @@ class TestCore < TestInteractive
     tmux.until { |lines| assert lines.any_include?('9999␊10000') }
   end
 
+  def test_freeze_left_tabstop
+    writelines(%W[1\t2\t3])
+    # With --freeze-left 1 and --tabstop=2:
+    # Frozen left: "1" (width 1)
+    # Middle starts with "\t" at prefix width 1, tabstop 2 → 1 space
+    # Then "2" at column 2, next "\t" at column 3 → 1 space, then "3"
+    tmux.send_keys %(cat #{tempname} | #{FZF} --tabstop=2 --freeze-left 1), :Enter
+    tmux.until { |lines| assert_equal '> 1 2 3', lines[-3] }
+  end
+
   def test_freeze_left_keep_right
     tmux.send_keys %(seq 10000 | #{FZF} --read0 --delimiter "\n" --freeze-left 3 --keep-right --ellipsis XX --no-multi-line --bind space:toggle-multi-line), :Enter
     tmux.until { |lines| assert_match(/^> 1␊2␊3XX.*10000␊$/, lines[-3]) }
@@ -2085,13 +2095,13 @@ class TestCore < TestInteractive
     tmux.send_keys %(echo "foo  ,bar,baz" | #{FZF} -d, --accept-nth 2,2,1,3,1 --sync --bind start:accept > #{tempname}), :Enter
     wait do
       assert_path_exists tempname
-      # Last delimiter and the whitespaces are removed
-      assert_equal ['bar,bar,foo  ,bazfoo'], File.readlines(tempname, chomp: true)
+      # Last delimiter is removed
+      assert_equal ['bar,bar,foo  ,bazfoo  '], File.readlines(tempname, chomp: true)
     end
   end
 
   def test_accept_nth_regex_delimiter
-    tmux.send_keys %(echo "foo  :,:bar,baz" | #{FZF} --delimiter='[:,]+' --accept-nth 2,2,1,3,1 --sync --bind start:accept > #{tempname}), :Enter
+    tmux.send_keys %(echo "foo  :,:bar,baz" | #{FZF} --delimiter=' *[:,]+ *' --accept-nth 2,2,1,3,1 --sync --bind start:accept > #{tempname}), :Enter
     wait do
       assert_path_exists tempname
       # Last delimiter and the whitespaces are removed
@@ -2109,7 +2119,7 @@ class TestCore < TestInteractive
   end
 
   def test_accept_nth_template
-    tmux.send_keys %(echo "foo  ,bar,baz" | #{FZF} -d, --accept-nth '[{n}] 1st: {1}, 3rd: {3}, 2nd: {2}' --sync --bind start:accept > #{tempname}), :Enter
+    tmux.send_keys %(echo "foo  ,bar,baz" | #{FZF} -d " *, *" --accept-nth '[{n}] 1st: {1}, 3rd: {3}, 2nd: {2}' --sync --bind start:accept > #{tempname}), :Enter
     wait do
       assert_path_exists tempname
       # Last delimiter and the whitespaces are removed

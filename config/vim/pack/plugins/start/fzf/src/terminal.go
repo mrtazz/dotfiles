@@ -3905,6 +3905,7 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 			frozenRight = line[splitOffsetRight:]
 		}
 		displayWidthSum := 0
+		displayWidthLeft := 0
 		todo := [3]func(){}
 		for fidx, runes := range [][]rune{frozenLeft, frozenRight, middle} {
 			if len(runes) == 0 {
@@ -3930,7 +3931,11 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 				// For frozen parts, reserve space for the ellipsis in the middle part
 				adjustedMaxWidth -= ellipsisWidth
 			}
-			displayWidth = t.displayWidthWithLimit(runes, 0, adjustedMaxWidth)
+			var prefixWidth int
+			if fidx == 2 {
+				prefixWidth = displayWidthLeft
+			}
+			displayWidth = t.displayWidthWithLimit(runes, prefixWidth, adjustedMaxWidth)
 			if !t.wrap && displayWidth > adjustedMaxWidth {
 				maxe = util.Constrain(maxe+min(maxWidth/2-ellipsisWidth, t.hscrollOff), 0, len(runes))
 				transformOffsets := func(diff int32) {
@@ -3968,6 +3973,9 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 				displayWidth = t.displayWidthWithLimit(runes, 0, maxWidth)
 			}
 			displayWidthSum += displayWidth
+			if fidx == 0 {
+				displayWidthLeft = displayWidth
+			}
 
 			if maxWidth > 0 {
 				color := colBase
@@ -3975,7 +3983,7 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 					color = color.WithFg(t.theme.Nomatch)
 				}
 				todo[fidx] = func() {
-					t.printColoredString(t.window, runes, offs, color)
+					t.printColoredString(t.window, runes, offs, color, prefixWidth)
 				}
 			} else {
 				break
@@ -4002,10 +4010,13 @@ func (t *Terminal) printHighlighted(result Result, colBase tui.ColorPair, colMat
 	return finalLineNum
 }
 
-func (t *Terminal) printColoredString(window tui.Window, text []rune, offsets []colorOffset, colBase tui.ColorPair) {
+func (t *Terminal) printColoredString(window tui.Window, text []rune, offsets []colorOffset, colBase tui.ColorPair, initialPrefixWidth ...int) {
 	var index int32
 	var substr string
 	var prefixWidth int
+	if len(initialPrefixWidth) > 0 {
+		prefixWidth = initialPrefixWidth[0]
+	}
 	maxOffset := int32(len(text))
 	var url *url
 	for _, offset := range offsets {
@@ -4212,7 +4223,7 @@ func (t *Terminal) followOffset() int {
 	for i := len(body) - 1; i >= 0; i-- {
 		h := t.previewLineHeight(body[i], maxWidth)
 		if visualLines+h > height {
-			return headerLines + i + 1
+			return min(len(lines)-1, headerLines+i+1)
 		}
 		visualLines += h
 	}
@@ -4510,7 +4521,7 @@ Loop:
 				}
 			}
 
-			t.previewer.scrollable = t.previewer.scrollable || t.pwindow.Y() == height-1 && t.pwindow.X() == t.pwindow.Width()
+			t.previewer.scrollable = t.previewer.scrollable || t.pwindow.Y() == height-1 && t.pwindow.X() == t.pwindow.Width() || t.previewed.filled
 			if fillRet == tui.FillNextLine {
 				continue
 			} else if fillRet == tui.FillSuspend {
@@ -4533,7 +4544,7 @@ Loop:
 		}
 		lineNo++
 	}
-	t.previewer.scrollable = t.previewer.scrollable || index < len(lines)-1
+	t.previewer.scrollable = t.previewer.scrollable || t.previewed.filled || index < len(lines)-1
 	t.previewed.image = image
 	t.previewed.wireframe = wireframe
 }
