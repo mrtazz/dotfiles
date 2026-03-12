@@ -17,12 +17,25 @@ def get_timestamp_age():
         with open(STATE_FILE, "r") as f:
             data = json.load(f)
 
-        print(int(time.time()) - data["timestamp"], end="")
+        return int(time.time()) - data["timestamp"]
     except Exception:
         # we just return -1 here as a signal that something went wrong so it
         # doesn't blow up the tmux bar with error messages
-        print(-1)
+        return -1
 
+def print_formatted_age(age):
+    # only seconds
+    if age < 60:
+        print('{}s'.format(age))
+        return
+    mins, secs = divmod(age, 60)
+    hours, mins = divmod(mins, 60)
+
+    if hours < 1:
+        print(f"{mins:02d}m{secs:02d}s")
+        return
+
+    print(f"{hours:02d}h{mins:02d}m{secs:02d}s")
 
 if __name__ == "__main__":
 
@@ -31,7 +44,8 @@ if __name__ == "__main__":
             case 'record':
                 record_timestamp()
             case 'age':
-                get_timestamp_age()
+                age = get_timestamp_age()
+                print_formatted_age(age)
             case _:
                 print('Unknown command: {}'.format(sys.argv[1]))
     else:
