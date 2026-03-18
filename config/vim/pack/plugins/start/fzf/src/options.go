@@ -101,6 +101,7 @@ Usage: fzf [options]
     --no-multi-line          Disable multi-line display of items when using --read0
     --raw                    Enable raw mode (show non-matching items)
     --track                  Track the current selection when the result is updated
+    --id-nth=N[,..]          Define item identity fields for cross-reload operations
     --tac                    Reverse the order of the input
     --gap[=N]                Render empty lines between each item
     --gap-line[=STR]         Draw horizontal line on each gap using the string
@@ -594,6 +595,7 @@ type Options struct {
 	Sort              int
 	Raw               bool
 	Track             trackOption
+	IdNth             []Range
 	Tac               bool
 	Tail              int
 	Criteria          []criterion
@@ -1610,7 +1612,7 @@ func parseWalkerOpts(str string) (walkerOpts, error) {
 }
 
 var (
-	executeRegexp    *regexp.Regexp
+	argActionRegexp  *regexp.Regexp
 	splitRegexp      *regexp.Regexp
 	actionNameRegexp *regexp.Regexp
 )
@@ -1629,7 +1631,7 @@ const (
 )
 
 func init() {
-	executeRegexp = regexp.MustCompile(
+	argActionRegexp = regexp.MustCompile(
 		`(?si)[:+](become|execute(?:-multi|-silent)?|reload(?:-sync)?|preview|(?:change|bg-transform|transform)-(?:query|prompt|(?:border|list|preview|input|header|footer)-label|header-lines|header|footer|search|with-nth|nth|pointer|ghost)|bg-transform|transform|change-(?:preview-window|preview|multi)|(?:re|un|toggle-)bind|pos|put|print|search|trigger)`)
 	splitRegexp = regexp.MustCompile("[,:]+")
 	actionNameRegexp = regexp.MustCompile("(?i)^[a-z-]+")
@@ -1639,7 +1641,7 @@ func maskActionContents(action string) string {
 	masked := ""
 Loop:
 	for len(action) > 0 {
-		loc := executeRegexp.FindStringIndex(action)
+		loc := argActionRegexp.FindStringIndex(action)
 		if loc == nil {
 			masked += action
 			break
@@ -1694,7 +1696,7 @@ Loop:
 }
 
 func parseSingleActionList(str string) ([]*action, error) {
-	// We prepend a colon to satisfy executeRegexp and remove it later
+	// We prepend a colon to satisfy argActionRegexp and remove it later
 	masked := maskActionContents(":" + str)[1:]
 	return parseActionList(masked, str, []*action{}, false)
 }
@@ -2811,6 +2813,16 @@ func parseOptions(index *int, opts *Options, allArgs []string) error {
 			opts.Track = trackEnabled
 		case "--no-track":
 			opts.Track = trackDisabled
+		case "--id-nth":
+			str, err := nextString("nth expression required")
+			if err != nil {
+				return err
+			}
+			if opts.IdNth, err = splitNth(str); err != nil {
+				return err
+			}
+		case "--no-id-nth":
+			opts.IdNth = nil
 		case "--tac":
 			opts.Tac = true
 		case "--no-tac":
