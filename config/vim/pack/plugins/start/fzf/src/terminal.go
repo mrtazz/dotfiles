@@ -216,8 +216,9 @@ const (
 )
 
 type StatusItem struct {
-	Index int    `json:"index"`
-	Text  string `json:"text"`
+	Index     int    `json:"index"`
+	Text      string `json:"text"`
+	Positions []int  `json:"positions,omitempty"`
 }
 
 type Status struct {
@@ -4629,7 +4630,7 @@ func (t *Terminal) renderPreviewScrollbar(yoff int, barLength int, barStart int)
 	w := t.pborder.Width()
 	xw := [2]int{t.pwindow.Left(), t.pwindow.Width()}
 	redraw := false
-	if len(t.previewer.bar) != height || t.previewer.xw != xw {
+	if len(t.previewer.bar) != height || t.previewer.xw != xw || t.previewed.version != t.previewer.version {
 		redraw = true
 		t.previewer.bar = make([]bool, height)
 		t.previewer.xw = xw
@@ -7183,10 +7184,12 @@ func (t *Terminal) Loop() error {
 				}
 				if !me.Down {
 					barDragging = false
+					pmx, pmy = -1, -1
+				}
+				if !me.Down || !t.hasPreviewWindow() {
 					pbarDragging = false
 					pborderDragging = -1
 					previewDraggingPos = -1
-					pmx, pmy = -1, -1
 				}
 
 				// Scrolling
@@ -7214,7 +7217,7 @@ func (t *Terminal) Loop() error {
 				}
 
 				// Preview dragging
-				if me.Down && (previewDraggingPos >= 0 || click && t.hasPreviewWindow() && t.pwindow.Enclose(my, mx)) {
+				if t.hasPreviewWindow() && me.Down && (previewDraggingPos >= 0 || click && t.pwindow.Enclose(my, mx)) {
 					if previewDraggingPos > 0 {
 						scrollPreviewBy(previewDraggingPos - my)
 					}
@@ -7224,7 +7227,7 @@ func (t *Terminal) Loop() error {
 
 				// Preview scrollbar dragging
 				headerLines := t.activePreviewOpts.headerLines
-				pbarDragging = me.Down && (pbarDragging || click && t.hasPreviewWindow() && my >= t.pwindow.Top()+headerLines && my < t.pwindow.Top()+t.pwindow.Height() && mx == t.pwindow.Left()+t.pwindow.Width())
+				pbarDragging = t.hasPreviewWindow() && me.Down && (pbarDragging || click && my >= t.pwindow.Top()+headerLines && my < t.pwindow.Top()+t.pwindow.Height() && mx == t.pwindow.Left()+t.pwindow.Width())
 				if pbarDragging {
 					effectiveHeight := t.pwindow.Height() - headerLines
 					numLines := len(t.previewer.lines) - headerLines
@@ -7241,7 +7244,7 @@ func (t *Terminal) Loop() error {
 				}
 
 				// Preview border dragging (resizing)
-				if pborderDragging < 0 && click && t.hasPreviewWindow() {
+				if t.hasPreviewWindow() && pborderDragging < 0 && click {
 					switch t.activePreviewOpts.position {
 					case posUp:
 						if t.pborder.Enclose(my, mx) && my == t.pborder.Top()+t.pborder.Height()-1 {
@@ -7270,7 +7273,7 @@ func (t *Terminal) Loop() error {
 					}
 				}
 
-				if pborderDragging >= 0 && t.hasPreviewWindow() {
+				if t.hasPreviewWindow() && pborderDragging >= 0 {
 					var newSize int
 					var prevSize int
 					switch t.activePreviewOpts.position {
@@ -7869,10 +7872,18 @@ func (t *Terminal) dumpItem(i *Item) StatusItem {
 	if i == nil {
 		return StatusItem{}
 	}
-	return StatusItem{
+	item := StatusItem{
 		Index: int(i.Index()),
 		Text:  i.AsString(t.ansi),
 	}
+	if t.resultMerger.pattern != nil {
+		_, _, pos := t.resultMerger.pattern.MatchItem(i, true, t.slab)
+		if pos != nil {
+			sort.Ints(*pos)
+			item.Positions = *pos
+		}
+	}
+	return item
 }
 
 func (t *Terminal) tryLock(timeout time.Duration) bool {

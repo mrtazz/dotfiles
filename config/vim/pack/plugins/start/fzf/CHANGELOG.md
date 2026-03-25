@@ -25,9 +25,12 @@ CHANGELOG
       ```
     - Improved the cache structure, reducing memory footprint per entry by 86x.
         - With the reduced per-entry cost, the cache now has broader coverage.
-- fish: Improved command history (CTRL-R) (#4703) (@bitraid)
+- Shell integration improvements
+    - bash: CTRL-R now supports multi-select and `shift-delete` to delete history entries (#4715)
+    - fish: Improved command history (CTRL-R) (#4703) (@bitraid)
+- `GET /` HTTP endpoint now includes `positions` field in each match entry, providing the indices of matched characters for external highlighting (#4726)
 - Bug fixes
-    - `--walker=follow` no longer visits the same directory more than once. This avoids effectively infinite traversal when a symlink points outside the walker root (#4710)
+    - `--walker=follow` no longer follows symlinks whose target is an ancestor of the walker root, avoiding severe resource exhaustion when a symlink points outside the tree (e.g. Wine's `z:` → `/`) (#4710)
     - Fixed AWK tokenizer not treating a new line character as whitespace
     - Fixed `--{accept,with}-nth` removing trailing whitespaces with a non-default `--delimiter`
     - Fixed OSC8 hyperlinks being mangled when the URL contains unicode characters (#4707)
