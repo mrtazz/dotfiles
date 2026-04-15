@@ -98,14 +98,20 @@ if (has('nvim') || has('terminal') && has('patch-8.0.995')) && (s:conf('statusli
     if exists('#User#FzfStatusLine')
       doautocmd User FzfStatusLine
     else
-      if $TERM !~ "256color"
-        highlight default fzf1 ctermfg=1 ctermbg=8 guifg=#E12672 guibg=#565656
-        highlight default fzf2 ctermfg=2 ctermbg=8 guifg=#BCDDBD guibg=#565656
-        highlight default fzf3 ctermfg=7 ctermbg=8 guifg=#D9D9D9 guibg=#565656
+      " Do not display statusline when fzf is running in a floating window
+      " (e.g. nvim-fzf)
+      if has('nvim') && len(nvim_win_get_config(0).relative)
+        return
+      endif
+
+      if has('termguicolors') && &termguicolors || $TERM =~ "256color"
+        highlight default fzf1 ctermfg=161 ctermbg=238 guifg=#E12672 guibg=#565656 gui=nocombine
+        highlight default fzf2 ctermfg=151 ctermbg=238 guifg=#BCDDBD guibg=#565656 gui=nocombine
+        highlight default fzf3 ctermfg=252 ctermbg=238 guifg=#D9D9D9 guibg=#565656 gui=nocombine
       else
-        highlight default fzf1 ctermfg=161 ctermbg=238 guifg=#E12672 guibg=#565656
-        highlight default fzf2 ctermfg=151 ctermbg=238 guifg=#BCDDBD guibg=#565656
-        highlight default fzf3 ctermfg=252 ctermbg=238 guifg=#D9D9D9 guibg=#565656
+        highlight default fzf1 ctermfg=1 ctermbg=8 guifg=#E12672 guibg=#565656 gui=nocombine
+        highlight default fzf2 ctermfg=2 ctermbg=8 guifg=#BCDDBD guibg=#565656 gui=nocombine
+        highlight default fzf3 ctermfg=7 ctermbg=8 guifg=#D9D9D9 guibg=#565656 gui=nocombine
       endif
       setlocal statusline=%#fzf1#\ >\ %#fzf2#fz%#fzf3#f
     endif
