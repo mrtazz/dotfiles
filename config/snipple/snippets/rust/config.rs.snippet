@@ -1,0 +1,79 @@
+use serde::{Deserialize, Serialize};
+use serde_yaml::{self};
+use std::fs::File;
+
+#[derive(Default, Serialize, Deserialize, Debug)]
+pub struct Config {
+
+}
+
+const CONFIG_LOCATIONS: &[&str] = &["~/.config/foo/config.yaml"];
+
+impl Config {
+    pub fn new(filepath: Option<String>) -> Result<Self, String> {
+        match filepath {
+            Some(f) => {
+                let cfg = try_yaml_read(sanitize_tilde_to_home(f.as_str()))?;
+                Ok(cfg)
+            }
+            None => {
+                // No config file was provided so lets check default locations
+                for cfg_path in CONFIG_LOCATIONS {
+                    match try_yaml_read(sanitize_tilde_to_home(cfg_path)) {
+                        Ok(cfg) => {
+                            return Ok(cfg);
+                        }
+                        Err(_) => {
+                            // we don't really care if default locations don't have a config file.
+                            // Maybe at some point this can be made smarter to determine an existing
+                            // but unreadable file throwing an error
+                        }
+                    }
+                }
+                Ok(Config { })
+            }
+        }
+    }
+
+    pub fn to_yaml(&self) -> Result<String, String> {
+        match serde_yaml::to_string(&Config {
+        }) {
+            Ok(serialized) => Ok(serialized),
+            Err(e) => Err(e.to_string()),
+        }
+    }
+}
+
+fn sanitize_tilde_to_home(path: &str) -> String {
+    let home = std::env::var("HOME").unwrap();
+    if path.starts_with("~/") {
+        // we should be fine to unwrap() here since we already checked for the prefix
+        format!("{}/{}", home, path.strip_prefix("~/").unwrap())
+    } else {
+        String::from(path)
+    }
+}
+
+fn try_yaml_read(fpath: String) -> Result<Config, String> {
+    let open_file =
+        File::open(fpath.clone()).map_err(|e| format!("unable to read file '{}': {}", fpath, e))?;
+    let cfg: Config = serde_yaml::from_reader(open_file)
+        .map_err(|e| format!("unable to parse config file '{}': {}", fpath, e))?;
+    Ok(cfg)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_get_simple_config() {
+        let cfg = Config::new(Some(String::from("fixtures/config/simple_config.yaml"))).unwrap();
+        assert_eq!(true);
+    }
+    #[test]
+    fn test_sanitize_tilde() {
+        std::env::set_var("HOME", "/home/test");
+        assert_eq!(sanitize_tilde_to_home("./bla"), "./bla");
+        assert_eq!(sanitize_tilde_to_home("~/bla"), "/home/test/bla");
+    }
+}
