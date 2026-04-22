@@ -1298,4 +1298,337 @@ class TestLayout < TestInteractive
       tmux.send_keys :Enter
     end
   end
+
+  # Locate a word in the currently captured screen and click its first character.
+  # tmux rows/columns are 1-based; capture indices are 0-based.
+  def click_word(word)
+    tmux.capture.each_with_index do |line, idx|
+      col = line.index(word)
+      return tmux.click(col + 1, idx + 1) if col
+    end
+    flunk("word #{word.inspect} not found on screen")
+  end
+
+  # Launch fzf with a click-{header,footer} binding that echoes FZF_CLICK_* into the prompt,
+  # then click each word in `clicks` and assert the resulting L/W values.
+  # `clicks` is an array of [word_to_click, expected_line].
+  def verify_clicks(kind:, opts:, input:, clicks:)
+    var = kind.to_s.upcase # HEADER or FOOTER
+    binding = "click-#{kind}:transform-prompt:" \
+              "echo \"L=$FZF_CLICK_#{var}_LINE W=$FZF_CLICK_#{var}_WORD> \""
+    # --multi makes the info line end in " (0)" so the wait regex is unambiguous.
+    tmux.send_keys %(#{input} | #{FZF} #{opts} --multi --bind '#{binding}'), :Enter
+    # Wait for fzf to fully render before inspecting the screen, otherwise the echoed
+    # command line can shadow click targets.
+    tmux.until { |lines| lines.any_include?(%r{ [0-9]+/[0-9]+ \(0\)}) }
+    clicks.each do |word, line|
+      click_word(word)
+      tmux.until { |lines| assert lines.any_include?("L=#{line} W=#{word}>") }
+    end
+    tmux.send_keys 'Escape'
+  end
+
+  # Header lines (--header-lines) are rendered in reverse display order only under
+  # layout=default; in layout=reverse and layout=reverse-list they keep the input order.
+  # FZF_CLICK_HEADER_LINE reflects the visual row, so the expected value flips.
+  HEADER_CLICKS = [%w[Aaa 1], %w[Bbb 2], %w[Ccc 3]].freeze
+
+  %w[default reverse reverse-list].each do |layout|
+    slug = layout.tr('-', '_')
+
+    # Plain --header with no border around the header section.
+    define_method(:"test_click_header_plain_#{slug}") do
+      verify_clicks(kind: :header,
+                    opts: %(--layout=#{layout} --header $'Aaa\\nBbb\\nCcc'),
+                    input: 'seq 5',
+                    clicks: HEADER_CLICKS)
+    end
+
+    # --header with a framing border (--style full gives --header-border=rounded by default).
+    define_method(:"test_click_header_border_rounded_#{slug}") do
+      verify_clicks(kind: :header,
+                    opts: %(--layout=#{layout} --style full --header $'Aaa\\nBbb\\nCcc'),
+                    input: 'seq 5',
+                    clicks: HEADER_CLICKS)
+    end
+
+    # --header-lines consumed from stdin, with its own framing border.
+    define_method(:"test_click_header_lines_border_rounded_#{slug}") do
+      clicks_hl = if layout == 'default'
+                    [%w[Xaa 3], %w[Ybb 2], %w[Zcc 1]]
+                  else
+                    [%w[Xaa 1], %w[Ybb 2], %w[Zcc 3]]
+                  end
+      verify_clicks(kind: :header,
+                    opts: %(--layout=#{layout} --style full --header-lines 3),
+                    input: "(printf 'Xaa\\nYbb\\nZcc\\n'; seq 5)",
+                    clicks: clicks_hl)
+    end
+
+    # --footer with a framing border.
+    define_method(:"test_click_footer_border_rounded_#{slug}") do
+      verify_clicks(kind: :footer,
+                    opts: %(--layout=#{layout} --style full --footer $'Foo\\nBar\\nBaz'),
+                    input: 'seq 5',
+                    clicks: [%w[Foo 1], %w[Bar 2], %w[Baz 3]])
+    end
+
+    # --header and --header-lines combined. Click-header numbering concatenates the two
+    # sections, but the order depends on the layout:
+    #   layoutReverse:     custom header (1..N), then header-lines (N+1..N+M)
+    #   layoutDefault:     header-lines (1..M, reversed visually), then custom header (M+1..M+N)
+    #   layoutReverseList: header-lines (1..M), then custom header (M+1..M+N)
+    define_method(:"test_click_header_combined_#{slug}") do
+      clicks = case layout
+               when 'reverse'
+                 [%w[Aaa 1], %w[Bbb 2], %w[Ccc 3], %w[Xaa 4], %w[Ybb 5], %w[Zcc 6]]
+               when 'default'
+                 [%w[Aaa 4], %w[Bbb 5], %w[Ccc 6], %w[Xaa 3], %w[Ybb 2], %w[Zcc 1]]
+               else # reverse-list
+                 [%w[Aaa 4], %w[Bbb 5], %w[Ccc 6], %w[Xaa 1], %w[Ybb 2], %w[Zcc 3]]
+               end
+      verify_clicks(kind: :header,
+                    opts: %(--layout=#{layout} --header $'Aaa\\nBbb\\nCcc' --header-lines 3),
+                    input: "(printf 'Xaa\\nYbb\\nZcc\\n'; seq 5)",
+                    clicks: clicks)
+    end
+
+    # Inline header inside a rounded list border.
+    define_method(:"test_click_header_border_inline_#{slug}") do
+      opts = %(--layout=#{layout} --style full --header $'Aaa\\nBbb\\nCcc' --header-border=inline)
+      verify_clicks(kind: :header, opts: opts, input: 'seq 5', clicks: HEADER_CLICKS)
+    end
+
+    # Inline header inside a horizontal list border (top+bottom only, no T-junctions).
+    define_method(:"test_click_header_border_inline_horizontal_list_#{slug}") do
+      opts = %(--layout=#{layout} --style full --list-border=horizontal --header $'Aaa\\nBbb\\nCcc' --header-border=inline)
+      verify_clicks(kind: :header, opts: opts, input: 'seq 5', clicks: HEADER_CLICKS)
+    end
+
+    # Inline header-lines inside a rounded list border.
+    define_method(:"test_click_header_lines_border_inline_#{slug}") do
+      clicks_hl = if layout == 'default'
+                    [%w[Xaa 3], %w[Ybb 2], %w[Zcc 1]]
+                  else
+                    [%w[Xaa 1], %w[Ybb 2], %w[Zcc 3]]
+                  end
+      opts = %(--layout=#{layout} --style full --header-lines 3 --header-lines-border=inline)
+      verify_clicks(kind: :header, opts: opts,
+                    input: "(printf 'Xaa\\nYbb\\nZcc\\n'; seq 5)",
+                    clicks: clicks_hl)
+    end
+
+    # Inline footer inside a rounded list border.
+    define_method(:"test_click_footer_border_inline_#{slug}") do
+      opts = %(--layout=#{layout} --style full --footer $'Foo\\nBar\\nBaz' --footer-border=inline)
+      verify_clicks(kind: :footer, opts: opts, input: 'seq 5',
+                    clicks: [%w[Foo 1], %w[Bar 2], %w[Baz 3]])
+    end
+  end
+
+  # An inline section requesting far more rows than the terminal can fit must not
+  # break the layout. The list frame must still render inside the pane with both
+  # corners visible and the prompt line present.
+  def test_inline_header_lines_oversized
+    tmux.send_keys %(seq 10000 | #{FZF} --style full --header-border inline --header-lines 9999), :Enter
+    tmux.until { |lines| lines.any_include?(%r{ [0-9]+/[0-9]+}) }
+    lines = tmux.capture
+    # Rounded (light) and sharp (tcell) default border glyphs.
+    top_corners = /[╭┌]/
+    bottom_corners = /[╰└]/
+    assert(lines.any? { |l| l.match?(top_corners) }, "list frame top missing: #{lines.inspect}")
+    assert(lines.any? { |l| l.match?(bottom_corners) }, "list frame bottom missing: #{lines.inspect}")
+    assert(lines.any? { |l| l.include?('>') }, "prompt missing: #{lines.inspect}")
+    tmux.send_keys 'Escape'
+  end
+
+  # A non-inline section that consumes all available rows must still render without
+  # crashing when another section is inline but has no budget. The inline section's
+  # content is clipped to 0 but the layout proceeds.
+  def test_inline_footer_starved_by_non_inline_header
+    tmux.send_keys %(seq 10000 | #{FZF} --style full --footer-border inline --footer "$(seq 1000)" --header "$(seq 1000)"), :Enter
+    tmux.until { |lines| lines.any_include?(%r{ [0-9]+/[0-9]+}) }
+    lines = tmux.capture
+    assert(lines.any? { |l| l.include?('>') }, "prompt missing: #{lines.inspect}")
+    tmux.send_keys 'Escape'
+  end
+
+  # Without a line-drawing --list-border, --header-border=inline must silently
+  # fall back to the `line` style (documented behavior).
+  def test_inline_falls_back_without_list_border
+    tmux.send_keys %(seq 5 | #{FZF} --list-border=none --header HEADER --header-border=inline), :Enter
+    tmux.until { |lines| lines.any_include?(%r{ [0-9]+/[0-9]+}) }
+    lines = tmux.capture
+    assert(lines.any? { |l| l.include?('HEADER') }, "header missing: #{lines.inspect}")
+    # Neither list frame corners (rounded/sharp) nor T-junction runes appear,
+    # since we've fallen back to a plain line separator.
+    assert(lines.none? { |l| l.match?(/[╭╮╰╯┌┐└┘├┤]/) }, "unexpected frame glyphs: #{lines.inspect}")
+    tmux.send_keys 'Escape'
+  end
+
+  # Regression: when --header-border=inline falls back to `line` because the
+  # list border can't host an inline separator, the header-border color must
+  # inherit from `border`, not `list-border`. The effective shape is `line`,
+  # so color inheritance must match what `line` rendering would use.
+  def test_inline_fallback_does_not_inherit_list_border_color
+    # Marker attribute (bold) on list-border. If HeaderBorder wrongly inherits
+    # from ListBorder, the header separator characters will carry the bold
+    # attribute. --info=hidden and --no-separator strip other separator lines
+    # so the only row of `─` chars is the header separator.
+    tmux.send_keys %(seq 5 | #{FZF} --list-border=none --header HEADER --header-border=inline --info=hidden --no-separator --color=bg:-1,list-border:red:bold), :Enter
+    sep_row = nil
+    tmux.until do |_|
+      sep_row = tmux.capture_ansi.find do |row|
+        stripped = row.gsub(/\e\[[\d;]*m/, '').rstrip
+        stripped.match?(/\A─+\z/)
+      end
+      !sep_row.nil?
+    end
+    # Bold (1) or red fg (31) on the header separator means it inherited from
+    # list-border even though the effective shape is `line` (non-inline).
+    refute_match(/\e\[(?:[\d;]*;)?(?:1|31)(?:;[\d;]*)?m─/, sep_row,
+                 "header separator inherited list-border attr: #{sep_row.inspect}")
+    tmux.send_keys 'Escape'
+  end
+
+  # Inline takes precedence over --header-first: the main header stays
+  # inside the list frame instead of moving below the input.
+  def test_inline_header_border_overrides_header_first
+    tmux.send_keys %(seq 5 | #{FZF} --style full --header foo --header-first --header-border inline), :Enter
+    tmux.until do |lines|
+      foo_idx = lines.index { |l| l.match?(/\A│\s+foo\s+│\z/) }
+      input_idx = lines.index { |l| l.match?(/\A│\s+>\s+\d+\/\d+\s+│\z/) }
+      foo_idx && input_idx && foo_idx < input_idx
+    end
+  end
+
+  # With both sections present, --header-first still moves the main --header
+  # below the input while --header-lines-border=inline keeps header-lines
+  # inside the list frame.
+  def test_inline_header_lines_with_header_first_and_main_header
+    tmux.send_keys %(seq 5 | #{FZF} --style full --header foo --header-lines 1 --header-first --header-lines-border inline), :Enter
+    tmux.until do |lines|
+      one_idx = lines.index { |l| l.match?(/\A│\s+1\s+│\z/) }
+      foo_idx = lines.index { |l| l.match?(/\A│\s+foo\s+│\z/) }
+      input_idx = lines.index { |l| l.match?(/\A│\s+>\s+\d+\/\d+\s+│\z/) }
+      one_idx && foo_idx && input_idx && one_idx < input_idx && input_idx < foo_idx
+    end
+  end
+
+  # With no main --header, --header-first previously repositioned
+  # header-lines. Inline now takes precedence: header-lines stays inside
+  # the list frame.
+  def test_inline_header_lines_with_header_first_no_main_header
+    tmux.send_keys %(seq 5 | #{FZF} --style full --header-lines 1 --header-first --header-lines-border inline), :Enter
+    tmux.until do |lines|
+      one_idx = lines.index { |l| l.match?(/\A│\s+1\s+│\z/) }
+      input_idx = lines.index { |l| l.match?(/\A│\s+>\s+\d+\/\d+\s+│\z/) }
+      one_idx && input_idx && one_idx < input_idx
+    end
+  end
+
+  # Regression: with --header-border=inline and --header-lines but no
+  # --header, the inline slot was sized for header-lines only. After
+  # change-header added a main header line, resizeIfNeeded tolerated the
+  # too-small slot, so the header-lines line got displaced and disappeared.
+  def test_inline_change_header_grows_slot
+    tmux.send_keys %(seq 5 | #{FZF} --style full --header-lines 1 --header-border inline --bind space:change-header:tada), :Enter
+    tmux.until { |lines| lines.any_include?(/\A│\s+1\s+│\z/) }
+    tmux.send_keys :Space
+    tmux.until do |lines|
+      lines.any_include?(/\A│\s+1\s+│\z/) && lines.any_include?(/\A│\s+tada\s+│\z/)
+    end
+  end
+
+  # Regression: with --footer-border=inline, change-footer that grows the
+  # footer line count left the inline slot sized for the old length, so
+  # extra lines were clipped.
+  def test_inline_change_footer_grows_slot
+    tmux.send_keys %(seq 5 | #{FZF} --style full --footer-border inline --footer one --bind $'space:change-footer:one\\ntwo'), :Enter
+    tmux.until { |lines| lines.any_include?(/\A│\s+one\s+│\z/) }
+    tmux.send_keys :Space
+    tmux.until do |lines|
+      lines.any_include?(/\A│\s+one\s+│\z/) && lines.any_include?(/\A│\s+two\s+│\z/)
+    end
+  end
+
+  # Invalid inline combinations must be rejected at startup.
+  def test_inline_rejected_on_unsupported_options
+    [
+      ['--border=inline', 'inline border is only supported'],
+      ['--list-border=inline', 'inline border is only supported'],
+      ['--input-border=inline', 'inline border is only supported'],
+      ['--preview-window=border-inline --preview :', 'invalid preview window option: border-inline'],
+      ['--header-border=inline --header-lines-border=sharp --header-lines=1',
+       '--header-border=inline requires --header-lines-border to be inline or unset']
+    ].each do |args, expected|
+      output = `#{FZF} #{args} < /dev/null 2>&1`
+      refute_equal 0, $CHILD_STATUS.exitstatus, "expected non-zero exit for: #{args}"
+      assert_includes output, expected, "wrong error for: #{args}"
+    end
+  end
+
+  private
+
+  # Count rows whose entire width is a single `color` range.
+  def count_full_rows(ranges_by_row, color)
+    ranges_by_row.count { |r| r.length == 1 && r[0][2] == color }
+  end
+
+  # Wait until `tmux.bg_ranges` has at least `count` fully-`color` rows; return them.
+  def wait_for_full_rows(color, count)
+    ranges = nil
+    tmux.until do |_|
+      ranges = tmux.bg_ranges
+      count_full_rows(ranges, color) >= count
+    end
+    ranges
+  end
+
+  public
+
+  # Inline header's entire section (outer edge + content-row verticals + separator)
+  # carries the header-bg color; list rows below carry list-bg.
+  def test_inline_header_bg_color
+    tmux.send_keys %(seq 5 | #{FZF} --list-border --reverse --header HEADER --header-border=inline --color=bg:-1,header-border:white,list-border:white,header-bg:red,list-bg:green), :Enter
+    tmux.until { |lines| lines.any_include?(%r{ [0-9]+/[0-9]+}) }
+    # 3 fully-red rows: top edge, header content, separator.
+    ranges = wait_for_full_rows('red', 3)
+    assert_equal_org(3, count_full_rows(ranges, 'red'))
+    # List rows below (>=5) are fully green.
+    assert_operator count_full_rows(ranges, 'green'), :>=, 5
+    tmux.send_keys 'Escape'
+  end
+
+  # Regression: when --header-lines-border=inline is the only inline section
+  # (no --header-border), the section must still use header-bg, not list-bg.
+  def test_inline_header_lines_bg_without_main_header
+    tmux.send_keys %(seq 5 | #{FZF} --list-border --reverse --header-lines 2 --header-lines-border=inline --color=bg:-1,header-border:white,list-border:white,header-bg:red,list-bg:green), :Enter
+    tmux.until { |lines| lines.any_include?(%r{ [0-9]+/[0-9]+}) }
+    # Top edge + 2 content rows + separator = 4 fully-red rows.
+    ranges = wait_for_full_rows('red', 4)
+    assert_equal_org(4, count_full_rows(ranges, 'red'))
+    tmux.send_keys 'Escape'
+  end
+
+  # Inline footer's entire section carries footer-bg; list rows above carry list-bg.
+  def test_inline_footer_bg_color
+    tmux.send_keys %(seq 5 | #{FZF} --list-border --footer FOOTER --footer-border=inline --color=bg:-1,footer-border:white,list-border:white,footer-bg:blue,list-bg:green), :Enter
+    tmux.until { |lines| lines.any_include?(%r{ [0-9]+/[0-9]+}) }
+    ranges = wait_for_full_rows('blue', 3)
+    assert_equal_org(3, count_full_rows(ranges, 'blue'))
+    tmux.send_keys 'Escape'
+  end
+
+  # The list-label's bg is swapped to match the adjacent inline section so it reads as
+  # part of the section frame rather than a list-colored island on a section-colored edge.
+  def test_list_label_bg_on_inline_section_edge
+    tmux.send_keys %(seq 5 | #{FZF} --list-border --reverse --header HEADER --header-border=inline --list-label=LL --color=bg:-1,header-border:white,list-border:white,header-bg:red,list-bg:green,list-label:yellow:bold), :Enter
+    tmux.until { |lines| lines.any_include?(%r{ [0-9]+/[0-9]+}) }
+    # The label sits on the header-owned top edge, so the entire row must be a
+    # single red run (no green breaks where the label cells are).
+    ranges = wait_for_full_rows('red', 3)
+    assert_operator count_full_rows(ranges, 'red'), :>=, 3
+    tmux.send_keys 'Escape'
+  end
 end

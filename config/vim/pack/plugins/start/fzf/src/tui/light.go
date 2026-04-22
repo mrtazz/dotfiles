@@ -689,6 +689,7 @@ func (r *LightRenderer) escSequence(sz *int) Event {
 					switch r.buffer[4] {
 					case '1', '2', '3', '4', '5', '6', '7', '8', '9':
 						//                   Kitty      iTerm2     WezTerm
+						// ARROW             "\e[1;1D"
 						// SHIFT-ARROW       "\e[1;2D"
 						// ALT-SHIFT-ARROW   "\e[1;4D"  "\e[1;10D" "\e[1;4D"
 						// CTRL-SHIFT-ARROW  "\e[1;6D"             N/A
@@ -743,6 +744,7 @@ func (r *LightRenderer) escSequence(sz *int) Event {
 							if shift {
 								return Event{ShiftUp, 0, nil}
 							}
+							return Event{Up, 0, nil}
 						case 'B':
 							if ctrlAltShift {
 								return Event{CtrlAltShiftDown, 0, nil}
@@ -765,6 +767,7 @@ func (r *LightRenderer) escSequence(sz *int) Event {
 							if shift {
 								return Event{ShiftDown, 0, nil}
 							}
+							return Event{Down, 0, nil}
 						case 'C':
 							if ctrlAltShift {
 								return Event{CtrlAltShiftRight, 0, nil}
@@ -787,6 +790,7 @@ func (r *LightRenderer) escSequence(sz *int) Event {
 							if alt {
 								return Event{AltRight, 0, nil}
 							}
+							return Event{Right, 0, nil}
 						case 'D':
 							if ctrlAltShift {
 								return Event{CtrlAltShiftLeft, 0, nil}
@@ -809,6 +813,7 @@ func (r *LightRenderer) escSequence(sz *int) Event {
 							if shift {
 								return Event{ShiftLeft, 0, nil}
 							}
+							return Event{Left, 0, nil}
 						case 'H':
 							if ctrlAltShift {
 								return Event{CtrlAltShiftHome, 0, nil}
@@ -831,6 +836,7 @@ func (r *LightRenderer) escSequence(sz *int) Event {
 							if shift {
 								return Event{ShiftHome, 0, nil}
 							}
+							return Event{Home, 0, nil}
 						case 'F':
 							if ctrlAltShift {
 								return Event{CtrlAltShiftEnd, 0, nil}
@@ -853,6 +859,7 @@ func (r *LightRenderer) escSequence(sz *int) Event {
 							if shift {
 								return Event{ShiftEnd, 0, nil}
 							}
+							return Event{End, 0, nil}
 						}
 					} // r.buffer[4]
 				} // r.buffer[3]
@@ -1122,127 +1129,144 @@ func (w *LightWindow) DrawHBorder() {
 	w.drawBorder(true)
 }
 
+// drawHLine fills row `row` with `line` between optional left/right caps.
+// A zero rune means "no cap"; caps are placed at the very edges of `w`.
+func (w *LightWindow) drawHLine(row int, line, leftCap, rightCap rune, color ColorPair) {
+	w.Move(row, 0)
+	hw := runeWidth(line)
+	width := w.width
+	if leftCap != 0 {
+		w.CPrint(color, string(leftCap))
+		width -= runeWidth(leftCap)
+	}
+	if rightCap != 0 {
+		width -= runeWidth(rightCap)
+	}
+	if width < 0 {
+		width = 0
+	}
+	inner := width / hw
+	rem := width - inner*hw
+	w.CPrint(color, repeat(line, inner)+repeat(' ', rem))
+	if rightCap != 0 {
+		w.CPrint(color, string(rightCap))
+	}
+}
+
+func (w *LightWindow) DrawHSeparator(row int, windowType WindowType, useBottom bool) {
+	if w.height == 0 {
+		return
+	}
+	shape := w.border.shape
+	if shape == BorderNone {
+		return
+	}
+	color := BorderColor(windowType)
+	line := w.border.top
+	if useBottom {
+		line = w.border.bottom
+	}
+	var leftCap, rightCap rune
+	if shape.HasLeft() {
+		leftCap = w.border.leftMid
+	}
+	if shape.HasRight() {
+		rightCap = w.border.rightMid
+	}
+	w.drawHLine(row, line, leftCap, rightCap, color)
+}
+
+func (w *LightWindow) PaintSectionFrame(topContent, bottomContent int, windowType WindowType, edge SectionEdge) {
+	if w.height == 0 || w.border.shape == BorderNone {
+		return
+	}
+	color := BorderColor(windowType)
+	shape := w.border.shape
+	hasLeft := shape.HasLeft()
+	hasRight := shape.HasRight()
+	rightW := runeWidth(w.border.right)
+	// Content rows: overpaint left/right verticals + their 1-char margin.
+	for row := topContent; row <= bottomContent; row++ {
+		if hasLeft {
+			w.Move(row, 0)
+			w.CPrint(color, string(w.border.left)+" ")
+		}
+		if hasRight {
+			w.Move(row, w.width-rightW-1)
+			w.CPrint(color, " "+string(w.border.right))
+		}
+	}
+	if edge == SectionEdgeTop && shape.HasTop() {
+		var leftCap, rightCap rune
+		if hasLeft {
+			leftCap = w.border.topLeft
+		}
+		if hasRight {
+			rightCap = w.border.topRight
+		}
+		w.drawHLine(0, w.border.top, leftCap, rightCap, color)
+	}
+	if edge == SectionEdgeBottom && shape.HasBottom() {
+		var leftCap, rightCap rune
+		if hasLeft {
+			leftCap = w.border.bottomLeft
+		}
+		if hasRight {
+			rightCap = w.border.bottomRight
+		}
+		w.drawHLine(w.height-1, w.border.bottom, leftCap, rightCap, color)
+	}
+}
+
 func (w *LightWindow) drawBorder(onlyHorizontal bool) {
 	if w.height == 0 {
 		return
 	}
-	switch w.border.shape {
-	case BorderRounded, BorderSharp, BorderBold, BorderBlock, BorderThinBlock, BorderDouble:
-		w.drawBorderAround(onlyHorizontal)
-	case BorderHorizontal:
-		w.drawBorderHorizontal(true, true)
-	case BorderVertical:
-		if onlyHorizontal {
-			return
-		}
-		w.drawBorderVertical(true, true)
-	case BorderTop:
-		w.drawBorderHorizontal(true, false)
-	case BorderBottom:
-		w.drawBorderHorizontal(false, true)
-	case BorderLeft:
-		if onlyHorizontal {
-			return
-		}
-		w.drawBorderVertical(true, false)
-	case BorderRight:
-		if onlyHorizontal {
-			return
-		}
-		w.drawBorderVertical(false, true)
+	shape := w.border.shape
+	if shape == BorderNone {
+		return
 	}
-}
+	color := BorderColor(w.windowType)
+	hasLeft := shape.HasLeft()
+	hasRight := shape.HasRight()
 
-func (w *LightWindow) drawBorderHorizontal(top, bottom bool) {
-	color := ColBorder
-	switch w.windowType {
-	case WindowList:
-		color = ColListBorder
-	case WindowInput:
-		color = ColInputBorder
-	case WindowHeader:
-		color = ColHeaderBorder
-	case WindowFooter:
-		color = ColFooterBorder
-	case WindowPreview:
-		color = ColPreviewBorder
-	}
-	hw := runeWidth(w.border.top)
-	if top {
-		w.Move(0, 0)
-		w.CPrint(color, repeat(w.border.top, w.width/hw))
-	}
-
-	if bottom {
-		w.Move(w.height-1, 0)
-		w.CPrint(color, repeat(w.border.bottom, w.width/hw))
-	}
-}
-
-func (w *LightWindow) drawBorderVertical(left, right bool) {
-	vw := runeWidth(w.border.left)
-	color := ColBorder
-	switch w.windowType {
-	case WindowList:
-		color = ColListBorder
-	case WindowInput:
-		color = ColInputBorder
-	case WindowHeader:
-		color = ColHeaderBorder
-	case WindowFooter:
-		color = ColFooterBorder
-	case WindowPreview:
-		color = ColPreviewBorder
-	}
-	for y := 0; y < w.height; y++ {
-		if left {
-			w.Move(y, 0)
-			w.CPrint(color, string(w.border.left))
-			w.CPrint(color, " ") // Margin
+	if shape.HasTop() {
+		var leftCap, rightCap rune
+		if hasLeft {
+			leftCap = w.border.topLeft
 		}
-		if right {
-			w.Move(y, w.width-vw-1)
-			w.CPrint(color, " ") // Margin
-			w.CPrint(color, string(w.border.right))
+		if hasRight {
+			rightCap = w.border.topRight
 		}
+		w.drawHLine(0, w.border.top, leftCap, rightCap, color)
 	}
-}
-
-func (w *LightWindow) drawBorderAround(onlyHorizontal bool) {
-	w.Move(0, 0)
-	color := ColBorder
-	switch w.windowType {
-	case WindowList:
-		color = ColListBorder
-	case WindowInput:
-		color = ColInputBorder
-	case WindowHeader:
-		color = ColHeaderBorder
-	case WindowFooter:
-		color = ColFooterBorder
-	case WindowPreview:
-		color = ColPreviewBorder
-	}
-	hw := runeWidth(w.border.top)
-	tcw := runeWidth(w.border.topLeft) + runeWidth(w.border.topRight)
-	bcw := runeWidth(w.border.bottomLeft) + runeWidth(w.border.bottomRight)
-	rem := (w.width - tcw) % hw
-	w.CPrint(color, string(w.border.topLeft)+repeat(w.border.top, (w.width-tcw)/hw)+repeat(' ', rem)+string(w.border.topRight))
-	if !onlyHorizontal {
+	if !onlyHorizontal && (hasLeft || hasRight) {
 		vw := runeWidth(w.border.left)
-		for y := 1; y < w.height-1; y++ {
-			w.Move(y, 0)
-			w.CPrint(color, string(w.border.left))
-			w.CPrint(color, " ") // Margin
-
-			w.Move(y, w.width-vw-1)
-			w.CPrint(color, " ") // Margin
-			w.CPrint(color, string(w.border.right))
+		for y := 0; y < w.height; y++ {
+			// Corner rows are already painted by drawHLine above / below.
+			if (y == 0 && shape.HasTop()) || (y == w.height-1 && shape.HasBottom()) {
+				continue
+			}
+			if hasLeft {
+				w.Move(y, 0)
+				w.CPrint(color, string(w.border.left)+" ")
+			}
+			if hasRight {
+				w.Move(y, w.width-vw-1)
+				w.CPrint(color, " "+string(w.border.right))
+			}
 		}
 	}
-	w.Move(w.height-1, 0)
-	rem = (w.width - bcw) % hw
-	w.CPrint(color, string(w.border.bottomLeft)+repeat(w.border.bottom, (w.width-bcw)/hw)+repeat(' ', rem)+string(w.border.bottomRight))
+	if shape.HasBottom() {
+		var leftCap, rightCap rune
+		if hasLeft {
+			leftCap = w.border.bottomLeft
+		}
+		if hasRight {
+			rightCap = w.border.bottomRight
+		}
+		w.drawHLine(w.height-1, w.border.bottom, leftCap, rightCap, color)
+	}
 }
 
 func (w *LightWindow) csi(code string) string {

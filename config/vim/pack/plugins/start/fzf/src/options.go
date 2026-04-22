@@ -85,7 +85,7 @@ Usage: fzf [options]
     --margin=MARGIN          Screen margin (TRBL | TB,RL | T,RL,B | T,R,B,L)
     --padding=PADDING        Padding inside border (TRBL | TB,RL | T,RL,B | T,R,B,L)
     --border[=STYLE]         Draw border around the finder
-                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
+                             [rounded|sharp|bold|block|thinblock|double|dashed|horizontal|vertical|
                               top|bottom|left|right|line|none] (default: rounded)
     --border-label=LABEL     Label to print on the border
     --border-label-pos=COL   Position of the border label
@@ -128,7 +128,7 @@ Usage: fzf [options]
                              (each for list section and preview window)
     --no-scrollbar           Hide scrollbar
     --list-border[=STYLE]    Draw border around the list section
-                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
+                             [rounded|sharp|bold|block|thinblock|double|dashed|horizontal|vertical|
                               top|bottom|left|right|none] (default: rounded)
     --list-label=LABEL       Label to print on the list border
     --list-label-pos=COL     Position of the list label
@@ -148,7 +148,7 @@ Usage: fzf [options]
     --ghost=TEXT             Ghost text to display when the input is empty
     --filepath-word          Make word-wise movements respect path separators
     --input-border[=STYLE]   Draw border around the input section
-                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
+                             [rounded|sharp|bold|block|thinblock|double|dashed|horizontal|vertical|
                               top|bottom|left|right|line|none] (default: rounded)
     --input-label=LABEL      Label to print on the input border
     --input-label-pos=COL    Position of the input label
@@ -165,7 +165,7 @@ Usage: fzf [options]
                              [,+SCROLL[OFFSETS][/DENOM]][,~HEADER_LINES]
                              [,default][,<SIZE_THRESHOLD(ALTERNATIVE_LAYOUT)]
     --preview-border[=STYLE] Short for --preview-window=border-STYLE
-                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
+                             [rounded|sharp|bold|block|thinblock|double|dashed|horizontal|vertical|
                               top|bottom|left|right|line|none] (default: rounded)
     --preview-label=LABEL
     --preview-label-pos=N    Same as --border-label and --border-label-pos,
@@ -177,11 +177,12 @@ Usage: fzf [options]
     --header-lines=N         The first N lines of the input are treated as header
     --header-first           Print header before the prompt line
     --header-border[=STYLE]  Draw border around the header section
-                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
-                              top|bottom|left|right|line|none] (default: rounded)
+                             [rounded|sharp|bold|block|thinblock|double|dashed|horizontal|vertical|
+                              top|bottom|left|right|line|inline|none] (default: rounded)
     --header-lines-border[=STYLE]
                              Display header from --header-lines with a separate border.
                              Pass 'none' to still separate it but without a border.
+                             Pass 'inline' to embed it inside the list frame.
     --header-label=LABEL     Label to print on the header border
     --header-label-pos=COL   Position of the header label
                              [POSITIVE_INTEGER: columns from left|
@@ -191,8 +192,8 @@ Usage: fzf [options]
   FOOTER
     --footer=STR             String to print as footer
     --footer-border[=STYLE]  Draw border around the footer section
-                             [rounded|sharp|bold|block|thinblock|double|horizontal|vertical|
-                              top|bottom|left|right|line|none] (default: line)
+                             [rounded|sharp|bold|block|thinblock|double|dashed|horizontal|vertical|
+                              top|bottom|left|right|line|inline|none] (default: line)
     --footer-label=LABEL     Label to print on the footer border
     --footer-label-pos=COL   Position of the footer label
                              [POSITIVE_INTEGER: columns from left|
@@ -953,6 +954,8 @@ func parseBorder(str string, optional bool) (tui.BorderShape, error) {
 	switch str {
 	case "line":
 		return tui.BorderLine, nil
+	case "inline":
+		return tui.BorderInline, nil
 	case "rounded":
 		return tui.BorderRounded, nil
 	case "sharp":
@@ -965,6 +968,8 @@ func parseBorder(str string, optional bool) (tui.BorderShape, error) {
 		return tui.BorderThinBlock, nil
 	case "double":
 		return tui.BorderDouble, nil
+	case "dashed":
+		return tui.BorderDashed, nil
 	case "horizontal":
 		return tui.BorderHorizontal, nil
 	case "vertical":
@@ -983,7 +988,7 @@ func parseBorder(str string, optional bool) (tui.BorderShape, error) {
 	if optional && str == "" {
 		return defaultBorderShape, nil
 	}
-	return tui.BorderNone, errors.New("invalid border style (expected: rounded|sharp|bold|block|thinblock|double|horizontal|vertical|top|bottom|left|right|none)")
+	return tui.BorderNone, errors.New("invalid border style (expected: rounded|sharp|bold|block|thinblock|double|dashed|horizontal|vertical|top|bottom|left|right|line|inline|none)")
 }
 
 func parseKeyChords(str string, message string) (map[tui.Event]string, []tui.Event, error) {
@@ -2338,6 +2343,8 @@ func parsePreviewWindowImpl(opts *previewOpts, input string) error {
 			opts.border = tui.BorderThinBlock
 		case "border-double":
 			opts.border = tui.BorderDouble
+		case "border-dashed":
+			opts.border = tui.BorderDashed
 		case "noborder", "border-none":
 			opts.border = tui.BorderNone
 		case "border-horizontal":
@@ -3608,6 +3615,19 @@ func validateOptions(opts *Options) error {
 
 	if opts.Theme.Nth.IsColorDefined() {
 		return errors.New("only ANSI attributes are allowed for 'nth' (regular, bold, underline, reverse, dim, italic, strikethrough)")
+	}
+
+	if opts.BorderShape == tui.BorderInline ||
+		opts.ListBorderShape == tui.BorderInline ||
+		opts.InputBorderShape == tui.BorderInline ||
+		opts.Preview.border == tui.BorderInline {
+		return errors.New("inline border is only supported for --header-border, --header-lines-border, and --footer-border")
+	}
+	if opts.HeaderBorderShape == tui.BorderInline &&
+		opts.HeaderLinesShape != tui.BorderInline &&
+		opts.HeaderLinesShape != tui.BorderUndefined &&
+		opts.HeaderLinesShape != tui.BorderNone {
+		return errors.New("--header-border=inline requires --header-lines-border to be inline or unset")
 	}
 
 	return nil
