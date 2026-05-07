@@ -27,11 +27,11 @@ function curl_with_timings() {
 function cssh() {
   local repo=${1}
 
-  if [ -z "${repo}"]; then
+  if [ -z "${repo}" ]; then
     gh cs ssh
   else
     existing_codespaces=$(gh cs list --repo ${repo} | wc -l)
-    if [ ${existing_codespaces} -neq 0 ]; then
+    if [ ${existing_codespaces} -ne 0 ]; then
       gh cs ssh
     else
       gh cs create --repo ${repo}
