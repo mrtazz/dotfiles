@@ -227,13 +227,13 @@ fi
 
 for s in $shells; do
   bin=$s
-  [[ "$s" = nushell ]] && bin=nu
+  [[ $s == nushell ]] && bin=nu
   if ! command -v "$bin" > /dev/null; then
     shells=${shells/$s/}
   fi
 done
 
-if [[ ${#shells} -lt 3 ]]; then
+if [[ -z ${shells// /} ]]; then
   echo "No shell configuration to be updated."
   exit 0
 fi
@@ -252,10 +252,10 @@ fi
 
 echo
 for shell in $shells; do
+  [[ $shell == nushell ]] && continue
   fzf_completion="source \"$fzf_base/shell/completion.${shell}\""
   fzf_key_bindings="source \"$fzf_base/shell/key-bindings.${shell}\""
   [[ $shell == fish ]] && continue
-  [[ $shell == nushell ]] && continue
   src=${prefix_expand}.${shell}
   echo -n "Generate $src ... "
 
@@ -442,7 +442,7 @@ if [[ $shells =~ fish ]]; then
   fi
 fi
 
-if [[ "$shells" =~ nushell ]]; then
+if [[ $shells =~ nushell ]]; then
   if [[ $key_bindings -eq 1 || $auto_completion -eq 1 ]]; then
     echo "Setting up Nushell integration ..."
     nushell_autoload_dir=$(nu -c '$nu.user-autoload-dirs | first')
