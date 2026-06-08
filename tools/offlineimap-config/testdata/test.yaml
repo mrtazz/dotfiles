@@ -1,0 +1,8 @@
+accounts:
+  - name: test
+    remote:
+      user: testuser
+      passitem: test-password
+      host: imap.example.com
+    localfolder: "~/test"
+    postsynchook: "~/.config/offlineimap/test_hook.sh"

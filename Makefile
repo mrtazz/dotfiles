@@ -67,8 +67,11 @@ ${HOME}/.phoenix.js:
 
 .PHONY: offlineimap
 offlineimap: config/offlineimap/config
-config/offlineimap/config: config/dotoverrides/offlineimap.m4 config/offlineimap/config.m4
-	m4 $^ > $@
+OFFLINEIMAP_TPL=config/offlineimap/config.tmpl
+OFFLINEIMAP_DATA=config/dotoverrides/offlineimap.yaml
+config/offlineimap/config: $(OFFLINEIMAP_TPL) $(OFFLINEIMAP_DATA)
+	go run tools/offlineimap-config/main.go render --data $(OFFLINEIMAP_DATA) \
+		--template $(OFFLINEIMAP_TPL) > $@
 
 ifeq ($(CODESPACES), true)
 # don't fully clone homebrew on codespaces
@@ -106,3 +109,10 @@ bundle-install:
 .PHONY: spec
 spec:
 	bundle exec --gemfile=spec/Gemfile rspec --format=documentation spec/
+
+.PHONY: tools_test
+tools_test:
+	go test -v ./tools/...
+
+.PHONY: test
+test: tools_test

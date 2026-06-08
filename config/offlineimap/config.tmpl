@@ -1,0 +1,35 @@
+[general]
+accounts = {{ .AccountNames }}
+maxsyncaccounts = 1
+ui = ttyui
+pythonfile=~/.config/offlineimap/lib.py
+socktimeout = 30
+metadata = ~/.config/offlineimap/metadata
+
+{{- range .Accounts }}
+
+[Account {{ .Name }}]
+localrepository = {{ .Name }}-local
+remoterepository = {{ .Name }}-remote
+autorefresh = 2
+{{ with .PostSyncHook -}}
+postsynchook = {{ . }}
+{{- end }}
+
+[Repository {{ .Name }}-local]
+type = Maildir
+localfolders = {{ .LocalFolder }}
+foldersort=mycmp
+
+[Repository {{ .Name }}-remote]
+type = IMAP
+remotehost = {{ .Remote.Host }}
+remoteuser = {{ .Remote.User }}
+remotepasseval = get_keychain_item("{{ .Remote.PassItem }}")
+ssl = yes
+sslcacertfile = /opt/homebrew/etc/gnutls/cert.pem
+foldersort=mycmp
+usecompression = no
+maxconnections = 1
+
+{{- end }}
