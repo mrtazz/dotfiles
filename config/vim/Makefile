@@ -12,17 +12,21 @@ plugin_vim-fugitive         := https://github.com/tpope/vim-fugitive/tarball/mas
 plugin_supertab             := https://github.com/ervandew/supertab/tarball/master
 plugin_syntastic            := https://github.com/scrooloose/syntastic/tarball/master
 plugin_vim-colors-solarized := https://github.com/altercation/vim-colors-solarized/tarball/master
+plugin_obsession            := https://github.com/tpope/vim-obsession/tarball/master
+
+# file navigation
+plugin_vim-nerdtree         := https://github.com/preservim/nerdtree/tarball/master
 plugin_fzf                  := https://github.com/junegunn/fzf/tarball/master
 plugin_fzf.vim              := https://github.com/junegunn/fzf.vim/tarball/master
+
+# languages
 plugin_rust.vim             := https://github.com/rust-lang/rust.vim/tarball/master
 plugin_vim-tla              := https://github.com/florentc/vim-tla/tarball/master
-plugin_obsession            := https://github.com/tpope/vim-obsession/tarball/master
 
 # these are all for note taking (mostly on macOS)
 plugin_vim-marked           := https://github.com/itspriddle/vim-marked/tarball/master
 plugin_vim-checkbox         := https://github.com/jkramer/vim-checkbox/tarball/master
 plugin_vim-plan             := https://github.com/mrtazz/vim-plan/tarball/main
-plugin_vim-nerdtree         := https://github.com/preservim/nerdtree/tarball/master
 plugin_vim-goyo         		:= https://github.com/junegunn/goyo.vim/tarball/master
 plugin_tabular-vim      		:= https://github.com/godlygeek/tabular/tarball/master
 
