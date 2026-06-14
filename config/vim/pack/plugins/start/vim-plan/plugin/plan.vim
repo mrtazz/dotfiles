@@ -15,6 +15,7 @@ let g:PlanAssetsDirectory = get(g:, 'PlanAssetsDirectory', "assets")
 
 let g:PlanPromptForTitle = get(g:, 'PlanPromptForTitle', 0)
 let g:PlanNoteTimestampPrefix = get(g:, 'PlanNoteTimestampPrefix', "%Y%m%d-%H%M%S")
+let g:PlanAddNERDTreeNewNoteMenuItem = get(g:, 'PlanAddNERDTreeNewNoteMenuItem', 0)
 
 
 " command definitions
@@ -46,3 +47,12 @@ augroup PluginPlan
   autocmd QuickFixCmdPost [^l]* cwindow
   autocmd QuickFixCmdPost l* lwindow
 augroup END
+
+if g:PlanAddNERDTreeNewNoteMenuItem
+  if exists('*NERDTreeAddMenuItem')
+    " add menu item for new note to NERDTree
+    call NERDTreeAddMenuItem({'text': '(n)ew note', 'shortcut': 'n', 'callback': 'plan#AddNERDTreeNoteMenu'})
+  else
+    echoerr 'vim-plan: Unable to find NERDTreeAddMenuItem to add menu item'
+  endif
+endif

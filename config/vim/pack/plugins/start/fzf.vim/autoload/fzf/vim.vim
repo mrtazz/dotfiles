@@ -94,7 +94,7 @@ function! s:escape_for_bash(path)
   return escape(path, ' ')
 endfunction
 
-let s:min_version = '0.56.0'
+let s:min_version = '0.63.0'
 let s:is_win = has('win32') || has('win64')
 let s:is_wsl_bash = s:is_win && (exepath('bash') =~? 'Windows[/\\]system32[/\\]bash.exe$')
 let s:layout_keys = ['window', 'up', 'down', 'left', 'right']
@@ -352,6 +352,25 @@ for s:color_name in keys(s:ansi)
         \ "endfunction"
 endfor
 
+function! s:build_hint(entries, defaults)
+  let entries = copy(a:entries)
+  let keys = []
+  let actions = get(g:, 'fzf_action', s:default_action)
+  if a:defaults
+    call add(entries, ['Enter', 'Open'])
+    for [key, name, label] in [['ctrl-x', 'C-X', 'HSplit'], ['ctrl-v', 'C-V', 'VSplit'], ['ctrl-t', 'C-T', 'New tab']]
+      let Cmd = get(actions, key, '')
+      if type(Cmd) == s:TYPE.string && Cmd ==# s:default_action[key]
+        call add(entries, [name, label])
+      endif
+    endfor
+  endif
+  for [key, action] in entries
+    call add(keys, s:magenta(key, 'Special').' '.action)
+  endfor
+  return join(keys, '  ')
+endfunction
+
 function! s:buflisted()
   return filter(range(1, bufnr('$')), 'buflisted(v:val) && getbufvar(v:val, "&filetype") != "qf"')
 endfunction
@@ -385,9 +404,9 @@ function! s:fzf(name, opts, extra)
 endfunction
 
 let s:default_action = {
-  \ 'ctrl-t': 'tab split',
-  \ 'ctrl-x': 'split',
-  \ 'ctrl-v': 'vsplit' }
+      \ 'ctrl-t': 'tab split',
+      \ 'ctrl-x': 'split',
+      \ 'ctrl-v': 'vsplit' }
 
 " Key that pastes the selected items into the current buffer instead of opening
 " them. Commands opt in by setting `_paste` on the spec (see s:wrap), and their
@@ -608,10 +627,10 @@ function! fzf#vim#_lines(all)
     endif
     let linefmt = s:blue("%2d\t", "TabLine")."%s".s:yellow("\t%4d ", "LineNr")."\t%s"
     call extend(b == buf ? cur : rest,
-    \ filter(
-    \   map(lines,
-    \       '(!a:all && empty(v:val)) ? "" : printf(linefmt, b, bufname, v:key + 1, v:val)'),
-    \   'a:all || !empty(v:val)'))
+          \ filter(
+          \   map(lines,
+          \       '(!a:all && empty(v:val)) ? "" : printf(linefmt, b, bufname, v:key + 1, v:val)'),
+          \   'a:all || !empty(v:val)'))
   endfor
   return [display_bufnames, extend(cur, rest)]
 endfunction
@@ -622,11 +641,11 @@ function! fzf#vim#lines(...)
   let [query, args] = (a:0 && type(a:1) == type('')) ?
         \ [a:1, a:000[1:]] : ['', a:000]
   return s:fzf('lines', {
-  \ 'source':  lines,
-  \ 'sink*':   s:function('s:line_handler'),
-  \ '_paste':  1,
-  \ 'options': s:reverse_list(['--tiebreak=index', '--prompt', 'Lines> ', '--ansi', '--extended', '--nth='.nth.'..', '--tabstop=1', '--query', query, '--multi'])
-  \}, args)
+        \ 'source':  lines,
+        \ 'sink*':   s:function('s:line_handler'),
+        \ '_paste':  1,
+        \ 'options': s:reverse_list(['--tiebreak=index', '--prompt', 'Lines> ', '--ansi', '--extended', '--nth='.nth.'..', '--tabstop=1', '--query', query, '--multi'])
+        \}, args)
 endfunction
 
 " ------------------------------------------------------------------
@@ -667,11 +686,11 @@ function! fzf#vim#buffer_lines(...)
   let [query, args] = (a:0 && type(a:1) == type('')) ?
         \ [a:1, a:000[1:]] : ['', a:000]
   return s:fzf('blines', {
-  \ 'source':  s:buffer_lines(query),
-  \ 'sink*':   s:function('s:buffer_line_handler'),
-  \ '_paste':  1,
-  \ 'options': s:reverse_list(['+m', '--tiebreak=index', '--multi', '--prompt', 'BLines> ', '--ansi', '--extended', '--nth=2..', '--tabstop=1'])
-  \}, args)
+        \ 'source':  s:buffer_lines(query),
+        \ 'sink*':   s:function('s:buffer_line_handler'),
+        \ '_paste':  1,
+        \ 'options': s:reverse_list(['+m', '--tiebreak=index', '--multi', '--prompt', 'BLines> ', '--ansi', '--extended', '--nth=2..', '--tabstop=1'])
+        \}, args)
 endfunction
 
 " ------------------------------------------------------------------
@@ -697,10 +716,10 @@ function! fzf#vim#colors(...)
   endif
 
   let spec = {
-  \ 'source':  colors,
-  \ 'sink':    'colo',
-  \ 'options': ['+m', '--prompt', 'Colors> ']
-  \}
+        \ 'source':  colors,
+        \ 'sink':    'colo',
+        \ 'options': ['+m', '--prompt', 'Colors> ']
+        \}
 
   if !a:1 " We can't set up IPC in fullscreen mode in Vim
     let fifo = fzf#vim#ipc#start({ msg -> execute('colo '.msg) })
@@ -720,10 +739,10 @@ endfunction
 " ------------------------------------------------------------------
 function! fzf#vim#locate(query, ...)
   return s:fzf('locate', {
-  \ 'source':  'locate '.a:query,
-  \ '_paste':  1,
-  \ 'options': '-m --prompt "Locate> "'
-  \}, a:000)
+        \ 'source':  'locate '.a:query,
+        \ '_paste':  1,
+        \ 'options': '-m --prompt "Locate> "'
+        \}, a:000)
 endfunction
 
 " ------------------------------------------------------------------
@@ -731,10 +750,10 @@ endfunction
 " ------------------------------------------------------------------
 function! fzf#vim#_recent_files()
   return fzf#vim#_uniq(map(
-    \ filter([expand('%')], 'len(v:val)')
-    \   + filter(map(fzf#vim#_buflisted_sorted(), 'bufname(v:val)'), 'len(v:val)')
-    \   + filter(copy(v:oldfiles), "filereadable(fnamemodify(v:val, ':p'))"),
-    \ 'fnamemodify(v:val, ":~:.")'))
+        \ filter([expand('%')], 'len(v:val)')
+        \   + filter(map(fzf#vim#_buflisted_sorted(), 'bufname(v:val)'), 'len(v:val)')
+        \   + filter(copy(v:oldfiles), "filereadable(fnamemodify(v:val, ':p'))"),
+        \ 'fnamemodify(v:val, ":~:.")'))
 endfunction
 
 function! s:history_source(type)
@@ -744,8 +763,7 @@ function! s:history_source(type)
   endif
   let fmt = s:yellow(' %'.len(string(max)).'d ', 'Number')
   let list = filter(map(range(1, max), 'histget(a:type, - v:val)'), '!empty(v:val)')
-  return extend([' • Press '.s:magenta('CTRL-E', 'Special').' to edit'],
-    \ map(list, 'printf(fmt, len(list) - v:key)." ".v:val'))
+  return map(list, 'printf(fmt, len(list) - v:key)." ".v:val')
 endfunction
 
 nnoremap <plug>(-fzf-vim-do) :execute g:__fzf_command<cr>
@@ -776,22 +794,24 @@ function! s:cmd_history_sink(lines)
   call s:history_sink(':', a:lines)
 endfunction
 
-function! fzf#vim#command_history(...)
-  return s:fzf('history-command', {
-  \ 'source':  s:history_source(':'),
-  \ 'sink*':   s:function('s:cmd_history_sink'),
-  \ 'options': '+m --ansi --prompt="Hist:> " --info inline-right --header-lines=1 --header-border=horizontal --no-separator --expect=ctrl-e --tiebreak=index'}, a:000)
-endfunction
-
 function! s:search_history_sink(lines)
   call s:history_sink('/', a:lines)
 endfunction
 
+function! s:history_common(name, source, sinklist, prompt, args)
+  let footer = s:magenta('C-E', 'Special').' Edit'
+  return s:fzf(a:name, {
+  \ 'source':  a:source,
+  \ 'sink*':   a:sinklist,
+  \ 'options': ['+m', '--ansi', '--prompt', a:prompt, '--footer', footer, '--expect=ctrl-e', '--scheme=history']}, a:args)
+endfunction
+
+function! fzf#vim#command_history(...)
+  call s:history_common('history-command', s:history_source(':'), s:function('s:cmd_history_sink'), 'Hist:> ', a:000)
+endfunction
+
 function! fzf#vim#search_history(...)
-  return s:fzf('history-search', {
-  \ 'source':  s:history_source('/'),
-  \ 'sink*':   s:function('s:search_history_sink'),
-  \ 'options': '+m --ansi --prompt="Hist/> " --info inline-right --header-lines=1 --header-border=horizontal --no-separator --expect=ctrl-e --tiebreak=index'}, a:000)
+  call s:history_common('history-search', s:history_source('/'), s:function('s:search_history_sink'), 'Hist/> ', a:000)
 endfunction
 
 function! fzf#vim#history(...)
@@ -977,7 +997,8 @@ function! fzf#vim#buffers(...)
   let sorted = sort(buffers, 's:sort_buffers')
   let tabstop = len(max(sorted)) >= 4 ? 9 : 8
   let s:buffers_delete_file = tempname()
-  let options = ['+m', '-x', '--tiebreak=index', '--ansi', '-d', '\t', '--with-nth', '3..', '-n', '2,1..2', '--prompt', 'Buf> ', '--query', query, '--preview-window', '+{2}/2', '--tabstop', tabstop, '--bind', 'shift-delete:execute-silent(echo {} >> '.s:buffers_delete_file.')+exclude', '--header', '• Press '.s:magenta('SHIFT-DELETE', 'Special').' to unload buffer', '--header-border=horizontal', '--no-separator', '--info=inline-right']
+  let hint = s:build_hint([['C-A-X', 'Unload']], 1)
+  let options = ['+m', '-x', '--tiebreak=index', '--ansi', '-d', '\t', '--with-nth', '3..', '-n', '2,1..2', '--prompt', 'Buf> ', '--query', query, '--preview-window', '+{2}/2', '--tabstop', tabstop, '--bind', 'ctrl-alt-x:execute-silent(echo {} >> '.s:buffers_delete_file.')+exclude', '--footer', hint]
   if bufnr('') == get(sorted, 0, 0)
     call extend(options, ['--sync', '--bind', 'start:pos:2'])
   endif
@@ -1757,13 +1778,13 @@ function! s:commits(range, buffer_local, args)
   if &modifiable
     call add(expect_keys, s:paste_key())
   endif
+  let hint = s:build_hint([['C-S', 'Toggle sort'], ['C-Y', 'Yank hashes']], 1)
   let options = {
   \ 'source':  source,
   \ 'sink*':   s:function('s:commits_sink'),
-  \ 'options': s:reverse_list(['--ansi', '--multi', '--tiebreak=index',
-  \   '--info=inline-right', '--prompt', command.'> ', '--bind=ctrl-s:toggle-sort',
-  \   '--header-border=horizontal', '--no-separator',
-  \   '--header', '• Press '.s:magenta('CTRL-S', 'Special').' to toggle sort, '.s:magenta('CTRL-Y', 'Special').' to yank commit hashes',
+  \ 'options': s:reverse_list(['--ansi', '--multi', '--scheme=history',
+  \   '--prompt', command.'> ', '--bind=ctrl-s:toggle-sort',
+  \   '--footer', hint,
   \   '--expect=ctrl-y,'.join(expect_keys, ',')])
   \ }
 

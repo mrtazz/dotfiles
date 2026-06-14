@@ -73,6 +73,49 @@ function! plan#OpenNote(template='')
   call plan#setupBuffer()
 endfunction
 
+function! plan#AddNERDTreeNoteMenu()
+  let curDirNode = g:NERDTreeDirNode.GetSelected()
+
+  let msg = s:titleEnabled ? input('Enter note file title: ') : ''
+  " generate a timestamp based title if we haven't given one
+  let maybeTitle = msg ==  '' ? strftime('%H%M%S') : "" . msg
+  let dateTime = strftime(s:noteTimestampPrefix)
+  let fullNoteName = dateTime . ' ' . maybeTitle
+  let plan = curDirNode.path.str() . nerdtree#slash() . substitute(fullNoteName, ' ', '-', 'g') . ".md"
+	let proposedFileName = input("New note to be added:", plan, 'file')
+
+  let newNodeName = substitute(proposedFileName, '\(^\s*\|\s*$\)', '', 'g')
+
+  if newNodeName ==# ''
+      call nerdtree#echo('Node Creation Aborted.')
+      return
+  endif
+
+  try
+      let newPath = g:NERDTreePath.Create(newNodeName)
+      let parentNode = b:NERDTree.root.findNode(newPath.getParent())
+
+      let newTreeNode = g:NERDTreeFileNode.New(newPath, b:NERDTree)
+      " Emptying g:NERDTreeOldSortOrder forces the sort to
+      " recalculate the cached sortKey so nodes sort correctly.
+      let g:NERDTreeOldSortOrder = []
+      if empty(parentNode)
+          call b:NERDTree.root.refresh()
+          call b:NERDTree.render()
+      elseif parentNode.isOpen || !empty(parentNode.children)
+          call parentNode.addChild(newTreeNode, 1)
+          call g:NERDTreePathNotifier.NotifyListeners('init', newTreeNode.path, newTreeNode.getNerdtree(), {})
+          call NERDTreeRender()
+          call newTreeNode.putCursorHere(1, 0)
+      endif
+
+      redraw!
+  catch /^NERDTree/
+      call nerdtree#echoWarning('Node Not Created.')
+  endtry
+endfunction
+
+
 function! plan#MarkDone()
   call setline(line('.'), substitute(getline('.'), '- \[ \]', '- [x]', 'g'))
 endfunction

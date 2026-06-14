@@ -87,6 +87,17 @@ variables inline:
 - `%%MONTH%%` with the name of the current month
 - `%%TITLE%%` with the note title if provided
 
+### NERDTree integration
+
+The plugin provides integration with the [NERDTree vim plugin][nerdtree]
+to add a new menu item to the modify menu. I allows to create a new note added
+to a tree node via the 'n' shortcut. The integration is off by default and can
+be enabled via the config setting:
+
+```
+let g:PlanAddNERDTreeNewNoteMenuItem = 1
+```
+
 ### Useful shell commands
 
 I complement this workflow with a couple of shell commands I run from a
@@ -227,6 +238,7 @@ let g:PlanNotesDir = get(g:, 'PlanNotesDir', "notes")
 " asset directory
 let g:PlanAssetsDirectory = get(g:, 'PlanAssetsDirectory', "assets")
 let g:PlanPromptForTitle = get(g:, 'PlanPromptForTitle', 0)
+let g:PlanAddNERDTreeNewNoteMenuItem = get(g:, 'PlanAddNERDTreeNewNoteMenuItem', 0)
 ```
 
 ## See also
@@ -235,3 +247,4 @@ let g:PlanPromptForTitle = get(g:, 'PlanPromptForTitle', 0)
 [vim_stencil]: https://github.com/mrtazz/vim-stencil
 [obsidian]: https://obsidian.md/
 [noteplan]: https://noteplan.co/
+[nerdtree]: https://github.com/preservim/nerdtree
