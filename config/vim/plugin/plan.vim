@@ -13,3 +13,6 @@ map <leader>pm :PlanMigrateToToday<CR>
 " states for markdown checkboxes
 let g:checkbox_states = [' ', 'x', '-', '>']
 
+let g:PlanPromptForTitle = 1
+let g:PlanAddNERDTreeNewNoteMenuItem = 1
+
