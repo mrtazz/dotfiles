@@ -7,9 +7,8 @@ set wildignorecase
 set complete+=kspell
 
 " Supertab settings
-let g:SuperTabDefaultCompletionTypeDiscovery = [
-\ "&completefunc:<c-x><c-u>",
-\ "&omnifunc:<c-x><c-o>",
-\ ]
+let g:SuperTabDefaultCompletionType = "context"
 let g:SuperTabLongestHighlight = 1
 
+" complete emojis
+set completefunc=emoji#complete

@@ -29,6 +29,7 @@ plugin_vim-checkbox         := https://github.com/jkramer/vim-checkbox/tarball/m
 plugin_vim-plan             := https://github.com/mrtazz/vim-plan/tarball/main
 plugin_vim-goyo         		:= https://github.com/junegunn/goyo.vim/tarball/master
 plugin_tabular-vim      		:= https://github.com/godlygeek/tabular/tarball/master
+plugin_emoji-vim      			:= https://github.com/junegunn/vim-emoji/tarball/master
 
 # my plugins
 plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master

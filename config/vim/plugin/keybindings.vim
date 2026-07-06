@@ -24,4 +24,5 @@ noremap   <Down>   <NOP>
 noremap   <Left>   <NOP>
 noremap   <Right>  <NOP>
 
-
+" replace emoji
+command ReplaceEmojiStrings :%s/:\([^:]\+\):/\=emoji#for(submatch(1), submatch(0))/g
