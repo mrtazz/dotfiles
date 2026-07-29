@@ -369,8 +369,20 @@ func radixSortResults(a []Result, tac bool, scratch []Result) []Result {
 	src, dst := a, buf
 	scattered := 0
 
+	// OR of all keys: a byte position that is zero here is zero in every key,
+	// so its pass is a no-op and can be skipped without a histogram scan.
+	// With the common two-criteria setup the low 32 bits are always zero.
+	var keyOR uint64
+	for i := range src {
+		keyOR |= sortKey(&src[i])
+	}
+
 	for pass := range 8 {
 		shift := uint(pass) * 8
+
+		if byte(keyOR>>shift) == 0 {
+			continue
+		}
 
 		var count [256]int
 		for i := range src {
