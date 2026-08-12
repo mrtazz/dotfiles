@@ -303,7 +303,9 @@ func bonusAt(input *util.Chars, idx int) int16 {
 }
 
 func normalizeRune(r rune) rune {
-	if r < 0x00C0 || r > 0xFF61 {
+	// Every key of the map folds to ASCII, so a rune the bitmap rejects cannot
+	// be in it. TestNormalizedKeysAreFlagged verifies that.
+	if !util.MayFoldToAscii(r) {
 		return r
 	}
 
@@ -345,10 +347,90 @@ func isAscii(runes []rune) bool {
 	return true
 }
 
+// runePrefilterable reports whether scanning the rune array can decide this
+// pattern against this item without missing a match. Phase 2 lowercases an
+// uppercase text rune and then normalizes it, and the scan sees neither
+// transform, so every pattern rune must be unreachable by them.
+func runePrefilterable(input *util.Chars, pattern []rune, caseSensitive bool) bool {
+	if input.MayFoldToAscii() {
+		// A non-ASCII rune of this item could fold onto an ASCII pattern char
+		for _, r := range pattern {
+			if r < utf8.RuneSelf {
+				return false
+			}
+		}
+	}
+	if caseSensitive {
+		// No case transform is applied, and normalization only ever produces
+		// ASCII, so nothing can reach a non-ASCII pattern rune
+		return true
+	}
+	for _, r := range pattern {
+		// Another rune must not lowercase onto this one. Being uncased is not
+		// enough by itself: U+00DF has no simple uppercase yet U+1E9E
+		// lowercases to it. Excluding the foldable set covers that.
+		if r >= utf8.RuneSelf &&
+			(unicode.ToUpper(r) != r || unicode.ToLower(r) != r || util.MayFoldToAscii(r)) {
+			return false
+		}
+	}
+	return true
+}
+
+// runeFuzzyIndex is asciiFuzzyIndex for rune-mode input. Only valid when
+// runePrefilterable says so.
+func runeFuzzyIndex(input *util.Chars, pattern []rune, caseSensitive bool) (int, int) {
+	runes := input.Runes()
+	firstIdx, idx, lastIdx := 0, 0, 0
+	var last rune
+	for pidx := range pattern {
+		last = pattern[pidx]
+		if last < utf8.RuneSelf {
+			idx = indexAsciiRune(runes, caseSensitive, byte(last), idx)
+		} else {
+			idx = indexRune(runes, last, idx)
+		}
+		if idx < 0 {
+			return -1, -1
+		}
+		if pidx == 0 && idx > 0 {
+			// Step back to find the right bonus point
+			firstIdx = idx - 1
+		}
+		lastIdx = idx
+		idx++
+	}
+
+	// Find the last appearance of the last character of the pattern to limit
+	// the search scope
+	if lastIdx+1 < len(runes) {
+		var end int
+		if last < utf8.RuneSelf {
+			end = lastIndexAsciiRune(runes, caseSensitive, byte(last), lastIdx+1)
+		} else {
+			end = lastIndexRune(runes, last, lastIdx+1)
+		}
+		if end >= 0 {
+			return firstIdx, end + 1
+		}
+	}
+	return firstIdx, lastIdx + 1
+}
+
 func asciiFuzzyIndex(input *util.Chars, pattern []rune, caseSensitive bool) (int, int) {
-	// Can't determine
 	if !input.IsBytes() {
-		return 0, input.Length()
+		if disableRunePrefilter {
+			return 0, input.Length()
+		}
+		// runePrefilterable does not inline, so keep the common case out of
+		// it: an ASCII pattern against an item that cannot fold to ASCII is
+		// always scannable, and both of these checks do inline.
+		if input.MayFoldToAscii() || !isAscii(pattern) {
+			if !runePrefilterable(input, pattern, caseSensitive) {
+				return 0, input.Length()
+			}
+		}
+		return runeFuzzyIndex(input, pattern, caseSensitive)
 	}
 
 	// Not possible
@@ -466,8 +548,9 @@ func fuzzyMatchV2Single(caseSensitive bool, forward bool, input *util.Chars, b b
 // Test hooks: force the general path instead of a fast path, so the two can
 // be compared for equivalence.
 var (
-	disableSingle bool
-	disableTwo    bool
+	disableSingle        bool
+	disableTwo           bool
+	disableRunePrefilter bool
 )
 
 // fuzzyMatchV2Two is a fused fast path for a two-character ASCII pattern on

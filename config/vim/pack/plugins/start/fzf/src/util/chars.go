@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"fmt"
+	"math/bits"
 	"unicode"
 	"unicode/utf8"
 	"unsafe"
@@ -13,15 +14,76 @@ const (
 	overflow32 uint32 = 0x80808080
 )
 
+const (
+	flagInBytes uint8 = 1 << iota
+	flagMayFold
+)
+
 type Chars struct {
-	slice           []byte // or []rune
-	inBytes         bool
+	slice []byte // or []rune
+	// Only ever set, never cleared, so a reader racing a Prepend sees either
+	// the old or the new value and both are safe. trimLength* is kept out
+	// because TrimLength rewrites it.
+	flags           uint8
 	trimLengthKnown bool
 	trimLength      uint16
 
 	// XXX Piggybacking item index here is a horrible idea. But I'm trying to
 	// minimize the memory footprint by not wasting padded spaces.
 	Index int32
+}
+
+// Rune ranges that case folding or normalization can turn into ASCII, derived
+// from algo's normalization table and unicode.ToLower, then merged. They are a
+// superset of the exact set, which TestMayFoldToAsciiIsSuperset in the algo
+// package verifies. Grouped tightly on purpose: a wider merge would include
+// Greek Extended, General Punctuation and the currency and letterlike blocks,
+// and every line holding a curly quote or an em dash would then lose the
+// prefilter. Cyrillic, Greek, Hebrew, Arabic, Thai, Devanagari, CJK, Hangul,
+// kana, emoji, punctuation and box drawing are all outside.
+const (
+	foldLo = 0x00C0
+	foldHi = 0xFF61
+)
+
+var foldableRanges = [...][2]rune{
+	{0x00C0, 0x01B6}, // Latin-1 Supplement, Latin Extended-A and -B
+	{0x01CD, 0x02AE}, // rest of Latin Extended-B and IPA Extensions
+	{0x0363, 0x036F}, // combining Latin small letters
+	{0x1D00, 0x1D22}, // Phonetic Extensions, small capitals
+	{0x1D62, 0x1D65}, // subscript letters
+	{0x1E00, 0x1EF9}, // Latin Extended Additional
+	{0x2071, 0x2071}, // superscript i
+	{0x2095, 0x209C}, // subscript letters
+	{0x212A, 0x212B}, // KELVIN SIGN and ANGSTROM SIGN, which fold by case
+	{0x2183, 0x2184}, // reversed roman numeral one hundred
+	{0x2C62, 0x2C7F}, // Latin Extended-C
+	{0xA78D, 0xA78D}, // Latin Extended-D
+	{0xA7AA, 0xA7B2}, // more Latin Extended-D
+	{0xA7C5, 0xA7C5},
+	{0xFF01, 0xFF61}, // fullwidth ASCII forms, and halfwidth ideographic full stop
+}
+
+// Walking the ranges costs a serial chain of comparisons per rune, which is
+// measurable at ingestion, so precompute a bitmap instead.
+var foldableBits = func() (bits [(foldHi-foldLo)/8 + 1]byte) {
+	for _, r := range foldableRanges {
+		for c := r[0]; c <= r[1]; c++ {
+			i := c - foldLo
+			bits[i>>3] |= 1 << (i & 7)
+		}
+	}
+	return
+}()
+
+// MayFoldToAscii reports whether case folding or normalization could turn r
+// into an ASCII character.
+func MayFoldToAscii(r rune) bool {
+	i := uint32(r - foldLo)
+	if i > foldHi-foldLo {
+		return false
+	}
+	return foldableBits[i>>3]&(1<<(i&7)) != 0
 }
 
 func checkAscii(bytes []byte) (bool, int) {
@@ -44,31 +106,94 @@ func checkAscii(bytes []byte) (bool, int) {
 	return true, 0
 }
 
+// countRunes counts the bytes that are not UTF-8 continuation bytes, which is
+// the rune count of valid UTF-8. Each invalid byte decodes to its own
+// RuneError, so the result can undercount but never overcount, making it safe
+// as a capacity hint.
+func countRunes(bytes []byte) int {
+	n, i := 0, 0
+	for ; i <= len(bytes)-8; i += 8 {
+		v := *(*uint64)(unsafe.Pointer(&bytes[i]))
+		// Continuation byte: bit 7 set, bit 6 clear. In `v << 1` bit 7 of each
+		// lane holds bit 6 of that same lane.
+		n += 8 - bits.OnesCount64(v&^(v<<1)&overflow64)
+	}
+	for ; i < len(bytes); i++ {
+		if bytes[i]&0xC0 != 0x80 {
+			n++
+		}
+	}
+	return n
+}
+
 // ToChars converts byte array into rune array
 func ToChars(bytes []byte) Chars {
 	inBytes, bytesUntil := checkAscii(bytes)
 	if inBytes {
-		return Chars{slice: bytes, inBytes: inBytes}
+		return Chars{slice: bytes, flags: flagInBytes}
 	}
 
-	runes := make([]rune, bytesUntil, len(bytes))
+	runes := make([]rune, bytesUntil, bytesUntil+countRunes(bytes[bytesUntil:]))
 	for i := range bytesUntil {
 		runes[i] = rune(bytes[i])
 	}
+	mayFold := false
 	for i := bytesUntil; i < len(bytes); {
+		// utf8.DecodeRune has an ASCII path of its own, but it is too complex
+		// to inline, so a mostly-ASCII line pays one call per byte for it.
+		// An ASCII rune never sets the fold bit either, so skip both calls.
+		if b := bytes[i]; b < utf8.RuneSelf {
+			runes = append(runes, rune(b))
+			i++
+			continue
+		}
 		r, sz := utf8.DecodeRune(bytes[i:])
 		i += sz
+		mayFold = mayFold || MayFoldToAscii(r)
 		runes = append(runes, r)
 	}
-	return RunesToChars(runes)
+	return runesToChars(runes, mayFold)
 }
 
+// RunesToChars adopts the caller's slice rather than copying it, so the caller
+// must not keep mutating it. See Runes for why.
 func RunesToChars(runes []rune) Chars {
-	return Chars{slice: *(*[]byte)(unsafe.Pointer(&runes)), inBytes: false}
+	mayFold := false
+	for _, r := range runes {
+		if MayFoldToAscii(r) {
+			mayFold = true
+			break
+		}
+	}
+	return runesToChars(runes, mayFold)
+}
+
+func runesToChars(runes []rune, mayFold bool) Chars {
+	var flags uint8
+	if mayFold {
+		flags = flagMayFold
+	}
+	return Chars{slice: *(*[]byte)(unsafe.Pointer(&runes)), flags: flags}
 }
 
 func (chars *Chars) IsBytes() bool {
-	return chars.inBytes
+	return chars.flags&flagInBytes != 0
+}
+
+// MayFoldToAscii reports whether the text holds a rune that case folding or
+// normalization could turn into an ASCII character. When false, an ASCII
+// pattern character can only match the identical ASCII rune, which is what
+// lets the prefilter scan the rune array directly.
+func (chars *Chars) MayFoldToAscii() bool {
+	return chars.flags&flagMayFold != 0
+}
+
+// Runes returns the underlying rune slice, or nil if the text is kept as
+// bytes. Read only. The result aliases the text, so writing to it would change
+// the text without updating the cached fold bit, and the prefilter would then
+// reject items it should match. Copy before mutating.
+func (chars *Chars) Runes() []rune {
+	return chars.optionalRunes()
 }
 
 func (chars *Chars) Bytes() []byte {
@@ -105,7 +230,7 @@ func (chars *Chars) NumLines(atMost int) (int, bool) {
 }
 
 func (chars *Chars) optionalRunes() []rune {
-	if chars.inBytes {
+	if chars.IsBytes() {
 		return nil
 	}
 	return *(*[]rune)(unsafe.Pointer(&chars.slice))
@@ -127,7 +252,7 @@ func (chars *Chars) Length() int {
 
 // String returns the string representation of a Chars object.
 func (chars *Chars) String() string {
-	return fmt.Sprintf("Chars{slice: []byte(%q), inBytes: %v, trimLengthKnown: %v, trimLength: %d, Index: %d}", chars.slice, chars.inBytes, chars.trimLengthKnown, chars.trimLength, chars.Index)
+	return fmt.Sprintf("Chars{slice: []byte(%q), inBytes: %v, mayFold: %v, trimLengthKnown: %v, trimLength: %d, Index: %d}", chars.slice, chars.IsBytes(), chars.MayFoldToAscii(), chars.trimLengthKnown, chars.trimLength, chars.Index)
 }
 
 // TrimLength returns the length after trimming leading and trailing whitespaces
@@ -218,6 +343,8 @@ func (chars *Chars) ToString() string {
 	return unsafe.String(unsafe.SliceData(chars.slice), len(chars.slice))
 }
 
+// ToRunes returns the text as runes. In rune mode the result aliases the text
+// and must not be mutated, see Runes. In byte mode it is a fresh slice.
 func (chars *Chars) ToRunes() []rune {
 	if runes := chars.optionalRunes(); runes != nil {
 		return runes
@@ -246,6 +373,12 @@ func (chars *Chars) Prepend(prefix string) {
 		chars.slice = *(*[]byte)(unsafe.Pointer(&runes))
 	} else {
 		chars.slice = append([]byte(prefix), chars.slice...)
+	}
+	for _, r := range prefix {
+		if MayFoldToAscii(r) {
+			chars.flags |= flagMayFold
+			break
+		}
 	}
 }
 
