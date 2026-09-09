@@ -33,12 +33,17 @@ function! s:dispatch(bang, file) abort
     else
       let file = fnamemodify(expand(a:file), ':p')
     endif
-    if !a:bang
-      \ && file !~# 'Session\.vim$'
-      \ && filereadable(file)
-      \ && getfsize(file) > 0
-      \ && readfile(file, '', 1)[0] !=# 'let SessionLoad = 1'
-      return 'mksession '.fnameescape(file)
+    if !a:bang && file !~# 'Session\.vim$'
+      try
+        let body = readfile(file, '', 2)
+        if len(body) > 0
+              \ && get(body, 0, '') !=# 'let SessionLoad = 1'
+              \ && get(body, 1, '') !=# 'g:SessionLoad = 1'
+          " Leverage original :mksession for E189
+          return 'mksession ' . fnameescape(file)
+        endif
+      catch /^Vim(readfile):E484:/
+      endtry
     endif
     let g:this_obsession = file
     let error = s:persist()
@@ -75,8 +80,9 @@ function! s:persist() abort
       execute 'mksession!' fnameescape(tmp)
       let v:this_session = g:this_obsession
       let body = readfile(tmp)
-      call insert(body, 'let g:this_session = v:this_session', -3)
-      call insert(body, 'let g:this_obsession = v:this_session', -3)
+      let assign = get(body, 0) ==# 'vim9script' ? '' : 'let '
+      call insert(body, assign . 'g:this_session = v:this_session', -3)
+      call insert(body, assign . 'g:this_obsession = v:this_session', -3)
       if type(get(g:, 'obsession_append')) == type([])
         for line in g:obsession_append
           call insert(body, line, -3)

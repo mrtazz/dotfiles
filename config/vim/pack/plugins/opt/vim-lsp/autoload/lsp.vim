@@ -554,7 +554,7 @@ endfunction
 
 function! lsp#default_get_supported_capabilities(server_info) abort
     " Sorted alphabetically
-    return {
+    let l:capabilities = {
     \   'textDocument': {
     \       'callHierarchy': {
     \           'dynamicRegistration': v:false,
@@ -692,6 +692,10 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'workspaceFolders': g:lsp_experimental_workspace_folders ? v:true : v:false,
     \   },
     \ }
+    if g:lsp_diagnostics_pull_enabled
+        let l:capabilities['textDocument']['diagnostic'] = { 'dynamicRegistration': v:false }
+    endif
+    return l:capabilities
 endfunction
 
 function! s:ensure_init(buf, server_name, cb) abort
@@ -796,15 +800,15 @@ function! s:text_changes(buf, server_name) abort
             return l:listener_changes
         endif
 
-        " Fallback: compute diff (O(total lines))
+        " Fallback: compute diff (native diff() when available, else O(total lines))
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
         let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
         let l:changes = lsp#internal#listener#get_diff_cached(a:buf, l:old_content)
-        if empty(l:changes.text) && l:changes.rangeLength ==# 0
+        if empty(l:changes)
             return []
         endif
         call s:update_file_content(a:buf, a:server_name, l:new_content)
-        return [l:changes]
+        return l:changes
     endif
 
     let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
@@ -854,6 +858,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \   'contentChanges': l:content_changes,
         \ }
         \ })
+    call s:send_document_diagnostic_request(a:buf, a:server_name)
     call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
 
     let l:msg = s:new_rpc_success('textDocument/didChange sent', { 'server_name': a:server_name, 'path': l:path })
@@ -898,6 +903,7 @@ function! s:ensure_open(buf, server_name, cb) abort
         \ },
         \ })
 
+    call s:send_document_diagnostic_request(a:buf, a:server_name)
     call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
 
     let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path, 'filetype': getbufvar(a:buf, '&filetype') })
@@ -1020,6 +1026,14 @@ function! s:on_request(server_name, id, request) abort
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
     elseif a:request['method'] ==# 'client/unregisterCapability'
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
+    elseif a:request['method'] ==# 'workspace/diagnostic/refresh'
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
+        for l:uri in keys(s:servers[a:server_name]['buffers'])
+            let l:refresh_buf = bufnr(lsp#utils#uri_to_path(l:uri))
+            if l:refresh_buf >= 0 && bufloaded(l:refresh_buf)
+                call s:send_document_diagnostic_request(l:refresh_buf, a:server_name)
+            endif
+        endfor
     else
         " TODO: for now comment this out until we figure out a better solution.
         " We need to comment this out so that others outside of vim-lsp can
@@ -1309,6 +1323,41 @@ endfunction
 
 let s:didchange_queue = []
 let s:didchange_timer = -1
+
+function! s:on_document_diagnostic_response(server_name, client_id, data, event) abort
+    call lsp#internal#diagnostics#state#_handle_text_document_diagnostic(a:server_name, a:data['request'], a:data['response'])
+endfunction
+
+function! s:send_document_diagnostic_request(buf, server_name) abort
+    if !g:lsp_diagnostics_enabled || !lsp#capabilities#has_diagnostic_provider(a:server_name)
+        return
+    endif
+
+    let l:uri = lsp#utils#get_buffer_uri(a:buf)
+    if empty(l:uri)
+        return
+    endif
+
+    let l:provider = lsp#capabilities#get_diagnostic_provider(a:server_name)
+    let l:identifier = get(l:provider, 'identifier', '')
+    let l:params = {
+        \ 'textDocument': s:get_text_document_identifier(a:buf),
+        \ }
+    if !empty(l:identifier)
+        let l:params['identifier'] = l:identifier
+    endif
+
+    let l:previous_result_id = lsp#internal#diagnostics#state#_get_previous_result_id(l:uri, a:server_name, l:identifier)
+    if !empty(l:previous_result_id)
+        let l:params['previousResultId'] = l:previous_result_id
+    endif
+
+    call s:send_request(a:server_name, {
+        \ 'method': 'textDocument/diagnostic',
+        \ 'params': l:params,
+        \ 'on_notification': function('s:on_document_diagnostic_response', [a:server_name]),
+        \ })
+endfunction
 
 function! s:add_didchange_queue(buf) abort
     if g:lsp_use_event_queue == 0

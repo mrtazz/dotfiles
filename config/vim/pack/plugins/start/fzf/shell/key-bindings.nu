@@ -47,6 +47,20 @@ def __fzfcmd []: nothing -> list<string> {
   ['fzf']
 }
 
+# Keybinding modes to activate. The Helix modes only exist since Nushell
+# 0.115.0, so they are only included when running a version that supports
+# them (major > 0 covers a hypothetical 1.0+ where the minor resets).
+def __fzf_modes []: nothing -> list<string> {
+  let v = version
+  let major = ($v.major | into int)
+  let minor = ($v.minor | into int)
+  if ($major > 0) or ($minor >= 115) {
+    ['emacs', 'vi_normal', 'vi_insert', 'helix_normal', 'helix_select', 'helix_insert']
+  } else {
+    ['emacs', 'vi_normal', 'vi_insert']
+  }
+}
+
 
 export-env {
   $env.FZF_CTRL_T_OPTS     = $env.FZF_CTRL_T_OPTS?     | default ""
@@ -55,11 +69,11 @@ export-env {
 }
 
 # Directories
-const alt_c = {
+let alt_c = {
     name: fzf_dirs
     modifier: alt
     keycode: char_c
-    mode: [emacs, vi_normal, vi_insert]
+    mode: (__fzf_modes)
     event: [
       {
         send: executehostcommand
@@ -82,11 +96,11 @@ const alt_c = {
 }
 
 # History
-const ctrl_r = {
+let ctrl_r = {
   name: fzf_history
   modifier: control
   keycode: char_r
-  mode: [emacs, vi_insert, vi_normal]
+  mode: (__fzf_modes)
   event: [
     {
       send: executehostcommand
@@ -115,11 +129,11 @@ const ctrl_r = {
 }
 
 # Files
-const ctrl_t =  {
+let ctrl_t =  {
     name: fzf_files
     modifier: control
     keycode: char_t
-    mode: [emacs, vi_normal, vi_insert]
+    mode: (__fzf_modes)
     event: [
       {
         send: executehostcommand
