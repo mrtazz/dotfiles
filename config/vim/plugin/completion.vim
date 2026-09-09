@@ -9,6 +9,3 @@ set complete+=kspell
 " Supertab settings
 let g:SuperTabDefaultCompletionType = "context"
 let g:SuperTabLongestHighlight = 1
-
-" complete emojis
-set completefunc=emoji#complete
