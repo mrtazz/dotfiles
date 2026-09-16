@@ -240,7 +240,7 @@ func (r *LightRenderer) getch(cancellable bool, nonblock bool) (int, getCharResu
 	}()
 
 	cancelFd := int(rpipe.Fd())
-	for range maxSelectTries {
+	for {
 		var rfds unix.FdSet
 		limit := len(rfds.Bits) * unix.NFDBITS
 		if fd >= limit || cancelFd >= limit {
@@ -251,6 +251,8 @@ func (r *LightRenderer) getch(cancellable bool, nonblock bool) (int, getCharResu
 		rfds.Set(cancelFd)
 		_, err := unix.Select(max(fd, cancelFd)+1, &rfds, nil, nil, nil)
 		if err != nil {
+			// An interrupted wait is not a failed read, so it must not count
+			// against anything. Retry until the fd is ready or the wait fails.
 			if err == syscall.EINTR {
 				continue
 			}
@@ -265,7 +267,6 @@ func (r *LightRenderer) getch(cancellable bool, nonblock bool) (int, getCharResu
 			return getter()
 		}
 	}
-	return 0, getCharError
 }
 
 func (r *LightRenderer) Size() TermSize {

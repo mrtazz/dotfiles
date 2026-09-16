@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ..
-.TH fzf 1 "Aug 2026" "fzf 0.74.3" "fzf - a command-line fuzzy finder"
+.TH fzf 1 "Sep 2026" "fzf 0.74.4" "fzf - a command-line fuzzy finder"
 
 .SH NAME
 fzf - a command-line fuzzy finder
@@ -408,6 +408,9 @@ Adaptive height has the following limitations:
 * Cannot be used with top/bottom margin and padding given in percent size
 .br
 * It will not find the right size when there are multi-line items
+.br
+* fzf cannot start until the input ends or exceeds the height, so a stream
+that stays below it will delay the first render
 
 .TP
 .BI "\-\-min\-height=" "HEIGHT[+]"

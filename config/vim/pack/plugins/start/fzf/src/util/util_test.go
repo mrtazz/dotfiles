@@ -109,6 +109,27 @@ func TestRepeatToFill(t *testing.T) {
 	if RepeatToFill("abcde", 10, 42) != strings.Repeat("abcde", 4)+"abcde"[:2] {
 		t.Error("Expected:", strings.Repeat("abcde", 4)+"abcde"[:2])
 	}
+
+	// Should not cut a grapheme cluster in half
+	for _, test := range []struct {
+		str      string
+		limit    int
+		expected string
+	}{
+		{"a\u0301b", 1, "a\u0301"},
+		{"a\u0301b", 3, "a\u0301ba\u0301"},
+		{"a\u0301b", 4, "a\u0301ba\u0301b"},
+		{"a\u4e00", 2, "a"},
+		{"a\u4e00", 4, "a\u4e00a"},
+		{"-\U0001f468\u200d\U0001f469\u200d\U0001f467", 1, "-"},
+		{"-\U0001f468\u200d\U0001f469\u200d\U0001f467", 2, "-"},
+		{"-\U0001f468\u200d\U0001f469\u200d\U0001f467", 4, "-\U0001f468\u200d\U0001f469\u200d\U0001f467-"},
+	} {
+		actual := RepeatToFill(test.str, StringWidth(test.str), test.limit)
+		if actual != test.expected {
+			t.Errorf("Expected: %q, actual: %q", test.expected, actual)
+		}
+	}
 }
 
 func TestStringWidth(t *testing.T) {

@@ -18,7 +18,7 @@ triggered by a tag push.
 2. Verify file consistency, sign the tag, and push the tag.
 
     ```sh
-    make tag VERSION=0.74.3
+    make tag VERSION=0.74.4
     ```
 
     `make tag` runs `prerelease` first (checks that the version

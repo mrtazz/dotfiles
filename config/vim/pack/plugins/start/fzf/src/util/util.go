@@ -105,16 +105,18 @@ func RepeatToFill(str string, length int, limit int) string {
 	rest := limit % length
 	output := strings.Repeat(str, times)
 	if rest > 0 {
-		for _, r := range str {
-			rest -= uniseg.StringWidth(string(r))
-			if rest < 0 {
+		// Iterate over grapheme clusters so that we don't cut a cluster in half
+		end := 0
+		graphemes := uniseg.NewGraphemes(str)
+		for rest > 0 && graphemes.Next() {
+			width := graphemes.Width()
+			if width > rest {
 				break
 			}
-			output += string(r)
-			if rest == 0 {
-				break
-			}
+			rest -= width
+			_, end = graphemes.Positions()
 		}
+		output += str[:end]
 	}
 	return output
 }

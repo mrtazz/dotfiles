@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+0.74.5
+------
+- Fixed `--gap-line` cutting a grapheme cluster when filling the last cells of the line (#4920)
+
 0.74.4
 ------
 - Fixed an escape sequence split across reads being parsed as a fragment, which leaked the rest into the query (#4899)
@@ -10,6 +14,8 @@ CHANGELOG
     - It is now reset when a search starts and reaches 100 on the final result, so `progress` of 100 means the matches belong to the query reported next to them
 - Fixed adaptive height not reserving a line for the divider of an inline header or footer border, so the list came up one line short for each of them (#4904)
     - e.g. `seq 10 | fzf --height=~100% --list-border --header-lines=1 --header-lines-border=inline`
+- Fixed fzf erasing the line the prompt was on when it exits, which made the last line of the prompt flicker in fish, bash, and nushell (#4913)
+- Fixed fzf exiting with status 2 while waiting for a key, when `--listen` is used and 100+ signals interrupt the wait (#4917)
 - Vim plugin
     - fzf no longer blocks the editor, so live previews keep working while fzf is open
         - `fzf#run` returns an empty list when it runs fzf asynchronously. Use `sink`, `sinklist`, or `exit` to get the result
@@ -21,9 +27,13 @@ CHANGELOG
     - fzf now opens in a tmux or Zellij floating pane by default, so the window it was started from stays visible and can be used while fzf is running
         - Requires tmux 3.7+ or Zellij 0.44+
         - Set `g:fzf_layout` to pick a different layout
-- fish:
-    - Fixed custom CTRL-T command not using the prefixed target directory in some cases (#4498)
-    - Optimized description alignment of completion items (#4910)
+- fish
+    - Fixed custom CTRL-T command not using the prefixed target directory in some cases (#4498) (@bitraid)
+    - Optimized description alignment of completion items (#4910) (@bitraid)
+- nushell
+    - Added key bindings for Helix editing modes, on nushell 0.115.0 or above (#4914) (@sim590)
+    - Fixed CTRL-T inserting the selected paths unquoted
+        - p4p3r (@P4P3R-HAK) reported the security vulnerability and suggested the fix
 
 0.74.3
 ------
