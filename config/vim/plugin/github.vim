@@ -1,9 +1,23 @@
 function! GitHubMDTitle()
   let current_line = getline('.')
-  let gh_url = matchstr(current_line, 'https:\/\/github.com\/[a-zA-Z0-9/_#-]\+')
+  " find and replace any short refs to gh issues
+  let gh_url = matchstr(current_line, '[/a-zA-Z-_0-9]\+#[0-9]\+')
+  if !empty(gh_url)
+    let gh_url_parts = split(gh_url, "#")
+    if len(gh_url_parts) == 2
+      " we use 'issues/' here as it redirects to pulls/discussions
+      let issue_url = 'https://github.com/' . gh_url_parts[0] . '/issues/' . gh_url_parts[1]
+      let new_url = system('PATH=$PATH:/opt/homebrew/bin gh md link -n ' . issue_url)
+      call setline(line('.'), substitute(getline('.'), gh_url, new_url, ''))
+      return
+    endif
+  endif
+  " find and replace any long refs to gh issues
+  let gh_url = matchstr(current_line, 'https:\/\/github.com\/[a-zA-Z0-9/]\+')
   if !empty(gh_url)
     let new_url = system('PATH=$PATH:/opt/homebrew/bin gh md link -n ' . gh_url)
     call setline(line('.'), substitute(getline('.'), gh_url, new_url, ''))
+    return
   endif
 endfunction
 map <silent> <leader>gt :call GitHubMDTitle()<cr>
