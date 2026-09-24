@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Maintainer: Sven Vowe @nuclearglow
+# Contact maintainer for any change to this file.
+
 CURRENT_DIR="$( dirname ${BASH_SOURCE[0]} )"
 
 source "$CURRENT_DIR/../helpers.sh"
@@ -25,7 +28,7 @@ template() {
 
 	ExecStop=${resurrect_save_script_path}
 	ExecStop=${tmux_path} kill-server
-	KillMode=none
+	KillMode=control-group
 
 	RestartSec=2
 
@@ -51,22 +54,25 @@ systemd_unit_file() {
 	local systemd_tmux_server_start_cmd="$(get_tmux_option "${systemd_tmux_server_start_cmd_option}" "${systemd_tmux_server_start_cmd_default}" )"
 	local tmux_start_script_path="${CURRENT_DIR}/linux_start_tmux.sh"
 	local systemd_unit_file=$(template "${tmux_start_script_path}" "${options}")
-	mkdir -p "$(dirname ${systemd_unit_file_path})"
 	echo "$systemd_unit_file"
 }
 
 write_unit_file() {
-  systemd_unit_file > "${systemd_unit_file_path}"
+	systemd_unit_file > "${systemd_unit_file_path}"
 }
 
 write_unit_file_unless_exists() {
-	if ! [ -e "${systemd_unit_file_path}" ]; then
-    write_unit_file
+	local systemd_unit_file_dir=$(dirname ${systemd_unit_file_path})
+	if ! [ -d $systemd_unit_file_dir ]; then
+		mkdir -p $systemd_unit_file_dir
+		write_unit_file
+	elif ! [ -e "${systemd_unit_file_path}" ]; then
+		write_unit_file
 	fi
 }
 
 main() {
-  write_unit_file_unless_exists
+	write_unit_file_unless_exists
 	enable_tmux_unit_on_boot
 }
 main
