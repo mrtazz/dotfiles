@@ -16,33 +16,35 @@ end
 
 
 # brew definitions
-brew "vim"
-brew "ripgrep"
 brew "bat"
+brew "difftastic"
+brew "fd"
 brew "fzf"
+brew "gotags"
+brew "ripgrep"
 brew "tmux"
 brew "universal-ctags"
-brew "gotags"
-brew "fd"
+brew "vim"
 
 # add my OSS tap
 tap "mrtazz/oss"
 brew "mrtazz/oss/snipple"
 
 if macos?
-  cask "1password"
   cask "1password-cli"
-  cask "alfred"
+  cask "1password"
   cask "alacritty"
+  cask "alfred"
+  cask "hazel"
+  cask "hiddenbar"
   cask "phoenix"
   cask "qlmarkdown"
   cask "zotero"
-  cask "hazel"
-  cask "hiddenbar"
+
   # git, go, and gh are already installed on codespaces
+  brew "gh"
   brew "git"
   brew "go" unless ci?
-  brew "gh"
 
   # email things
   brew "mutt"
