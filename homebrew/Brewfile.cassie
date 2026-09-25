@@ -9,6 +9,10 @@ brew "ledger"
 brew "coreutils"
 brew "grdl/tap/git-get"
 
+# email things
+brew "mutt"
+brew "offlineimap"
+
 # add my OSS tap
 tap "mrtazz/oss"
 brew "mrtazz/oss/plan"

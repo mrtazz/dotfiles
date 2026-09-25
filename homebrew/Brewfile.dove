@@ -6,5 +6,5 @@ tap "mrtazz/oss"
 brew "mrtazz/oss/plan"
 brew "mrtazz/oss/pd"
 
-# menu bar tools and stuff
-cask "meetingbar"
+cask "1password-cli"
+cask "1password"

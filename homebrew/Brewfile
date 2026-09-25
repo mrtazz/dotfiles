@@ -31,8 +31,6 @@ tap "mrtazz/oss"
 brew "mrtazz/oss/snipple"
 
 if macos?
-  cask "1password-cli"
-  cask "1password"
   cask "alacritty"
   cask "alfred"
   cask "hazel"
@@ -45,8 +43,4 @@ if macos?
   brew "gh"
   brew "git"
   brew "go" unless ci?
-
-  # email things
-  brew "mutt"
-  brew "offlineimap"
 end

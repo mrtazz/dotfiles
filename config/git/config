@@ -45,6 +45,9 @@
   pull-with-submodules = "!git pull && git submodule update --init"
   rpull-with-submodules = "!git pull --rebase --stat && git submodule update --init"
 
+[diff]
+  external = difft
+
 [merge]
   tool = vimdiff
 
