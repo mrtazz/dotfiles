@@ -12,13 +12,13 @@
 
 <kbd align="center">
   <br/>
-  <a href="https://commitgoods.com/collections/fzf"><img src="https://junegunn.github.io/fzf/images/fzf-mugs.jpg" width="80%" alt="fzf merch"></a>
+  <a href="https://commitgoods.com/collections/fzf?utm_source=github&amp;utm_medium=referral"><img src="https://junegunn.github.io/fzf/images/fzf-mugs.jpg" width="80%" alt="fzf merch"></a>
   <br/>
   <br/>
   Show your love for fzf -- T-shirts, mugs, and stickers now available!
   <br/>
   <br/>
-  <a href="https://commitgoods.com/collections/fzf">commitgoods.com/collections/fzf</a>
+  <a href="https://commitgoods.com/collections/fzf?utm_source=github&amp;utm_medium=referral"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.shopify.com/s/files/1/0101/8752/files/commitgoods-badge-stacked-navy-dark.svg"><img src="https://cdn.shopify.com/s/files/1/0101/8752/files/commitgoods-badge-stacked-navy.svg" height="28" alt="Official merch on commitgoods.com"></picture></a>
   <br/>
   <br/>
 </kbd>
@@ -841,6 +841,13 @@ Fuzzy completion in Nushell works via the
 [external completer](https://www.nushell.sh/cookbook/external_completers.html)
 mechanism. There are some differences compared to bash and zsh:
 
+- Nushell 0.116.1 or newer is required. The completion runs on the line-editor
+  thread so fzf can take the terminal; a previously configured external
+  completer (e.g. Carapace) is therefore invoked inline when the `**` trigger
+  is absent.
+- The script wraps whichever external completer is configured when it loads,
+  so load it after any other external completer setup. The autoload setup
+  described above runs after `config.nu`, so it already does this.
 - On Nushell >= 0.103.0, the external completer is no longer called for
   built-in commands (e.g. `cd`, `ls`). Fuzzy completion with `**<TAB>` only
   works for external commands.
@@ -1143,7 +1150,7 @@ Copyright (c) 2013-2026 Junegunn Choi
 Goods
 -----
 
-Grab fzf T-shirts, mugs, and stickers here: https://commitgoods.com/collections/fzf
+Grab fzf T-shirts, mugs, and stickers here: [commitgoods.com/collections/fzf](https://commitgoods.com/collections/fzf?utm_source=github&utm_medium=referral)
 
 Sponsors :heart:
 ----------------

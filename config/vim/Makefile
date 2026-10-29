@@ -25,19 +25,13 @@ plugin_vim-tla              := https://github.com/florentc/vim-tla/tarball/maste
 
 # these are all for note taking (mostly on macOS)
 plugin_vim-marked           := https://github.com/itspriddle/vim-marked/tarball/master
-plugin_vim-checkbox         := https://github.com/jkramer/vim-checkbox/tarball/master
 plugin_vim-plan             := https://github.com/mrtazz/vim-plan/tarball/main
 plugin_vim-goyo         		:= https://github.com/junegunn/goyo.vim/tarball/master
 plugin_tabular-vim      		:= https://github.com/godlygeek/tabular/tarball/master
-plugin_emoji-vim      			:= https://github.com/junegunn/vim-emoji/tarball/master
 
 # my plugins
 plugin_vim-tinygo           := https://github.com/mrtazz/vim-tinygo/tarball/master
 plugin_vim-snipple          := https://github.com/mrtazz/vim-snipple/tarball/main
-
-# optional plugins, these are too noisy to always keep enabled
-plugin-opt_vim-lsp          := https://github.com/prabirshrestha/vim-lsp/tarball/master
-plugin-opt_copilot.vim      := https://github.com/github/copilot.vim/tarball/release
 
 # this filters out all variables with a plugin_ prefix and regards them as
 # plugin definitions

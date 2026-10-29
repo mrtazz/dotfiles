@@ -42,7 +42,7 @@ function! s:dispatch(bang, file) abort
           " Leverage original :mksession for E189
           return 'mksession ' . fnameescape(file)
         endif
-      catch /^Vim(readfile):E484:/
+      catch /^Vim(let):E484:/
       endtry
     endif
     let g:this_obsession = file

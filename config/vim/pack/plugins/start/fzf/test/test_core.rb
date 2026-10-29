@@ -1532,6 +1532,61 @@ class TestCore < TestInteractive
     tmux.until { |lines| refute_includes(lines[-1], '[[1]]') }
   end
 
+  def assert_focus_log(expected)
+    wait do
+      assert_path_exists tempname
+      assert_equal expected, File.readlines(tempname, chomp: true)
+    end
+  end
+
+  def test_focus_event_after_reload
+    # Without --id-nth, the item at the same index after reload is a new item
+    tmux.send_keys %(printf 'a\\nb\\n' | #{FZF} --bind 'focus:execute-silent(echo {} >> #{tempname})' --bind 'ctrl-r:reload(printf "c\\nd\\n")'), :Enter
+    tmux.until { |lines| assert_includes lines, '> a' }
+    assert_focus_log(%w[a])
+    tmux.send_keys 'C-r'
+    tmux.until { |lines| assert_includes lines, '> c' }
+    assert_focus_log(%w[a c])
+  end
+
+  def test_focus_event_after_reload_id_nth_same_key
+    # Same --id-nth key after reload: no focus event
+    tmux.send_keys %(printf '1 a\\n2 b\\n' | #{FZF} --track --id-nth 1 --bind 'focus:execute-silent(echo {} >> #{tempname})' --bind 'ctrl-r:reload(printf "0 x\\n1 aa\\n2 bb\\n")'), :Enter
+    tmux.until { |lines| assert_includes lines, '> 1 a' }
+    assert_focus_log(['1 a'])
+    tmux.send_keys 'C-r'
+    tmux.until { |lines| assert_includes lines, '> 1 aa' }
+    tmux.send_keys :Up
+    tmux.until { |lines| assert_includes lines, '> 2 bb' }
+    assert_focus_log(['1 a', '2 bb'])
+  end
+
+  def test_focus_event_after_reload_id_nth_key_not_found
+    tmux.send_keys %(printf '1 a\\n2 b\\n' | #{FZF} --track --id-nth 1 --bind 'focus:execute-silent(echo {} >> #{tempname})' --bind 'ctrl-r:reload(printf "3 c\\n4 d\\n")'), :Enter
+    tmux.until { |lines| assert_includes lines, '> 1 a' }
+    assert_focus_log(['1 a'])
+    tmux.send_keys 'C-r'
+    tmux.until { |lines| assert_includes lines, '> 3 c' }
+    assert_focus_log(['1 a', '3 c'])
+  end
+
+  def test_focus_event_after_async_reload_id_nth
+    # No focus event for the items shown before the tracked item arrives.
+    # 'result' binding makes fzf redraw the list while blocked.
+    tmux.send_keys %(printf '1 a\\n2 b\\n' | #{FZF} --track --id-nth 1 --bind 'result:change-footer(R)' --bind 'focus:execute-silent(echo {} >> #{tempname})' --bind 'ctrl-r:reload(printf "0 x\\n"; sleep 1; printf "1 aa\\n2 bb\\n")'), :Enter
+    tmux.until { |lines| assert_includes lines, '> 1 a' }
+    assert_focus_log(['1 a'])
+    tmux.send_keys 'C-r'
+    tmux.until { |lines| assert_includes lines[-2], '+T*' }
+    tmux.until do |lines|
+      assert_includes lines, '> 1 aa'
+      refute_includes lines[-2], '+T*'
+    end
+    tmux.send_keys :Up
+    tmux.until { |lines| assert_includes lines, '> 2 bb' }
+    assert_focus_log(['1 a', '2 bb'])
+  end
+
   def test_result_event
     tmux.send_keys '(echo 0; seq 10) | fzf --bind "result:pos(2)"', :Enter
     tmux.until { |lines| assert_equal 11, lines.match_count }
@@ -2287,6 +2342,94 @@ class TestCore < TestInteractive
     end
   end
 
+  def test_change_nth_next_value
+    tmux.send_keys %(echo 'a b c d' | #{FZF} --nth 1 --bind 'space:change-nth(1|2|3|4),x:change-nth(3),result:transform-prompt:echo "[$FZF_NTH]> "'), :Enter
+    tmux.until { |lines| assert lines.any_include?('[1]>') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('[2]>') }
+    # Changed by another binding. The next value is the one after '3'.
+    tmux.send_keys :x
+    tmux.until { |lines| assert lines.any_include?('[3]>') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('[4]>') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('[1]>') }
+  end
+
+  def test_change_nth_all_fields_is_current
+    # '--nth ..' is stored as an empty list, which must match '..'
+    tmux.send_keys %(echo 'a b c' | #{FZF} --nth .. --bind 'space:change-nth(..|1|2)' --bind 'result:transform-prompt:echo "[$FZF_NTH]> "'), :Enter
+    tmux.until { |lines| assert lines.any_include?('[]>') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('[1]>') }
+  end
+
+  def test_change_nth_repeated_value
+    tmux.send_keys %(echo 'a b c' | #{FZF} --nth 1 --bind 'space:change-nth(1|2|1|3)' --bind 'result:transform-prompt:echo "[$FZF_NTH]> "'), :Enter
+    tmux.until { |lines| assert lines.any_include?('[1]>') }
+    %w[2 1 3 1 2].each do |nth|
+      tmux.send_keys :Space
+      tmux.until { |lines| assert lines.any_include?("[#{nth}]>") }
+    end
+  end
+
+  def test_change_nth_skips_invalid_value
+    tmux.send_keys %(echo 'a b c' | #{FZF} --nth 2 --bind 'space:change-nth(1|x|3)' --bind 'result:transform-prompt:echo "[$FZF_NTH]> "'), :Enter
+    tmux.until { |lines| assert lines.any_include?('[2]>') }
+    %w[1 3 1].each do |nth|
+      tmux.send_keys :Space
+      tmux.until { |lines| assert lines.any_include?("[#{nth}]>") }
+    end
+  end
+
+  def test_change_nth_only_invalid_values_left
+    # 'x' is invalid and '3' is current, so nothing changes
+    tmux.send_keys %(echo 'a b c' | #{FZF} --nth 1 --bind 'a:change-nth(3),space:change-nth(x|3)+transform-prompt:echo "S[$FZF_NTH]> "' --bind 'result:transform-prompt:echo "[$FZF_NTH]> "'), :Enter
+    tmux.until { |lines| assert lines.any_include?('[1]>') }
+    tmux.send_keys :a
+    tmux.until { |lines| assert lines.any_include?('[3]>') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('S[3]>') }
+  end
+
+  def test_change_nth_invalid_value_ignored
+    tmux.send_keys %(echo 'a b c' | #{FZF} --nth 1 --bind 'a:change-nth(3),space:change-nth(bad)+transform-prompt:echo "S[$FZF_NTH]> "' --bind 'b:transform-nth(echo bad)+transform-prompt:echo "T[$FZF_NTH]> "' --bind 'result:transform-prompt:echo "[$FZF_NTH]> "'), :Enter
+    tmux.until { |lines| assert lines.any_include?('[1]>') }
+    tmux.send_keys :a
+    tmux.until { |lines| assert lines.any_include?('[3]>') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('S[3]>') }
+    tmux.send_keys :b
+    tmux.until { |lines| assert lines.any_include?('T[3]>') }
+  end
+
+  def test_change_nth_from_transform
+    # A new action is created on each run, so the next value is found from the current state
+    tmux.send_keys %(echo 'a b c' | #{FZF} --nth 1 --bind 'space:transform:echo "change-nth(1|2|3)"' --bind 'result:transform-prompt:echo "[$FZF_NTH]> "'), :Enter
+    tmux.until { |lines| assert lines.any_include?('[1]>') }
+    %w[2 3 1].each do |nth|
+      tmux.send_keys :Space
+      tmux.until { |lines| assert lines.any_include?("[#{nth}]>") }
+    end
+  end
+
+  def test_change_with_nth_skips_default_value
+    tmux.send_keys %(echo 'a b c' | #{FZF} --with-nth 1 --bind 'space:change-with-nth(|2)'), :Enter
+    tmux.until { |lines| assert lines.any_include?('> a') }
+    # Empty value is the default (field 1), which is current
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('> b') }
+  end
+
+  def test_change_with_nth_skips_invalid_value
+    tmux.send_keys %(echo 'a b c' | #{FZF} --with-nth 1 --bind 'space:change-with-nth(1|foo|2)'), :Enter
+    tmux.until { |lines| assert lines.any_include?('> a') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('> b') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('> a') }
+  end
+
   def test_transform_with_nth_search
     input = [
       'alpha bravo charlie',
@@ -2317,6 +2460,25 @@ class TestCore < TestInteractive
     end
     tmux.send_keys :Enter
     tmux.until { |lines| assert lines.any_include?('a b c') || lines.any_include?('d e f') }
+  end
+
+  def test_transform_nth_output_does_not_replace_command
+    # '|' in the output must not be treated as a list to cycle through
+    File.write(tempname, '')
+    tmux.send_keys %(echo 'a b' | #{FZF} --with-nth .. --bind "space:transform-nth(echo >> #{tempname}; echo '1|2')+transform-with-nth(echo >> #{tempname}; echo '1|2')"), :Enter
+    tmux.until { |lines| assert_equal 1, lines.item_count }
+    3.times do |i|
+      tmux.send_keys :Space
+      wait { assert_equal 2 * (i + 1), File.readlines(tempname).length }
+    end
+  end
+
+  def test_transform_with_nth_output_with_pipe
+    File.write(tempname, '{2}|{1}')
+    tmux.send_keys %(echo 'a b' | #{FZF} --with-nth .. --bind 'space:transform-with-nth(cat #{tempname})'), :Enter
+    tmux.until { |lines| assert lines.any_include?('a b') }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert lines.any_include?('b|a') }
   end
 
   # Regression: actions emitted by bg-transform must affect the iteration that
@@ -2871,7 +3033,7 @@ class TestCore < TestInteractive
   end
 
   def test_change_nth_unset_default
-    tmux.send_keys %(echo foo bar | #{FZF} --nth 2 --query fb --bind space:change-nth:), :Enter
+    tmux.send_keys %(echo foo bar | #{FZF} --nth 2 --query fb --bind space:change-nth:..), :Enter
     tmux.until do
       assert_equal 1, it.item_count
       assert_equal 0, it.match_count
@@ -2883,6 +3045,19 @@ class TestCore < TestInteractive
       assert_equal 1, it.item_count
       assert_equal 1, it.match_count
     end
+  end
+
+  def test_change_nth_empty_restores_default
+    tmux.send_keys %(echo foo bar | #{FZF} --nth 2 --query fb --bind 'a:change-nth(..),space:change-nth(),b:transform-nth(true)'), :Enter
+    tmux.until { |lines| assert_equal 0, lines.match_count }
+    tmux.send_keys :a
+    tmux.until { |lines| assert_equal 1, lines.match_count }
+    tmux.send_keys :Space
+    tmux.until { |lines| assert_equal 0, lines.match_count }
+    tmux.send_keys :a
+    tmux.until { |lines| assert_equal 1, lines.match_count }
+    tmux.send_keys :b
+    tmux.until { |lines| assert_equal 0, lines.match_count }
   end
 
   def test_change_header_lines
